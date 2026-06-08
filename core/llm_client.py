@@ -1,0 +1,278 @@
+"""
+core/llm_client.py - Unified LLM client (OpenAI + Anthropic)
+"""
+
+from typing import List, Dict, Optional
+
+from tenacity import retry, stop_after_attempt, wait_exponential
+
+from core.config import config
+from core.logger import logger
+from core.router import ModelRouter
+from core.cost_tracker import CostTracker
+
+
+class LLMClient:
+
+    def __init__(self):
+        self.provider = config.LLM_PROVIDER
+        self.model = config.get_model()
+
+        self._client = None
+
+        self.router = ModelRouter()
+        self.cost_tracker = CostTracker()
+
+        self._init_client()
+
+    def _init_client(self):
+
+        if self.provider == "openai":
+
+            try:
+
+                from openai import OpenAI
+
+                self._client = OpenAI(
+                    api_key=config.OPENAI_API_KEY
+                )
+
+                logger.info(
+                    f"LLM Client initialized: OpenAI ({self.model})"
+                )
+
+            except ImportError:
+
+                raise ImportError(
+                    "openai package not installed. Run: pip install openai"
+                )
+
+        elif self.provider == "anthropic":
+
+            try:
+
+                import anthropic
+
+                self._client = anthropic.Anthropic(
+                    api_key=config.ANTHROPIC_API_KEY
+                )
+
+                logger.info(
+                    f"LLM Client initialized: Anthropic ({self.model})"
+                )
+
+            except ImportError:
+
+                raise ImportError(
+                    "anthropic package not installed. Run: pip install anthropic"
+                )
+
+        else:
+
+            raise ValueError(
+                f"Unknown LLM provider: {self.provider}"
+            )
+
+    @retry(
+        stop=stop_after_attempt(3),
+        wait=wait_exponential(
+            multiplier=1,
+            min=2,
+            max=10
+        )
+    )
+    def chat(
+        self,
+        messages: List[Dict],
+        system: Optional[str] = None,
+        temperature: float = 0.7,
+        max_tokens: int = 4096,
+        json_mode: bool = False,
+    ) -> str:
+
+        try:
+
+            task_hint = ""
+
+            if messages:
+                task_hint = str(
+                    messages[-1].get(
+                        "content",
+                        ""
+                    )
+                )
+
+            self._dynamic_model = self.router.route(
+                task_hint
+            )
+
+            logger.info(
+                f"Router selected model: {self._dynamic_model}"
+            )
+
+            if self.provider == "openai":
+
+                return self._openai_chat(
+                    messages,
+                    system,
+                    temperature,
+                    max_tokens,
+                    json_mode
+                )
+
+            elif self.provider == "anthropic":
+
+                return self._anthropic_chat(
+                    messages,
+                    system,
+                    temperature,
+                    max_tokens
+                )
+
+            raise RuntimeError(
+                "No provider selected"
+            )
+
+        except Exception as e:
+
+            logger.error(
+                f"LLM call failed: {e}"
+            )
+
+            raise
+
+    def _openai_chat(
+        self,
+        messages,
+        system,
+        temperature,
+        max_tokens,
+        json_mode
+    ) -> str:
+
+        full_messages = []
+
+        if system:
+            full_messages.append(
+                {
+                    "role": "system",
+                    "content": system
+                }
+            )
+
+        full_messages.extend(messages)
+
+        kwargs = {
+            "model": getattr(
+                self,
+                "_dynamic_model",
+                self.model
+            ),
+            "messages": full_messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens,
+        }
+
+        if json_mode:
+
+            kwargs["response_format"] = {
+                "type": "json_object"
+            }
+
+        logger.info(
+            f"Using model: {kwargs['model']}"
+        )
+
+        response = self._client.chat.completions.create(
+            **kwargs
+        )
+
+        try:
+
+            usage = response.usage
+
+            self.cost_tracker.add(
+                usage.prompt_tokens,
+                usage.completion_tokens
+            )
+
+        except Exception as e:
+
+            logger.warning(
+                f"Cost tracker failed: {e}"
+            )
+
+        return response.choices[0].message.content
+
+    def _anthropic_chat(
+        self,
+        messages,
+        system,
+        temperature,
+        max_tokens
+    ) -> str:
+
+        kwargs = {
+            "model": getattr(
+                self,
+                "_dynamic_model",
+                self.model
+            ),
+            "max_tokens": max_tokens,
+            "temperature": temperature,
+            "messages": messages,
+        }
+
+        if system:
+
+            kwargs["system"] = system
+
+        logger.info(
+            f"Using model: {kwargs['model']}"
+        )
+
+        response = self._client.messages.create(
+            **kwargs
+        )
+
+        try:
+
+            self.cost_tracker.add(
+                response.usage.input_tokens,
+                response.usage.output_tokens
+            )
+
+        except Exception as e:
+
+            logger.warning(
+                f"Cost tracker failed: {e}"
+            )
+
+        return response.content[0].text
+
+    def count_tokens(
+        self,
+        text: str
+    ) -> int:
+
+        try:
+
+            import tiktoken
+
+            enc = tiktoken.encoding_for_model(
+                "gpt-4"
+            )
+
+            return len(
+                enc.encode(text)
+            )
+
+        except Exception:
+
+            return len(
+                text.split()
+            ) * 2
+
+
+llm = LLMClient()
+

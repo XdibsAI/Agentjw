@@ -1,0 +1,62 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+.Python
+pip-log.txt
+pip-delete-this-directory.txt
+
+# ── Virtual Environment ───────────────────────────────────────────────────────
+venv/
+env/
+ENV/
+.venv/
+
+# ── Environment / Secrets ─────────────────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+*.key
+secrets.json
+
+# ── AgentJW Runtime ───────────────────────────────────────────────────────────
+memory/agentjw.db
+memory/chroma_db/
+memory/projects_db/
+logs/
+runtime/sandbox/
+projects/
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# ── APK / Build artifacts ─────────────────────────────────────────────────────
+*.apk
+*.aab
+*.ipa
+
+# ── Backups ───────────────────────────────────────────────────────────────────
+backups/
+*.bak
+*.backup
+
+# ── Test / Coverage ───────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ── Misc ─────────────────────────────────────────────────────────────────────
+*.tar.gz
+*.zip
+node_modules/
