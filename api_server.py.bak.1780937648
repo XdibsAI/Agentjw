@@ -1,8 +1,7 @@
-import os
 """
 api_server.py - AgentJW REST API Server v2.0
 FastAPI exposing chat, build, and Video Studio endpoints
-Run: uvicorn api_server:app --host 0.0.0.0 --port 18790
+Run: uvicorn api_server:app --host 0.0.0.0 --port 8000
 """
 import uuid, json
 from pathlib import Path
@@ -56,24 +55,9 @@ class JSXReq(BaseModel):
 _jobs: Dict[str, Dict] = {}
 
 def _set_job(jid, status, result=None, error=None):
-    print(f"[JOB DEBUG] jid={jid} status={status}", flush=True)
-
-    if isinstance(result, dict):
-        print(f"[JOB DEBUG] result keys={list(result.keys())}", flush=True)
-
-        if "package" in result:
-            print(
-                f"[JOB DEBUG] package sections="
-                f"{list(result['package'].get('sections', {}).keys())}"
-            )
-
-    _jobs[jid] = {
-        "job_id": jid,
-        "status": status,
-        "result": result,
-        "error": error,
-        "updated_at": datetime.now().isoformat()
-    }
+    _jobs[jid] = {"job_id": jid, "status": status,
+                  "result": result, "error": error,
+                  "updated_at": datetime.now().isoformat()}
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.get("/health")
@@ -125,23 +109,6 @@ def api_status():
     return {"status": "ok", "agent": "AgentJW GOD MODE",
             "model": config.get_model(), "session": "active"}
 
-
-@app.post("/api/chat")
-def api_chat_legacy(req: ChatReq):
-    """Legacy /api/chat endpoint for APK compatibility"""
-    return api_agent(req)
-
-
-@app.post("/api/build")
-def api_build_legacy(req: ChatReq):
-    """Legacy /api/build endpoint"""
-    from pydantic import BaseModel
-    msg = req.message
-    from agents.orchestrator import orchestrator
-    import uuid
-    result = orchestrator.smart_build(msg, str(uuid.uuid4())[:8])
-    return {"status": "ok", "result": result}
-
 @app.post("/build")
 def build(req: BuildReq):
     try:
@@ -168,79 +135,20 @@ def video_package(req: VideoReq, bg: BackgroundTasks):
                 config.VIDEO_STUDIO_MODEL = req.model
             intent = {"title": req.title, "duration": req.duration,
                       "lang": req.lang, "style": req.style, "tone": req.tone}
-
-            secs = req.sections or [
-                "script",
-                "scenes",
-                "voice",
-                "sound",
-                "editing",
-                "thumbnails"
-            ]
-
-            pkg = {
-                "id": str(uuid.uuid4())[:8],
-                "created_at": datetime.now().isoformat(),
-                "intent": intent,
-                "sections": {}
-            }
-
-            for section in secs:
-                pkg["sections"][section] = (
-                    video_studio_tool.generate_section(
-                        section,
-                        intent
-                    )
-                )
+            secs = req.sections or ["script","scenes","voice","sound","editing","thumbnails"]
+            pkg = video_studio_tool.build_video_package(req.title, secs)
+            pkg["intent"] = intent
             pdir = config.PROJECTS_DIR / f"video_{jid}"
             files = video_studio_tool.save_package(pkg, pdir)
             from tools.project_manager.manager import project_manager
             pid = project_manager.register_project(
                 name=f"video_{jid}", description=req.title,
                 project_dir=str(pdir), tool_type="youtube")
-
-            from core.models import CodeFile
-
-            tracked_files = []
-
-            for fp in files:
-                try:
-                    p = Path(fp)
-
-                    tracked_files.append(
-                        CodeFile(
-                            path=p.name,
-                            content=p.read_text(encoding="utf-8"),
-                            language="text",
-                            description=f"Video file: {p.name}"
-                        )
-                    )
-                except Exception:
-                    pass
-
-            if tracked_files:
-                project_manager.save_files(
-                    pid,
-                    tracked_files
-                )
-
-            project_manager.set_status(
-                pid,
-                "success",
-                "Video package generated successfully"
-            )
-
             _set_job(jid, "done", {
-                "project_id": pid,
-                "project_dir": str(pdir),
+                "project_id": pid, "project_dir": str(pdir),
                 "package_id": pkg["id"],
-                "sections_done": [
-                    s for s,v in pkg["sections"].items()
-                    if not v.startswith("ERROR")
-                ],
-                "files": [str(f) for f in files],
-                "title": req.title,
-                "package": pkg
+                "sections_done": [s for s,v in pkg["sections"].items() if not v.startswith("ERROR")],
+                "files": [str(f) for f in files], "title": req.title,
             })
         except Exception as e:
             _set_job(jid, "error", error=str(e))
@@ -333,41 +241,3 @@ if __name__ == "__main__":
     import uvicorn
     from core.config import config
     uvicorn.run("api_server:app", host=config.API_HOST, port=config.API_PORT, reload=False)
-
-@app.get("/api/projects")
-async def get_projects():
-    try:
-        from memory.memory_store import memory_store
-        projects = memory_store.list_projects(limit=50)
-        formatted = [{
-            "id": p.get("id",""), "name": p.get("name",""),
-            "status": p.get("status","unknown"),
-            "tool_type": p.get("tool_type","general"),
-            "created_at": p.get("created_at",""),
-            "description": p.get("description",""),
-        } for p in projects]
-        return {"projects": formatted, "total": len(formatted), "status": "ok"}
-    except Exception as e:
-        return {"projects": [], "total": 0, "error": str(e), "status": "error"}
-
-@app.get("/api/logs")
-async def get_logs(project_id: str = None, lines: int = 100):
-    try:
-        from memory.memory_store import memory_store
-        from pathlib import Path as P
-        log_data = {}
-        api_log = P("/home/dibs/agentjw/api.log")
-        if api_log.exists():
-            all_lines = api_log.read_text(errors="ignore").splitlines()
-            log_data["api_server"] = "\n".join(all_lines[-lines:])
-        if project_id:
-            projects = memory_store.list_projects()
-            proj = next((p for p in projects if p["id"].startswith(project_id)), None)
-            if proj:
-                proj_dir = P(proj["project_dir"])
-                for lf in list(proj_dir.glob("*.log")):
-                    all_lines = lf.read_text(errors="ignore").splitlines()
-                    log_data[lf.name] = "\n".join(all_lines[-lines:])
-        return {"logs": log_data, "status": "ok"}
-    except Exception as e:
-        return {"logs": {}, "error": str(e), "status": "error"}

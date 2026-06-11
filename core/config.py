@@ -17,6 +17,15 @@ class Config:
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
 
+    # ── OpenRouter + Video Studio ──────────────────────────────────────────
+    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
+    VIDEO_STUDIO_MODEL: str = os.getenv("VIDEO_STUDIO_MODEL", "deepseek/deepseek-r1-0528:free")
+    VIDEO_STUDIO_MAX_TOKENS: int = int(os.getenv("VIDEO_STUDIO_MAX_TOKENS", "4096"))
+    VIDEO_STUDIO_TEMPERATURE: float = float(os.getenv("VIDEO_STUDIO_TEMPERATURE", "0.75"))
+    VIDEO_PROJECTS_DIR: "Path" = BASE_DIR / os.getenv("VIDEO_PROJECTS_DIR", "projects/video")
+    API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
+    API_PORT: int = int(os.getenv("API_PORT", "8000"))
+
     # ── OpenRouter (Video Studio) ──────────────────────────────────────────
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
@@ -75,5 +84,15 @@ class Config:
     @classmethod
     def has_video_studio(cls) -> bool:
         return bool(cls.OPENROUTER_API_KEY)
+
+
+    @classmethod
+    def has_openrouter(cls) -> bool:
+        return bool(cls.OPENROUTER_API_KEY)
+
+    @classmethod
+    def has_video_studio(cls) -> bool:
+        return bool(cls.OPENROUTER_API_KEY)
+
 
 config = Config()

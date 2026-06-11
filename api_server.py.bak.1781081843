@@ -56,24 +56,9 @@ class JSXReq(BaseModel):
 _jobs: Dict[str, Dict] = {}
 
 def _set_job(jid, status, result=None, error=None):
-    print(f"[JOB DEBUG] jid={jid} status={status}", flush=True)
-
-    if isinstance(result, dict):
-        print(f"[JOB DEBUG] result keys={list(result.keys())}", flush=True)
-
-        if "package" in result:
-            print(
-                f"[JOB DEBUG] package sections="
-                f"{list(result['package'].get('sections', {}).keys())}"
-            )
-
-    _jobs[jid] = {
-        "job_id": jid,
-        "status": status,
-        "result": result,
-        "error": error,
-        "updated_at": datetime.now().isoformat()
-    }
+    _jobs[jid] = {"job_id": jid, "status": status,
+                  "result": result, "error": error,
+                  "updated_at": datetime.now().isoformat()}
 
 # ── Routes ────────────────────────────────────────────────────────────────────
 @app.get("/health")
@@ -198,38 +183,6 @@ def video_package(req: VideoReq, bg: BackgroundTasks):
             pid = project_manager.register_project(
                 name=f"video_{jid}", description=req.title,
                 project_dir=str(pdir), tool_type="youtube")
-
-            from core.models import CodeFile
-
-            tracked_files = []
-
-            for fp in files:
-                try:
-                    p = Path(fp)
-
-                    tracked_files.append(
-                        CodeFile(
-                            path=p.name,
-                            content=p.read_text(encoding="utf-8"),
-                            language="text",
-                            description=f"Video file: {p.name}"
-                        )
-                    )
-                except Exception:
-                    pass
-
-            if tracked_files:
-                project_manager.save_files(
-                    pid,
-                    tracked_files
-                )
-
-            project_manager.set_status(
-                pid,
-                "success",
-                "Video package generated successfully"
-            )
-
             _set_job(jid, "done", {
                 "project_id": pid,
                 "project_dir": str(pdir),

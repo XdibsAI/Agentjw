@@ -1,0 +1,41 @@
+nohup: ignoring input
+INFO:     Started server process [2858929]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:18790 (Press CTRL+C to quit)
+[JOB DEBUG] jid=54cbc979 status=queued
+INFO:     127.0.0.1:33680 - "POST /video/package HTTP/1.1" 200 OK
+[JOB DEBUG] jid=54cbc979 status=running
+  📽  Generating: script...
+[13:15:32] INFO     OpenRouter client initialized: deepseek/deepseek-r1-0528    
+[13:16:36] INFO     Section 'script' generated: 4200 chars                      
+  📽  Generating: scenes...
+INFO:     127.0.0.1:36498 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+[13:17:48] INFO     Section 'scenes' generated: 5822 chars                      
+  📽  Generating: voice...
+[13:18:46] INFO     Section 'voice' generated: 3457 chars                       
+  📽  Generating: sound...
+[13:20:38] INFO     Section 'sound' generated: 8852 chars                       
+  📽  Generating: editing...
+[13:21:55] INFO     Section 'editing' generated: 5247 chars                     
+  📽  Generating: thumbnails...
+INFO:     127.0.0.1:50058 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:42008 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+[13:22:58] INFO     Section 'thumbnails' generated: 4438 chars                  
+           INFO     Memory store initialized at                                 
+                    /home/dibs/agentjw/memory/agentjw.db                        
+📋 Project registered:  video_54cbc979
+[JOB DEBUG] jid=54cbc979 status=done
+[JOB DEBUG] result keys=['project_id', 'project_dir', 'package_id', 'sections_done', 'files', 'title', 'package']
+[JOB DEBUG] package sections=['script', 'scenes', 'voice', 'sound', 'editing', 'thumbnails']
+INFO:     127.0.0.1:52618 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:39048 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:60306 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:57030 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49750 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49762 - "GET /api/status HTTP/1.1" 200 OK
+INFO:     127.0.0.1:49770 - "GET /api/projects HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [2858929]

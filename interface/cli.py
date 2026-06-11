@@ -212,6 +212,70 @@ class CLI:
         if not config.OPENROUTER_API_KEY:
             console.print("[yellow]Add OPENROUTER_API_KEY=sk-or-v1-... to .env[/yellow]")
 
+    def _run_video_build(self, topic: str):
+        if not topic:
+            console.print("[yellow]Usage: video <topic>[/yellow]")
+            return
+        try:
+            from agents.orchestrator import orchestrator
+            orchestrator._build_video(topic, self.session_id)
+        except Exception as e:
+            console.print(f"[red]Video Studio error: {e}[/red]")
+            logger.exception("Video build failed")
+
+    def _run_video_section(self, section: str, topic: str):
+        valid = ["script", "scenes", "voice", "sound", "editing", "thumbnails"]
+        if section not in valid:
+            console.print(f"[red]Section tidak valid. Pilih: {', '.join(valid)}[/red]")
+            return
+        try:
+            from tools.video.video_studio_tool import video_studio_tool
+            intent = {"title": topic, "duration": "12-15", "lang": "bilingual",
+                      "style": "cinematic documentary", "tone": "confident, urgent, no fluff"}
+            content = video_studio_tool.generate_section(section, intent)
+            console.print(Panel(content[:3000],
+                                title=f"🎬 {section.upper()}", border_style="red"))
+        except Exception as e:
+            console.print(f"[red]Section error: {e}[/red]")
+
+    def _list_video_projects(self):
+        try:
+            from memory.memory_store import memory_store
+            from rich.table import Table
+            projects = memory_store.list_projects(tool_type="youtube")
+            if not projects:
+                console.print("[dim]Belum ada video project.[/dim]")
+                return
+            table = Table(title="🎬 Video Projects", border_style="red")
+            table.add_column("ID", style="cyan", width=10)
+            table.add_column("Name", style="white", width=30)
+            table.add_column("Status", style="green", width=10)
+            table.add_column("Dir", style="dim", width=35)
+            for p in projects:
+                table.add_row(p["id"][:8], p["name"],
+                              p["status"], p.get("project_dir","")[-35:])
+            console.print(table)
+        except Exception as e:
+            console.print(f"[red]Error: {e}[/red]")
+
+    def _video_status(self):
+        from core.config import config
+        from rich.table import Table
+        table = Table(title="🎬 Video Studio Status", border_style="red")
+        table.add_column("Setting", style="cyan")
+        table.add_column("Value", style="white")
+        ok = "✓ SET" if config.OPENROUTER_API_KEY else "✗ BELUM DISET"
+        table.add_row("OpenRouter Key", ok)
+        table.add_row("Video Model", config.VIDEO_STUDIO_MODEL)
+        table.add_row("Max Tokens", str(config.VIDEO_STUDIO_MAX_TOKENS))
+        table.add_row("Temperature", str(config.VIDEO_STUDIO_TEMPERATURE))
+        table.add_row("Video Projects Dir", str(config.VIDEO_PROJECTS_DIR))
+        console.print(table)
+        if not config.OPENROUTER_API_KEY:
+            console.print("[yellow]→ Tambahkan OPENROUTER_API_KEY=sk-or-v1-... ke .env[/yellow]")
+        else:
+            console.print("[green]✓ Video Studio siap digunakan![/green]")
+
     def _exit(self):
         console.print("[cyan]AgentJW signing off. 🤖[/cyan]")
         sys.exit(0)

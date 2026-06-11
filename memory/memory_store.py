@@ -63,6 +63,8 @@ class MemoryStore:
 
     # ── Chat ──────────────────────────────────────────────────────
     def save_chat(self, session_id: str, role: str, content: str):
+        if not content:  # guard: never insert NULL content
+            return
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("INSERT INTO chat_history (session_id,role,content,timestamp) VALUES (?,?,?,?)",
                 (session_id, role, content, datetime.now().isoformat()))
