@@ -19,9 +19,14 @@ class Config:
 
     # ── OpenRouter + Video Studio ──────────────────────────────────────────
     OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
-    VIDEO_STUDIO_MODEL: str = os.getenv("VIDEO_STUDIO_MODEL", "deepseek/deepseek-r1-0528:free")
+    VIDEO_STUDIO_MODEL: str = os.getenv("VIDEO_STUDIO_MODEL", "qwen/qwen3-coder")
     VIDEO_STUDIO_MAX_TOKENS: int = int(os.getenv("VIDEO_STUDIO_MAX_TOKENS", "4096"))
     VIDEO_STUDIO_TEMPERATURE: float = float(os.getenv("VIDEO_STUDIO_TEMPERATURE", "0.75"))
+    OPENROUTER_IMAGE_MODEL: str = os.getenv(
+        "OPENROUTER_IMAGE_MODEL",
+        "google/gemini-2.5-flash-image"
+    )
+
     VIDEO_PROJECTS_DIR: "Path" = BASE_DIR / os.getenv("VIDEO_PROJECTS_DIR", "projects/video")
     API_HOST: str = os.getenv("API_HOST", "0.0.0.0")
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
@@ -31,9 +36,14 @@ class Config:
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # ── Video Studio ───────────────────────────────────────────────────────
-    VIDEO_STUDIO_MODEL: str = os.getenv("VIDEO_STUDIO_MODEL", "deepseek/deepseek-r1-0528:free")
+    VIDEO_STUDIO_MODEL: str = os.getenv("VIDEO_STUDIO_MODEL", "qwen/qwen3-coder")
     VIDEO_STUDIO_MAX_TOKENS: int = int(os.getenv("VIDEO_STUDIO_MAX_TOKENS", "4096"))
     VIDEO_STUDIO_TEMPERATURE: float = float(os.getenv("VIDEO_STUDIO_TEMPERATURE", "0.75"))
+    OPENROUTER_IMAGE_MODEL: str = os.getenv(
+        "OPENROUTER_IMAGE_MODEL",
+        "google/gemini-2.5-flash-image"
+    )
+
     VIDEO_PROJECTS_DIR = BASE_DIR / os.getenv("VIDEO_PROJECTS_DIR", "projects/video")
 
     # ── API Server ─────────────────────────────────────────────────────────

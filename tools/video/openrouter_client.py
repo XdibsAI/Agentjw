@@ -11,7 +11,7 @@ from core.logger import logger
 class OpenRouterClient:
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
 
-    def __init__(self, api_key: str, model: str = "deepseek/deepseek-r1-0528:free"):
+    def __init__(self, api_key: str, model: str = "qwen/qwen3-coder"):
         self.api_key = api_key
         self.model = model
         logger.info(f"OpenRouter client initialized: {model}")
@@ -76,3 +76,72 @@ class OpenRouterClient:
 
     def count_tokens(self, text: str) -> int:
         return len(text.split()) * 2
+
+    def generate_image(self, prompt: str, output_path: str, model: str):
+        import base64
+        import requests
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {self.api_key}",
+            "HTTP-Referer": "https://agentjw.local",
+            "X-Title": "AgentJW Video Studio",
+        }
+
+        payload = {
+            "model": model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ]
+        }
+
+        resp = requests.post(
+            self.BASE_URL,
+            headers=headers,
+            json=payload,
+            timeout=300
+        )
+
+        resp.raise_for_status()
+
+        data = resp.json()
+
+        msg = data["choices"][0]["message"]
+
+        image_url = None
+
+        if "images" in msg:
+            try:
+                image_url = msg["images"][0]["image_url"]["url"]
+            except Exception:
+                pass
+
+        if image_url is None and "content" in msg:
+            content = msg["content"]
+
+            if isinstance(content, list):
+                for item in content:
+                    if item.get("type") == "image_url":
+                        image_url = item["image_url"]["url"]
+                        break
+
+        if not image_url:
+            raise RuntimeError(
+                f"No image found in OpenRouter response keys={list(msg.keys())}"
+            )
+
+        if not image_url.startswith("data:image"):
+            raise RuntimeError(
+                f"Unexpected image url format: {image_url[:80]}"
+            )
+
+        b64 = image_url.split(",", 1)[1]
+
+        with open(output_path, "wb") as f:
+            f.write(base64.b64decode(b64))
+
+        return output_path
+

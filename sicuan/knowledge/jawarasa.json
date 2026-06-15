@@ -1,0 +1,15 @@
+{
+  "bisnis": "Jawarasa",
+  "kategori": "kuliner - es buah, rujak, minuman segar",
+  "target_market": "semua kalangan, fokus keluarga dan anak muda",
+  "posting_schedule": {
+    "jumat": "konten berkah jumat + promo mingguan",
+    "weekend": "konten lifestyle + behind the scene",
+    "senin": "semangat awal pekan + produk highlight",
+    "daily": "konten produk atau testimoni"
+  },
+  "konten_style": "warm, natural, appetizing, community feel",
+  "platform": ["WhatsApp", "Instagram", "TikTok"],
+  "produk_utama": ["es buah", "rujak buah", "jus segar", "minuman tradisional"],
+  "tone_konten": "akrab, hangat, bikin ngiler, encouraging"
+}

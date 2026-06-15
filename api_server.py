@@ -96,27 +96,12 @@ def root():
 @app.post("/chat")
 def chat(req: ChatReq):
     try:
-        from agents.orchestrator import orchestrator
-        sid = req.session_id or str(uuid.uuid4())
-        resp = orchestrator.chat(req.message, req.history or [], sid)
-        return {"response": resp, "session_id": sid}
+        chat_inst = get_sicuan(req.session_id)
+        response = chat_inst.chat(req.message)
+        return {"response": response, "session_id": chat_inst.session_id}
     except Exception as e:
         raise HTTPException(500, str(e))
 
-@app.post("/api/agent")
-def api_agent(req: ChatReq):
-    """Legacy endpoint - compatible with old APK format"""
-    try:
-        from agents.orchestrator import orchestrator
-        sid = req.session_id or "legacy"
-        # Try execute first
-        result = orchestrator.execute(req.message, req.history or [], sid)
-        if not result or result.get("action") == "chat" or result.get("status") not in ("done", "success"):
-            resp = orchestrator.chat(req.message, req.history or [], sid)
-            return {"response": resp, "session_id": sid}
-        return {"response": "✅ " + str(result.get("status", "done")), "session_id": sid}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/status")
 def api_status():
@@ -128,8 +113,7 @@ def api_status():
 
 @app.post("/api/chat")
 def api_chat_legacy(req: ChatReq):
-    """Legacy /api/chat endpoint for APK compatibility"""
-    return api_agent(req)
+    return api_agent_v2(req)
 
 
 @app.post("/api/build")
@@ -141,6 +125,48 @@ def api_build_legacy(req: ChatReq):
     import uuid
     result = orchestrator.smart_build(msg, str(uuid.uuid4())[:8])
     return {"status": "ok", "result": result}
+
+
+class SiCuanReq(BaseModel):
+    message: str
+    session_id: Optional[str] = None
+
+@app.post("/sicuan")
+def sicuan_endpoint(req: SiCuanReq):
+    """SiCuan — Si Paling Cuan autonomous chat"""
+    try:
+        import sys
+        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+        from sicuan.chat import SiCuanChat
+        chat = SiCuanChat()
+        if req.session_id:
+            chat.session_id = req.session_id
+        response = chat.chat(req.message)
+        return {"response": response, "session_id": chat.session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Persistent SiCuan sessions per session_id
+_sicuan_sessions = {}
+
+def get_sicuan(session_id: str = None):
+    """Get or create SiCuan chat instance per session"""
+    from sicuan.chat import SiCuanChat
+    sid = session_id or "default"
+    if sid not in _sicuan_sessions:
+        chat = SiCuanChat()
+        chat.session_id = sid
+        _sicuan_sessions[sid] = chat
+    return _sicuan_sessions[sid]
+
+@app.post("/api/agent")
+def api_agent_v2(req: ChatReq):
+    try:
+        chat = get_sicuan(req.session_id)
+        response = chat.chat(req.message)
+        return {"response": response, "session_id": chat.session_id}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/build")
 def build(req: BuildReq):
@@ -316,10 +342,50 @@ def download(project_id: str):
     return FileResponse(str(p), media_type="application/json",
                         filename=f"video_package_{project_id}.json")
 
+@app.get("/files/download")
+def download_file(path: str):
+    """Serve a file by path relative to ~/agentjw (e.g. projects/video_xxx/final_video.mp4)."""
+    try:
+        base = Path(__file__).resolve().parent
+        target = (base / path).resolve()
+        if not str(target).startswith(str(base)):
+            raise HTTPException(403, "Path outside project root")
+        if not target.exists() or not target.is_file():
+            raise HTTPException(404, "File not found")
+        return FileResponse(str(target), filename=target.name)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+
 @app.get("/projects")
 def projects():
     from memory.memory_store import memory_store
     return {"projects": memory_store.list_projects()}
+
+
+@app.delete("/projects/{project_id}")
+def delete_project_endpoint(project_id: str):
+    """Delete project — dipanggil dari APK"""
+    try:
+        from sicuan.cleanup import delete_project
+        result = delete_project(project_id, delete_files=True)
+        return result
+    except Exception as e:
+        raise HTTPException(500, str(e))
+
+@app.post("/projects/cleanup")
+def cleanup_projects_endpoint():
+    """Audit dan return list project yang bisa dihapus"""
+    try:
+        from sicuan.cleanup import audit_projects, cleanup_report
+        return {
+            "report": cleanup_report(),
+            "projects": audit_projects()
+        }
+    except Exception as e:
+        raise HTTPException(500, str(e))
 
 @app.get("/projects/{pid}")
 def get_project(pid: str):
@@ -371,3 +437,274 @@ async def get_logs(project_id: str = None, lines: int = 100):
         return {"logs": log_data, "status": "ok"}
     except Exception as e:
         return {"logs": {}, "error": str(e), "status": "error"}
+
+
+
+# ══════════════════════════════════════════════════════════════════
+# MEDIA ROUTES — dipanggil APK Flutter (MediaTab)
+# Ditambah otomatis oleh agentjw_flutter_patcher.py
+# ══════════════════════════════════════════════════════════════════
+from fastapi import UploadFile, File
+import aiofiles
+
+@app.post("/media/image/generate")
+async def media_image_generate(req: dict):
+    """
+    Generate gambar via fal.ai.
+    APK kirim: prompt, model, image_size, negative_prompt, num_images
+    """
+    try:
+        prompt = req.get("prompt", "").strip()
+        model  = req.get("model", "fal-ai/flux/schnell")
+        size   = req.get("image_size", "landscape_16_9")
+        neg    = req.get("negative_prompt", "")
+
+        if not prompt:
+            raise HTTPException(400, "prompt wajib diisi")
+
+        # ── Coba integrasikan dengan fal-client jika tersedia ──────────
+        try:
+            import fal_client
+            from core.config import config
+            fal_key = getattr(config, "FAL_API_KEY", "") or os.getenv("FAL_API_KEY", "")
+            if fal_key:
+                os.environ["FAL_KEY"] = fal_key
+                result = fal_client.run(model, arguments={
+                    "prompt":          prompt,
+                    "negative_prompt": neg,
+                    "image_size":      size,
+                    "num_images":      req.get("num_images", 1),
+                })
+                images = result.get("images", [])
+                url = images[0]["url"] if images else ""
+                return {
+                    "status":    "ok",
+                    "image_url": url,
+                    "url":       url,
+                    "model":     model,
+                }
+        except ImportError:
+            pass  # fal_client belum diinstall
+
+        # ── Fallback: return info bahwa perlu fal-client ───────────────
+        return {
+            "status":    "pending_config",
+            "image_url": "",
+            "message":   (
+                f"Image generation siap. "
+                f"Install fal-client: pip install fal-client "
+                f"dan set FAL_API_KEY di .env untuk model {model}"
+            ),
+            "prompt": prompt,
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"media_image_generate error: {e}")
+
+
+@app.post("/media/upload")
+async def media_upload(file: UploadFile = File(...)):
+    """
+    Upload file gambar dari APK (untuk img2video).
+    Return: filename + URL untuk di-pass ke /media/video/generate
+    """
+    try:
+        upload_dir = Path("uploads")
+        upload_dir.mkdir(exist_ok=True)
+
+        ext      = Path(file.filename or "upload.jpg").suffix.lower() or ".jpg"
+        filename = f"{uuid.uuid4().hex}{ext}"
+        dest     = upload_dir / filename
+
+        content = await file.read()
+        dest.write_bytes(content)
+
+        return {
+            "status":   "ok",
+            "filename": filename,
+            "url":      f"/uploads/{filename}",
+            "size":     len(content),
+        }
+    except Exception as e:
+        raise HTTPException(500, f"upload error: {e}")
+
+
+@app.post("/media/video/generate")
+async def media_video_generate(req: dict, background_tasks: BackgroundTasks):
+    """
+    Generate video dari image URL.
+    APK kirim: image_url, model, prompt, duration
+    Return: job_id untuk di-poll via /media/video/jobs/{id}
+    """
+    try:
+        image_url = req.get("image_url", "").strip()
+        model     = req.get("model", "fal-ai/kling-video/v1.6/standard/image-to-video")
+        prompt    = req.get("prompt", "")
+        duration  = req.get("duration", "5")
+
+        if not image_url:
+            raise HTTPException(400, "image_url wajib diisi")
+
+        jid = str(uuid.uuid4())[:12]
+        _set_job(jid, "processing")
+
+        def _do_video():
+            try:
+                import fal_client
+                from core.config import config
+                fal_key = getattr(config, "FAL_API_KEY", "") or os.getenv("FAL_API_KEY", "")
+                if fal_key:
+                    os.environ["FAL_KEY"] = fal_key
+                    result = fal_client.run(model, arguments={
+                        "image_url":       image_url,
+                        "prompt":          prompt,
+                        "duration":        duration,
+                        "aspect_ratio":    "16:9",
+                    })
+                    video_url = result.get("video", {}).get("url", "")
+                    _set_job(jid, "completed", result={"video_url": video_url, "url": video_url})
+                else:
+                    _set_job(jid, "error", error="FAL_API_KEY belum diset di .env")
+            except ImportError:
+                _set_job(jid, "error",
+                    error="fal-client belum diinstall. Jalankan: pip install fal-client")
+            except Exception as e:
+                _set_job(jid, "error", error=str(e))
+
+        background_tasks.add_task(_do_video)
+
+        return {
+            "status": "ok",
+            "job_id": jid,
+            "poll":   f"GET /media/video/jobs/{jid}",
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(500, f"media_video_generate error: {e}")
+
+
+@app.get("/media/video/jobs/{job_id}")
+async def media_video_job_status(job_id: str):
+    """
+    Cek status video generation job.
+    APK polling setiap ~5 detik sampai status = 'completed' | 'error'
+    Response: { job_id, status, result: { video_url } }
+    """
+    job = _jobs.get(job_id)
+    if not job:
+        raise HTTPException(404, f"Job {job_id} tidak ditemukan")
+
+    # Flatten result.video_url ke top-level untuk memudahkan APK
+    result  = job.get("result") or {}
+    vid_url = result.get("video_url") or result.get("url") or ""
+
+    return {
+        "job_id":    job_id,
+        "status":    job.get("status", "unknown"),
+        "video_url": vid_url,
+        "url":       vid_url,
+        "error":     job.get("error"),
+        "result":    result,
+        "updated_at": job.get("updated_at"),
+    }
+
+
+@app.get("/media/gallery")
+async def media_gallery():
+    """
+    Daftar semua file media (gambar + video) di folder uploads/.
+    Digunakan GalleryTab APK untuk tampilkan riwayat.
+    """
+    try:
+        upload_dir = Path("uploads")
+        items = []
+        if upload_dir.exists():
+            for f in sorted(
+                upload_dir.iterdir(),
+                key=lambda x: x.stat().st_mtime,
+                reverse=True
+            )[:100]:
+                if f.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".gif",
+                                        ".mp4", ".mov", ".webm"}:
+                    is_video = f.suffix.lower() in {".mp4", ".mov", ".webm"}
+                    items.append({
+                        "filename":   f.name,
+                        "url":        f"/uploads/{f.name}",
+                        "type":       "video" if is_video else "image",
+                        "size":       f.stat().st_size,
+                        "size_mb":    round(f.stat().st_size / 1_048_576, 2),
+                        "created_at": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
+                    })
+
+        return {"items": items, "total": len(items)}
+
+    except Exception as e:
+        raise HTTPException(500, f"gallery error: {e}")
+
+
+# Static file serving untuk uploads
+from fastapi.staticfiles import StaticFiles
+_uploads_dir = Path("uploads")
+_uploads_dir.mkdir(exist_ok=True)
+try:
+    app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
+except Exception:
+    pass  # Already mounted
+
+# ══ END MEDIA ROUTES ══════════════════════════════════════════════
+# PATCH: Override media_gallery to scan projects too
+from fastapi import Request
+import importlib, sys
+
+@app.get("/media/gallery/v2")
+async def media_gallery_v2():
+    """Scan uploads/ + projects/*/final_video.mp4 + projects/*/preview.jpg"""
+    import glob
+    items = []
+    base = Path(__file__).parent
+    
+    # Scan uploads/
+    for f in (base / "uploads").glob("*"):
+        if f.suffix.lower() in [".jpg",".jpeg",".png",".mp4",".webm"]:
+            items.append({
+                "filename": f.name,
+                "url": f"/media/file/{f.name}",
+                "type": "video" if f.suffix == ".mp4" else "image",
+                "size": f.stat().st_size,
+                "source": "uploads"
+            })
+    
+    # Scan projects/*/final_video.mp4
+    for f in base.glob("projects/*/final_video.mp4"):
+        items.append({
+            "filename": f.name,
+            "url": f"/media/project-file/{f.parent.name}/final_video.mp4",
+            "type": "video",
+            "size": f.stat().st_size,
+            "source": f.parent.name
+        })
+    
+    # Scan projects/*/preview.jpg
+    for f in base.glob("projects/*/preview.jpg"):
+        items.append({
+            "filename": f"{f.parent.name}_preview.jpg",
+            "url": f"/media/project-file/{f.parent.name}/preview.jpg",
+            "type": "image",
+            "size": f.stat().st_size,
+            "source": f.parent.name
+        })
+    
+    return {"items": items, "total": len(items)}
+
+@app.get("/media/project-file/{project_id}/{filename}")
+async def serve_project_file(project_id: str, filename: str):
+    base = Path(__file__).parent
+    p = base / "projects" / project_id / filename
+    if not p.exists():
+        raise HTTPException(404, "File not found")
+    mt = "video/mp4" if filename.endswith(".mp4") else "image/jpeg"
+    return FileResponse(str(p), media_type=mt)

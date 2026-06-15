@@ -28,10 +28,20 @@ SECTION_PROMPTS = {
         "user": (
             "Write a complete viral documentary script.\n"
             "- Format: [HOOK] [MAIN CONTENT Act I/II/III] [ENDING]\n"
-            "- Each segment: English VO | Indonesian subtitle | Director delivery note\n"
-            "- Hook creates immediate curiosity in first 5 seconds\n"
-            "- Use real data, statistics, surprising facts\n"
-            "TOPIC: {title}\nDURATION: {duration} minutes\nTONE: {tone}\nLANGUAGE: {lang}"
+            "- MINIMUM 100 English narration words.\n"
+            "- Target words based on duration: 3-5min=200, 7-10min=600, 12+=1000.\n"
+            "- Produce 30-50 EN VO narration blocks.\n"
+            "- Every EN VO block must contain 25-50 words.\n"
+            "- Each EN VO block MUST have matching Indonesian subtitle and director note.\n"
+            "- Hook creates immediate curiosity in first 5 seconds.\n"
+            "- Use real data, statistics, surprising facts.\n"
+            "- Expand every act with detailed explanations, examples, evidence and storytelling.\n"
+            "- Never summarize sections.\n"
+            "- Do not shorten the script.\n"
+            "TOPIC: {title}\n"
+            "DURATION: {duration} minutes\n"
+            "TONE: {tone}\n"
+            "LANGUAGE: {lang}"
         ),
     },
     "scenes": {
@@ -193,6 +203,23 @@ class VideoStudioTool:
                     max_tokens=config.VIDEO_STUDIO_MAX_TOKENS,
                 )
             logger.info(f"Section '{section}' generated: {len(result)} chars")
+
+            if section == "script":
+                vo_blocks = re.findall(
+                    r'\*\*EN VO:\*\*(?:.*?)"([^"]+)"',
+                    result,
+                    re.S
+                )
+
+                vo_words = sum(
+                    len(x.split())
+                    for x in vo_blocks
+                )
+
+                if vo_words < 30:
+                    raise RuntimeError(f"Script kosong ({vo_words} words).")
+
+
             return result
         except Exception as e:
             logger.error(f"Failed section '{section}': {e}")

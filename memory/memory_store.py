@@ -102,14 +102,34 @@ class MemoryStore:
         return [{"id": r[0], "type": r[1], "content": r[2], "metadata": json.loads(r[3]), "importance": r[4], "created_at": r[5]} for r in rows]
 
     def search_memories(self, query: str, type: Optional[str] = None, limit: int = 10) -> List[Dict]:
+        # Keyword-based OR matching: split query into significant words
+        # (len > 3) and match any of them, instead of requiring the whole
+        # sentence to appear verbatim (which almost never happens).
+        words = [w for w in query.lower().split() if len(w) > 3][:6]
+        if not words:
+            return self.recall(type=type, limit=limit)
+
+        conditions = " OR ".join(["lower(content) LIKE ?"] * len(words))
+        params: List = [f"%{w}%" for w in words]
+
+        sql = f"SELECT id,type,content,metadata,importance,created_at FROM memories WHERE ({conditions})"
+        if type:
+            sql += " AND type=?"
+            params.append(type)
+        sql += " ORDER BY importance DESC, created_at DESC LIMIT ?"
+        params.append(limit)
+
         with sqlite3.connect(self.db_path) as conn:
-            if type:
-                rows = conn.execute("SELECT id,type,content,metadata,importance,created_at FROM memories WHERE type=? AND content LIKE ? ORDER BY importance DESC LIMIT ?",
-                    (type, f"%{query}%", limit)).fetchall()
-            else:
-                rows = conn.execute("SELECT id,type,content,metadata,importance,created_at FROM memories WHERE content LIKE ? ORDER BY importance DESC LIMIT ?",
-                    (f"%{query}%", limit)).fetchall()
-        return [{"id": r[0], "type": r[1], "content": r[2], "metadata": json.loads(r[3]), "importance": r[4], "created_at": r[5]} for r in rows]
+            rows = conn.execute(sql, params).fetchall()
+
+        seen = set()
+        results = []
+        for r in rows:
+            if r[0] in seen:
+                continue
+            seen.add(r[0])
+            results.append({"id": r[0], "type": r[1], "content": r[2], "metadata": json.loads(r[3]), "importance": r[4], "created_at": r[5]})
+        return results
 
     # ── Error Registry ────────────────────────────────────────────
     def log_error(self, error_type: str, error_message: str, fix_applied: str = "", success: bool = False, context: str = ""):

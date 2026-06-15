@@ -319,6 +319,9 @@ PROJECTS ({len(projects)} total):
 {proj_ctx}
 {real_data}
 
+THINGS YOU REMEMBER ABOUT THIS USER/PROJECT (from past conversations):
+{chr(10).join(f"- {s}" for s in snippets) if snippets else "(belum ada memori relevan)"}
+
 AVAILABLE TOOLS (gunakan ini untuk menjalankan tugas):
   - trading_tool: build/analyze/modify trading bots (Solana, CEX, DEX)
   - youtube_tool: build YouTube automation (upload, SEO, thumbnail, analytics)
@@ -342,14 +345,24 @@ AgentJW akan simpan otomatis ke .env project terkait.
 RECENT CHAT:
 {chat_ctx}"""
 
-        if snippets:
-            system += "\nMEMORY:\n" + "\n".join(f"- {s[:120]}" for s in snippets)
 
         messages = [{"role": m["role"], "content": m["content"]} for m in history[-8:]]
         messages.append({"role": "user", "content": user_message})
         response = llm.chat(messages=messages, system=system, temperature=0.7, max_tokens=2048)
         memory_store.save_chat(session_id, "user", user_message)
         memory_store.save_chat(session_id, "assistant", response)
+
+        # ── Second brain: extract & store durable facts from this turn ─────
+        try:
+            memory_agent.run({
+                "action": "extract_and_store",
+                "session_summary": f"User: {user_message}\nAssistant: {response[:1000]}",
+                "success": True,
+                "project_name": session_id,
+            })
+        except Exception as e:
+            console.print(f"[dim]Memory extraction skipped: {e}[/dim]")
+
         return response
 
 
@@ -389,6 +402,7 @@ RECENT CHAT:
             "run_project":     self._run_project,
             "mcp_tool":        self._mcp_action,
             "general_build":   self._general_build,
+            "render_video":    self._render_video,
         }
         handler = handlers.get(intent["type"])
         if handler:
@@ -415,6 +429,14 @@ RECENT CHAT:
 
 
     def route_intent(self, user_input: str) -> Dict:
+        lower = user_input.lower()
+        render_keywords = [
+            "render video", "jadikan video", "generate video file",
+            "buatkan videonya", "render videonya", "convert ke video",
+            "render final video", "lanjut render",
+        ]
+        if any(k in lower for k in render_keywords):
+            return {"type": "render_video", "confidence": 0.92}
         return {"type": "chat", "confidence": 0.5}
 
     def build(self, user_request: str, session_id: str = None) -> BuildSession:
@@ -697,6 +719,37 @@ RECENT CHAT:
             self._show_scan(data)
 
         return {"status": "done", "project_id": proj["id"]}
+
+    def _render_video(self, user_request: str, session_id: str) -> Dict:
+        """Render final_video.mp4 from the most recent (or referenced) video project."""
+        import json
+        from tools.video.video_renderer import video_renderer_tool
+
+        projects = memory_store.list_projects()
+        video_projects = [p for p in projects if p["name"].startswith("video_")]
+        if not video_projects:
+            return {"status": "error", "reason": "Belum ada project video. Generate dulu dengan 'buat video ...'"}
+
+        proj = self._find_project_ref(user_request, video_projects) or video_projects[0]
+        project_dir = Path(proj["project_dir"])
+        package_path = project_dir / "video_package.json"
+        if not package_path.exists():
+            return {"status": "error", "reason": f"video_package.json tidak ditemukan di {project_dir}"}
+
+        package = json.loads(package_path.read_text(encoding="utf-8"))
+        console.print(Panel(f"🎬 RENDERING VIDEO: {proj['name']}", border_style="magenta"))
+        try:
+            out_path = video_renderer_tool.render(package, project_dir)
+        except Exception as e:
+            return {"status": "error", "reason": f"Render gagal: {e}"}
+
+        project_manager.set_status(proj["id"], "success")
+        return {
+            "status": "success",
+            "project_id": proj["id"],
+            "project_dir": str(project_dir),
+            "video_path": str(out_path),
+        }
 
     def _run_project(self, user_request: str) -> Dict:
         """Run a project and capture output"""

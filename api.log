@@ -1,41 +1,1584 @@
 nohup: ignoring input
-INFO:     Started server process [2858929]
+INFO:     Started server process [3107036]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:18790 (Press CTRL+C to quit)
-[JOB DEBUG] jid=54cbc979 status=queued
-INFO:     127.0.0.1:33680 - "POST /video/package HTTP/1.1" 200 OK
-[JOB DEBUG] jid=54cbc979 status=running
-  📽  Generating: script...
-[13:15:32] INFO     OpenRouter client initialized: deepseek/deepseek-r1-0528    
-[13:16:36] INFO     Section 'script' generated: 4200 chars                      
-  📽  Generating: scenes...
-INFO:     127.0.0.1:36498 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-[13:17:48] INFO     Section 'scenes' generated: 5822 chars                      
-  📽  Generating: voice...
-[13:18:46] INFO     Section 'voice' generated: 3457 chars                       
-  📽  Generating: sound...
-[13:20:38] INFO     Section 'sound' generated: 8852 chars                       
-  📽  Generating: editing...
-[13:21:55] INFO     Section 'editing' generated: 5247 chars                     
-  📽  Generating: thumbnails...
-INFO:     127.0.0.1:50058 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:42008 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-[13:22:58] INFO     Section 'thumbnails' generated: 4438 chars                  
-           INFO     Memory store initialized at                                 
+[09:53:15] INFO     Memory store initialized at                                 
                     /home/dibs/agentjw/memory/agentjw.db                        
-📋 Project registered:  video_54cbc979
-[JOB DEBUG] jid=54cbc979 status=done
-[JOB DEBUG] result keys=['project_id', 'project_dir', 'package_id', 'sections_done', 'files', 'title', 'package']
-[JOB DEBUG] package sections=['script', 'scenes', 'voice', 'sound', 'editing', 'thumbnails']
-INFO:     127.0.0.1:52618 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:39048 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:60306 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:57030 - "GET /video/jobs/54cbc979 HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49750 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49762 - "GET /api/status HTTP/1.1" 200 OK
-INFO:     127.0.0.1:49770 - "GET /api/projects HTTP/1.1" 200 OK
+[09:53:17] INFO     LLM Client initialized: OpenAI (qwen/qwen3-coder)           
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[09:53:20] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[09:54:10] INFO     SiCuan decided: move_to_gallery | Hanya ada 2 video yang    
+                    sudah di-render berdasarkan STATUS RE                       
+INFO:     127.0.0.1:42246 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:40732 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:40722 - "GET /health HTTP/1.1" 200 OK
+[09:54:59] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+INFO:     202.6.192.2:40746 - "GET /projects HTTP/1.1" 200 OK
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     202.6.192.2:40758 - "GET /media/gallery HTTP/1.1" 200 OK
+[09:55:11] INFO     SiCuan decided: null | Memberikan update status semua       
+                    project berdasarkan data nyat                               
+INFO:     202.6.192.2:40752 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[09:55:15] INFO     SiCuan decided: get_file | User minta tampilkan log, jadi   
+                    perlu mengambil file log dan                                
+INFO:     202.6.192.2:51128 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:37362 - "GET /health HTTP/1.1" 200 OK
+[10:00:45] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[10:00:46] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[10:00:54] INFO     SiCuan decided: null | User hanya menyebutkan 'perbaiki'    
+                    tanpa spesifikasi, perlu k                                  
+INFO:     202.6.192.2:55136 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:39314 - "GET /health HTTP/1.1" 200 OK
+[10:02:13] INFO     Router selected model: qwen/qwen3-coder                     
+           INFO     Using model: qwen/qwen3-coder                               
+[10:02:14] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[10:02:15] INFO     SiCuan decided: scan_project | User minta perbaikan di      
+                    Godmeme Bot untuk 3 aspek: strategi                         
+INFO:     202.6.192.2:42430 - "POST /chat HTTP/1.1" 200 OK
+[10:03:05] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[10:03:06] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[10:03:11] INFO     SiCuan decided: modify_project | User meminta optimasi      
+                    strategi trading, perlu diskusi parame                      
+INFO:     202.6.192.2:55692 - "POST /chat HTTP/1.1" 200 OK
+[10:04:31] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[10:04:36] INFO     SiCuan decided: run_bot | User meminta optimasi strategi    
+                    trading dan menjalankan bot u                               
+INFO:     202.6.192.2:41954 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:56612 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:56626 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:56632 - "GET /projects HTTP/1.1" 200 OK
+[10:59:11] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[10:59:12] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     38.52.148.10:56656 - "GET /media/gallery HTTP/1.1" 200 OK
+[10:59:23] INFO     SiCuan decided: request_api_key | Bot tidak bisa jalan      
+                    karena ada API key kosong di .env                           
+INFO:     38.52.148.10:56648 - "POST /chat HTTP/1.1" 200 OK
+[10:59:24] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[10:59:27] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[10:59:37] INFO     SiCuan decided: show_log | User minta tampilkan log,        
+                    langsung tampilkan dari file tradi                          
+INFO:     202.6.192.2:53664 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:53666 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:53674 - "GET /projects HTTP/1.1" 200 OK
+[12:02:15] INFO     Router selected model: deepseek/deepseek-chat               
+[12:02:16] INFO     Router selected model: deepseek/deepseek-chat               
+[12:02:17] INFO     Using model: deepseek/deepseek-chat                         
+           INFO     Using model: deepseek/deepseek-chat                         
+[12:02:25] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[12:02:35] INFO     SiCuan decided: request_api_key | log dan hasil trading     
+                    tidak bisa ditampilkan karena API key                       
+INFO:     202.6.192.2:45668 - "POST /chat HTTP/1.1" 200 OK
+[12:02:41] INFO     SiCuan decided: null | Menampilkan status semua project     
+                    terkait berdasarkan data ny                                 
+INFO:     202.6.192.2:53676 - "POST /chat HTTP/1.1" 200 OK
+[12:03:19] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[12:03:37] INFO     SiCuan decided: null | User meminta status terkini secara   
+                    urutan, jadi aku tampilka                                   
+INFO:     202.6.192.2:39198 - "POST /chat HTTP/1.1" 200 OK
+[12:04:58] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[12:05:00] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[12:05:07] INFO     SiCuan decided: null | User meminta variabel .env untuk     
+                    Godmeme Bot agar bisa mengi                                 
+INFO:     202.6.192.2:39304 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:33910 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:33916 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:33918 - "GET /projects HTTP/1.1" 200 OK
+[12:37:57] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[12:37:58] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     202.6.192.2:42432 - "GET /media/gallery HTTP/1.1" 200 OK
+[12:38:13] INFO     SiCuan decided: null | User meminta status terkini dari     
+                    semua project berdasarkan d                                 
+INFO:     202.6.192.2:33926 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:41258 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:45822 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57936 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57952 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57966 - "GET /health HTTP/1.1" 200 OK
+[12:54:58] INFO     API key set: TELEGRAM_BOT_TOKEN                             
+INFO:     38.52.148.10:46634 - "POST /chat HTTP/1.1" 200 OK
+[12:56:39] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[12:56:40] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[12:56:48] INFO     SiCuan decided: null | WALLET_PRIVATE_KEY diperlukan untuk  
+                    akses wallet Solana. Per                                    
+INFO:     38.52.148.10:45090 - "POST /chat HTTP/1.1" 200 OK
+[12:57:39] INFO     Router selected model: qwen/qwen3-coder                     
+           INFO     Using model: qwen/qwen3-coder                               
+[12:57:42] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[12:57:50] ERROR    SiCuan brain error: Expecting value: line 1 column 1 (char  
+                    0)                                                          
+INFO:     38.52.148.10:48144 - "POST /chat HTTP/1.1" 200 OK
+[13:00:22] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[13:00:23] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[13:00:29] INFO     SiCuan decided: build_project | User minta generate wallet  
+                    baru untuk trading bot                                      
+Brain: chat | file=None | project=None
+INFO:     38.52.148.10:47980 - "POST /chat HTTP/1.1" 200 OK
+[13:01:22] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[13:01:23] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[13:01:27] INFO     SiCuan decided: modify_project | User meminta generate      
+                    wallet baru dengan private key untuk b                      
+INFO:     38.52.148.10:53906 - "POST /chat HTTP/1.1" 200 OK
+[13:01:37] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[13:01:40] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[13:01:46] INFO     SiCuan decided: get_file | User meminta detail wallet baru  
+                    yang sudah digenerate, file                                 
+INFO:     38.52.148.10:57630 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:46636 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:46650 - "GET /projects HTTP/1.1" 200 OK
+INFO:     202.6.192.2:46634 - "GET /health HTTP/1.1" 200 OK
+[13:13:27] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[13:13:28] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[13:13:39] INFO     SiCuan decided: get_file | User meminta private key wallet  
+                    baru yang sudah digenerate.                                 
+INFO:     202.6.192.2:46652 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:37094 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:37126 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:37110 - "GET /health HTTP/1.1" 200 OK
+[14:14:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     38.52.148.10:37148 - "GET /health HTTP/1.1" 200 OK
+[14:14:21] INFO     SiCuan decided: get_file | User meminta status dan perlu    
+                    melihat atau mengunduh file .e                              
+INFO:     38.52.148.10:37132 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[14:14:33] INFO     SiCuan decided: show_log | User minta tampilkan log trading 
+                    bot, jadi perlu action show                                 
+INFO:     38.52.148.10:43202 - "POST /chat HTTP/1.1" 200 OK
+[14:14:39] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+[14:14:48] INFO     SiCuan decided: scan_project | User minta perbaiki tapi     
+                    tidak spesifik, jadi perlu scan dul                         
+INFO:     38.52.148.10:58360 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:40348 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:40126 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:40122 - "GET /health HTTP/1.1" 200 OK
+[14:27:28] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     38.52.148.10:40124 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:33542 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     38.52.148.10:33572 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:33558 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:33568 - "GET /uploads/video_ce2bc15a_preview.jpg HTTP/1.1" 200 OK
+[14:27:38] INFO     SiCuan decided: null | Menampilkan status umum berdasarkan  
+                    data nyata yang ada tanp                                    
+INFO:     38.52.148.10:40136 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 200 
+                    OK"                                                         
+INFO:     38.52.148.10:33586 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+[14:27:49] INFO     SiCuan decided: null | User meminta tampilan log, dan sudah 
+                    ditampilkan log terakhi                                     
+INFO:     38.52.148.10:33580 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:59276 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:43632 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:43646 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:35546 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     38.52.148.10:43640 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:35574 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:35570 - "GET /uploads/video_ce2bc15a_preview.jpg HTTP/1.1" 200 OK
+INFO:     38.52.148.10:35562 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+[15:40:46] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[15:40:49] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+INFO:     38.52.148.10:35586 - "GET /health HTTP/1.1" 200 OK
+[15:40:51] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[15:40:52] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[15:40:54] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cceba3f0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:43660 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[15:40:56] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[15:40:57] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[15:40:59] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cdfd79e0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:55968 - "POST /chat HTTP/1.1" 200 OK
+[15:41:10] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[15:41:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[15:41:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cdfd79e0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:46010 - "POST /chat HTTP/1.1" 200 OK
+INFO:     182.2.53.229:46444 - "GET /health HTTP/1.1" 200 OK
+INFO:     182.2.53.229:46428 - "GET /health HTTP/1.1" 200 OK
+INFO:     182.2.53.229:46448 - "GET /projects HTTP/1.1" 200 OK
+[16:07:03] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[16:07:04] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:07:06] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:07:08] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cceea990    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     182.2.53.229:46464 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:07:10] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:07:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cceea930    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     182.2.53.229:46478 - "POST /chat HTTP/1.1" 200 OK
+[16:16:17] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[16:16:18] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:16:20] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[16:16:22] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf1d640    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     182.2.53.229:58732 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc462360    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     182.2.53.229:58742 - "POST /chat HTTP/1.1" 200 OK
+INFO:     182.2.53.229:39220 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     182.2.53.229:39230 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+INFO:     182.2.53.229:39240 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+INFO:     182.2.53.229:39232 - "GET /uploads/video_ce2bc15a_preview.jpg HTTP/1.1" 200 OK
+INFO:     182.2.53.229:39770 - "GET /health HTTP/1.1" 200 OK
+INFO:     182.2.53.229:33434 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:56220 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:34704 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:36638 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:36630 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:36640 - "GET /projects HTTP/1.1" 200 OK
+[17:49:50] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[17:49:51] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:49:53] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:49:55] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf1f140    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:36648 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:49:57] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[17:49:58] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:50:00] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc613500    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:58680 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49150 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49158 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49134 - "GET /health HTTP/1.1" 200 OK
+[17:52:11] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[17:52:12] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:16] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc55fc50    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:49162 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:18] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:20] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496d0e767b0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60640 - "POST /chat HTTP/1.1" 200 OK
+[17:52:24] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:26] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:52:28] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc6120c0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:43952 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:48164 - "GET /projects HTTP/1.1" 200 OK
+[17:52:59] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:53:01] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+INFO:     38.52.148.10:48160 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:48156 - "GET /health HTTP/1.1" 200 OK
+[17:53:03] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44f9e0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:48174 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:53:05] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:53:07] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44ea20    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:48180 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:56498 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:33304 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60828 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60844 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60856 - "GET /projects HTTP/1.1" 200 OK
+[17:57:05] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:57:07] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:57:09] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+[17:57:10] ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cdda8980    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60860 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:57:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[17:57:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc45d7c0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60870 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57144 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57988 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     38.52.148.10:57994 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:58020 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+INFO:     38.52.148.10:58008 - "GET /uploads/video_ce2bc15a_preview.jpg HTTP/1.1" 200 OK
+INFO:     38.52.148.10:47900 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     38.52.148.10:53242 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60316 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60302 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60328 - "GET /projects HTTP/1.1" 200 OK
+[22:23:06] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:23:08] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:23:10] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44d970    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60330 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:23:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:23:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+[22:23:15] ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44c980    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60344 - "POST /chat HTTP/1.1" 200 OK
+[22:24:35] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:24:37] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:24:39] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[22:24:40] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc445790    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:35958 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:38662 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:55760 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:55752 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:55774 - "GET /projects HTTP/1.1" 200 OK
+[22:35:25] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+[22:35:26] ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:35:28] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:35:30] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44f440    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:55778 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:35:32] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:35:34] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf01130    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:55780 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:34210 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:34212 - "GET /health HTTP/1.1" 200 OK
+[22:36:53] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+INFO:     38.52.148.10:34218 - "GET /projects HTTP/1.1" 200 OK
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:36:55] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:36:57] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44e5d0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:34224 - "POST /chat HTTP/1.1" 200 OK
+[22:36:58] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:37:00] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[22:37:02] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc5c3650    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:34230 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:52164 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:52162 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:52170 - "GET /projects HTTP/1.1" 200 OK
+[01:36:03] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[01:36:05] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:07] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:09] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf02480    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:52176 - "POST /chat HTTP/1.1" 200 OK
+[01:36:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:16] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc5c3e30    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:53250 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49936 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49960 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:49948 - "GET /health HTTP/1.1" 200 OK
+[01:36:40] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:42] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[01:36:43] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:45] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44c4d0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:49962 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+[01:36:46] INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:48] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:36:50] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc462cc0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:49964 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:45392 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:45404 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:45408 - "GET /projects HTTP/1.1" 200 OK
+[01:44:44] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+[01:44:45] ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:44:47] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:44:49] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc4a5340    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:45424 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:44:51] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[01:44:53] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccee9280    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:57266 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60736 - "GET /projects HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60732 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60718 - "GET /health HTTP/1.1" 200 OK
+[05:17:09] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+[05:17:10] ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:17:12] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:17:14] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cceba150    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:60738 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:17:16] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:17:18] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc610a70    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:37082 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:42268 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:42284 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:42286 - "GET /projects HTTP/1.1" 200 OK
+[05:20:26] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:20:28] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:20:30] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf03ef0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:42290 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:20:32] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[05:20:34] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496ccf02630    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     38.52.148.10:42296 - "POST /chat HTTP/1.1" 200 OK
+INFO:     38.52.148.10:60250 - "GET /health HTTP/1.1" 200 OK
+INFO:     38.52.148.10:37802 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59264 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59268 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59280 - "GET /projects HTTP/1.1" 200 OK
+[06:48:26] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:48:28] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:48:30] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cd2fede0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     202.6.192.2:59286 - "POST /chat HTTP/1.1" 200 OK
+[06:48:31] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+INFO:     202.6.192.2:59312 - "GET /media/gallery HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59324 - "GET /uploads/video_5b41e2e9_final.mp4 HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59332 - "GET /uploads/video_ce2bc15a_preview.jpg HTTP/1.1" 200 OK
+INFO:     202.6.192.2:59346 - "GET /uploads/video_ce2bc15a_final.mp4 HTTP/1.1" 200 OK
+[06:48:33] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:48:35] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc44fce0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     202.6.192.2:59298 - "POST /chat HTTP/1.1" 200 OK
+INFO:     202.6.192.2:34542 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:34552 - "GET /health HTTP/1.1" 200 OK
+INFO:     202.6.192.2:34560 - "GET /projects HTTP/1.1" 200 OK
+[06:49:34] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[06:49:35] INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:49:37] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:49:38] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:49:39] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496d0e76720    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     202.6.192.2:34576 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:49:40] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+[06:49:41] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+[06:49:43] INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc55f170    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     202.6.192.2:34582 - "POST /chat HTTP/1.1" 200 OK
+           INFO     Router selected model: deepseek/deepseek-chat               
+           INFO     Using model: deepseek/deepseek-chat                         
+           INFO     HTTP Request: POST                                          
+                    https://openrouter.ai/api/v1/chat/completions "HTTP/1.1 403 
+                    Forbidden"                                                  
+           ERROR    LLM call failed: Error code: 403 - {'error': {'message':    
+                    'Key limit exceeded (total limit). Manage it using          
+                    https://openrouter.ai/workspaces/default/keys/66d535d3eb82bb
+                    31afca06a4bf8b7dd8d9605046819c8eb7706da900a64b0659', 'code':
+                    403}}                                                       
+           ERROR    SiCuan brain error: RetryError[<Future at 0x7496cc6132c0    
+                    state=finished raised PermissionDeniedError>]               
+INFO:     202.6.192.2:34578 - "POST /chat HTTP/1.1" 200 OK
 INFO:     Shutting down
 INFO:     Waiting for application shutdown.
 INFO:     Application shutdown complete.
-INFO:     Finished server process [2858929]
+INFO:     Finished server process [3107036]

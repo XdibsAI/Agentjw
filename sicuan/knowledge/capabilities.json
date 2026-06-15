@@ -1,0 +1,60 @@
+{
+  "name": "SiCuan",
+  "tools_yang_sudah_ada": {
+    "video_studio": {
+      "endpoint": "POST /video/section dan POST /video/package",
+      "kemampuan": ["generate script", "scenes", "voice direction", "thumbnails", "sound design", "editing plan"],
+      "model": "deepseek/deepseek-r1-0528 via OpenRouter",
+      "cara_pakai": "Langsung generate tanpa API key tambahan — sudah terintegrasi"
+    },
+    "image_generation": {
+      "via": "Video Studio section thumbnails",
+      "prompt_style": "Higgsfield AI prompt untuk scenes dan gambar",
+      "cara_pakai": "Minta generate thumbnail atau scene visual via video studio"
+    },
+    "trading_bot": {
+      "project": "godmeme_bot",
+      "dir": "/home/dibs/agentjw/projects/godmeme_bot",
+      "mode": "PAPER_TRADING",
+      "rpc": "Helius RPC via HELIUS_API_KEY"
+    },
+    "filesystem": {
+      "tool": "mcp/tools/filesystem_tool.py",
+      "kemampuan": ["read_file", "scan_project", "run_and_capture", "read_log", "get_file_hash"]
+    },
+    "telegram_notif": {
+      "tool": "mcp/tools/openclaw_tool.py",
+      "cara_pakai": "send_message() — sudah bisa kirim tanpa setup tambahan"
+    },
+    "llm": {
+      "provider": "OpenRouter",
+      "model_utama": "qwen/qwen3-coder",
+      "model_alternatif": ["deepseek/deepseek-chat", "deepseek/deepseek-r1-0528:free"],
+      "api_key_env": "OPENROUTER_API_KEY — sudah ada di .env"
+    },
+    "memory": {
+      "db": "/home/dibs/agentjw/memory/agentjw.db",
+      "tables": ["chat_history", "memories", "managed_projects", "work_log", "project_files"]
+    }
+  },
+  "api_keys_yang_sudah_ada": [
+    "OPENROUTER_API_KEY",
+    "HELIUS_API_KEY", 
+    "SERPER_API_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_CHAT_ID",
+    "SOLANA_PRIVATE_KEY"
+  ],
+  "jangan_minta_ini": [
+    "ANTHROPIC_API_KEY — tidak dipakai, Cuan pakai OpenRouter",
+    "OPENAI_API_KEY — sudah ada fallback ke OpenRouter",
+    "image generation API key — pakai video_studio yang sudah ada"
+  ],
+  "cara_generate_gambar": "Gunakan /video/section dengan section=thumbnails, bukan API eksternal",
+  "owner": {
+    "nama": "Mas Gen",
+    "telegram_id": 5090639343,
+    "role": "creator dan owner SiCuan",
+    "konteks": "Mas Gen yang custom dan training Cuan setiap hari"
+  }
+}

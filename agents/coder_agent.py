@@ -30,30 +30,40 @@ class CoderAgent(BaseAgent):
         plan: ProjectPlan = input.get("plan")
         if not plan:
             raise ValueError("CoderAgent requires a ProjectPlan")
+
         self._log(f"Generating {len(plan.files_to_create)} files for: {plan.project_name}")
+
         generated_files = []
         file_contents = {}
+
         for file_info in plan.files_to_create:
             file_path = file_info["path"] if isinstance(file_info, dict) else file_info.path
             file_desc = file_info.get("description", "") if isinstance(file_info, dict) else file_info.description
+
             self._log(f"  Writing: {file_path}")
+
             code = self._generate_file(plan, file_path, file_desc, file_contents)
+
             code_file = CodeFile(
                 path=file_path,
                 content=code,
                 language=self._detect_language(file_path),
                 description=file_desc,
             )
+
             generated_files.append(code_file)
             file_contents[file_path] = code[:500]
+
         return generated_files
 
     def _generate_file(self, plan, file_path, file_description, existing_files) -> str:
         context_info = ""
+
         if existing_files:
             context_info = "\n\nALREADY GENERATED FILES:\n"
             for fp, fc in list(existing_files.items())[:3]:
                 context_info += f"\n--- {fp} ---\n{fc[:300]}\n"
+
         messages = [{
             "role": "user",
             "content": (
@@ -68,11 +78,15 @@ class CoderAgent(BaseAgent):
                 f"Output ONLY raw Python code. No markdown. No think tags."
             )
         }]
+
         code = self._chat(messages, temperature=0.2, max_tokens=8192)
         return self._clean_code(code)
 
     def generate_single_file(self, description: str, context: str = "") -> str:
-        messages = [{"role": "user", "content": f"Write complete Python code for: {description}\n{context}\nRaw Python only."}]
+        messages = [{
+            "role": "user",
+            "content": f"Write complete Python code for: {description}\n{context}\nRaw Python only."
+        }]
         return self._clean_code(self._chat(messages, temperature=0.2, max_tokens=8192))
 
     def _clean_code(self, code: str) -> str:
