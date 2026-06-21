@@ -1,0 +1,31 @@
+{
+  "current_skills": [
+    "Python",
+    "FastAPI",
+    "Telegram Bot",
+    "Solana/DeFi",
+    "LLM Integration"
+  ],
+  "learning_queue": [
+    {
+      "topic": "DeFi MEV & sandwich strategy",
+      "priority": "high",
+      "status": "in_progress",
+      "resource": "internal - godmeme_bot codebase"
+    },
+    {
+      "topic": "Marketing funnel automation",
+      "priority": "medium",
+      "status": "in_progress",
+      "resource": "tbd"
+    },
+    {
+      "topic": "LLM fine-tuning untuk trading signal",
+      "priority": "medium",
+      "status": "in_progress",
+      "resource": "tbd"
+    }
+  ],
+  "completed": [],
+  "weekly_learning_hours": 5
+}

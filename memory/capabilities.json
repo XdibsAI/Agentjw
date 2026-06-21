@@ -1,0 +1,11 @@
+{
+  "coding": true,
+  "debugging": true,
+  "filesystem": true,
+  "telegram": true,
+  "video": true,
+  "youtube": true,
+  "trading": true,
+  "mcp": true,
+  "memory": true
+}

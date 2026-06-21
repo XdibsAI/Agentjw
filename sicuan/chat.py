@@ -67,6 +67,22 @@ class SiCuanChat:
         action = result.get("action")
         action_target = result.get("action_target", "")
 
+        # Action yang FAKTUAL — hasil eksekusi WAJIB menggantikan total response
+        # LLM sebelumnya, karena LLM bisa mengarang detail (nama file, isi kode,
+        # angka) sebelum action benar-benar dijalankan. Jangan pernah digabung,
+        # supaya karangan tidak nempel di depan data asli.
+        FACTUAL_OVERRIDE_ACTIONS = {
+            "scan_project", "get_file", "show_log", "video_info",
+            "list_projects", "gallery", "godmeme_status", "project_summary",
+            "trace_code",
+        }
+
+        # Action yang sudah punya verifikasi sendiri (lewat auditor_agent) —
+        # response auditor JUGA wajib full-override, bukan digabung.
+        AUDITED_ACTIONS = {
+            "repair_project", "modify_logic", "modify_project",
+        }
+
         # Execute action kalau ada
         if action and action not in ("null", None, "request_api_key"):
             try:
@@ -74,8 +90,10 @@ class SiCuanChat:
                     action, action_target, user_message, self.session_id
                 )
                 if action_result:
-                    # Kalau action_result adalah permintaan API key, override response
                     if "Sebentar Mas" in action_result and ".env" in action_result:
+                        response_text = action_result
+                    elif action in FACTUAL_OVERRIDE_ACTIONS or action in AUDITED_ACTIONS:
+                        # Full override — buang response karangan LLM sepenuhnya
                         response_text = action_result
                     elif action_result not in response_text:
                         response_text += "\n\n" + action_result

@@ -1,62 +1,83 @@
-# ── Python ────────────────────────────────────────────────────────────────────
+# Python cache
 __pycache__/
 *.py[cod]
 *$py.class
-*.so
-*.egg
-*.egg-info/
-dist/
-build/
-.eggs/
-.Python
-pip-log.txt
-pip-delete-this-directory.txt
 
-# ── Virtual Environment ───────────────────────────────────────────────────────
+# Virtual environment
 venv/
-env/
-ENV/
 .venv/
+env/
 
-# ── Environment / Secrets ─────────────────────────────────────────────────────
+# Secrets
 .env
-.env.local
-.env.*.local
+.env.*
 *.key
 secrets.json
 
-# ── AgentJW Runtime ───────────────────────────────────────────────────────────
-memory/agentjw.db
-memory/chroma_db/
-memory/projects_db/
-logs/
-runtime/sandbox/
-projects/
-
-# ── IDE ───────────────────────────────────────────────────────────────────────
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+
+# OS
 .DS_Store
 Thumbs.db
 
-# ── APK / Build artifacts ─────────────────────────────────────────────────────
+# Build artifacts
 *.apk
 *.aab
 *.ipa
 
-# ── Backups ───────────────────────────────────────────────────────────────────
-backups/
+# Runtime logs
+logs/*.log
+logs/*.pid
+
+# Temporary media output
+*TEMP_MPY*
+uploads/*.mp4
+uploads/*.jpg
+uploads/*.png
+
+# Python backup files
 *.bak
 *.backup
+*.before_*
+*.pre_*
 
-# ── Test / Coverage ───────────────────────────────────────────────────────────
-.pytest_cache/
-.coverage
-htmlcov/
+# Runtime database
+memory/*.db
+memory/projects_db/
 
-# ── Misc ─────────────────────────────────────────────────────────────────────
-*.tar.gz
-*.zip
-node_modules/
+# Generated state
+memory/chroma_db/
+memory/optimization_reports/
+
+# Old archive
+backup_video_patch/
+
+# Sicuan runtime
+logs/
+backups/
+
+# Project runtime
+projects/*/__pycache__/
+projects/*/*.log
+projects/*/*.db
+projects/*/.env
+
+# Database runtime
+*.db
+*.sqlite
+
+# Temporary trace
+trace
+
+# Godmeme runtime
+projects/*/*.db
+projects/*/*.log
+projects/*/*_status.json
+projects/*/paper_wallet.json
+projects/*/token_memory.json
+projects/*/*safe_backup
+

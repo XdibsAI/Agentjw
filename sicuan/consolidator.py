@@ -36,7 +36,7 @@ async def nightly_consolidation():
 
     # 2. Ambil semua memories yang ada
     memories = conn.execute("""
-        SELECT topic, content, importance FROM memories
+        SELECT metadata, content, importance FROM memories
         ORDER BY importance DESC LIMIT 50
     """).fetchall()
 
@@ -63,7 +63,13 @@ async def nightly_consolidation():
         for w in worklogs
     ])
 
-    existing_memory_topics = [m['topic'] for m in memories]
+    existing_memory_topics = []
+    for m in memories:
+        try:
+            meta = json.loads(m["metadata"] or "{}")
+            existing_memory_topics.append(meta.get("topic", "unknown"))
+        except Exception:
+            existing_memory_topics.append("unknown")
 
     prompt = f"""Kamu SiCuan sedang melakukan nightly consolidation.
 Ini yang terjadi hari ini:
@@ -110,7 +116,7 @@ Respond JSON:
             memory_engine.save_insight(
                 topic=insight["topic"],
                 content=insight["content"],
-                importance=insight.get("improvement", 0.7)
+                importance=insight.get("importance", 0.7)
             )
             saved += 1
 

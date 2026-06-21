@@ -52,7 +52,8 @@ class CLI:
     def run(self):
         config.ensure_dirs()
         console.print(f"[bold yellow]{BANNER}[/bold yellow]")
-        projects = memory_store.list_projects()
+        from memory.unified_projects import unified_projects
+        projects = unified_projects.list_projects()
         msgs = len(self.sicuan.history)
         console.print(
             f"[dim]Session: {self.session_id[:8]} | "
@@ -116,7 +117,8 @@ class CLI:
 
     def _show_projects(self):
         from rich.table import Table
-        projects = memory_store.list_projects()
+        from memory.unified_projects import unified_projects
+        projects = unified_projects.list_projects()
         if not projects:
             console.print("[dim]Belum ada project[/dim]")
             return
@@ -144,7 +146,8 @@ class CLI:
         table.add_row("Model", config.get_model())
         table.add_row("Session", self.session_id[:16] + "...")
         table.add_row("Chat history", str(len(self.sicuan.history)))
-        table.add_row("Projects", str(len(memory_store.list_projects())))
+        from memory.unified_projects import unified_projects
+        table.add_row("Projects", str(len(unified_projects.list_projects())))
         table.add_row("Memory DB", str(config.SQLITE_PATH))
         console.print(table)
 

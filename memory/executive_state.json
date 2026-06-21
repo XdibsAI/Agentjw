@@ -1,0 +1,68 @@
+{
+  "current_focus": "godmeme_bot",
+  "priority": [],
+  "next_action": null,
+  "remaining_tasks": 0,
+  "last_result": {
+    "buy_conditions": [
+      "not mint or len(mint) < 30",
+      "mint in self.positions",
+      "len(self.positions) >= config.MAX_OPEN_POSITIONS",
+      "self.daily_pnl_sol <= -config.MAX_DAILY_LOSS_SOL",
+      "price_change > 5",
+      "price_change > 15",
+      "volume > 10000",
+      "liquidity > 50000",
+      "age < 10",
+      "age < 30",
+      "liq >= config.MIN_LIQUIDITY_USD and vol5m >= config.MIN_VOLUME_5M_USD and (mcap <= config.MAX_MCAP_USD) and (age_min <= 60)"
+    ],
+    "sell_conditions": [
+      "not current_price or current_price <= 0",
+      "current_price <= pos.stop_loss_price",
+      "should_sell",
+      "current_price >= pos.take_profit_price",
+      "held_min >= 240"
+    ],
+    "score_rules": [
+      {
+        "condition": "unknown",
+        "score": "1"
+      },
+      {
+        "condition": "unknown",
+        "score": "2"
+      },
+      {
+        "condition": "unknown",
+        "score": "1"
+      },
+      {
+        "condition": "unknown",
+        "score": "2"
+      },
+      {
+        "condition": "unknown",
+        "score": "1"
+      },
+      {
+        "condition": "unknown",
+        "score": "2"
+      },
+      {
+        "condition": "unknown",
+        "score": "1"
+      }
+    ],
+    "recommendations": [
+      "missing holder distribution check",
+      "review liquidity threshold"
+    ],
+    "risk_level": "medium",
+    "status": "completed",
+    "action": "strategy_ast_analysis"
+  },
+  "last_action": "read_log",
+  "last_summary": "Membaca 200 baris log terakhir dari project godmeme_bot untuk menganalisis aktivitas dan error terkini guna mengevaluasi kesehatan codebase.",
+  "last_run": "2026-06-21T05:34:09.000145"
+}

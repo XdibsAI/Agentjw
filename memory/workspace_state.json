@@ -1,0 +1,97 @@
+{
+  "root": "/home/dibs/agentjw",
+  "systems": {
+    "agents": {
+      "path": "/home/dibs/agentjw/agents",
+      "python_files": 16,
+      "exists": true
+    },
+    "core": {
+      "path": "/home/dibs/agentjw/core",
+      "python_files": 9,
+      "exists": true
+    },
+    "memory": {
+      "path": "/home/dibs/agentjw/memory",
+      "python_files": 6,
+      "exists": true
+    },
+    "tools": {
+      "path": "/home/dibs/agentjw/tools",
+      "python_files": 15,
+      "exists": true
+    },
+    "mcp": {
+      "path": "/home/dibs/agentjw/mcp",
+      "python_files": 7,
+      "exists": true
+    },
+    "runtime": {
+      "path": "/home/dibs/agentjw/runtime",
+      "python_files": 3,
+      "exists": true
+    },
+    "swarm": {
+      "path": "/home/dibs/agentjw/swarm",
+      "python_files": 2,
+      "exists": true
+    },
+    "sicuan": {
+      "path": "/home/dibs/agentjw/sicuan",
+      "python_files": 37,
+      "exists": true
+    }
+  },
+  "projects": {
+    "flask_todo_api": {
+      "path": "/home/dibs/agentjw/projects/flask_todo_api",
+      "python_files": 3,
+      "status": "active"
+    },
+    "godmeme_bot": {
+      "path": "/home/dibs/agentjw/projects/godmeme_bot",
+      "python_files": 17,
+      "status": "active"
+    }
+  },
+  "logs": [
+    "/home/dibs/agentjw/logs/20260609_agentjw.log",
+    "/home/dibs/agentjw/logs/api.log",
+    "/home/dibs/agentjw/logs/20260617_agentjw.log",
+    "/home/dibs/agentjw/logs/20260603_agentjw.log",
+    "/home/dibs/agentjw/logs/20260618_agentjw.log",
+    "/home/dibs/agentjw/logs/download.log",
+    "/home/dibs/agentjw/logs/download_server.log",
+    "/home/dibs/agentjw/logs/sicuan_scheduler.log",
+    "/home/dibs/agentjw/logs/20260611_agentjw.log",
+    "/home/dibs/agentjw/logs/fix_all_20260612_020642.log",
+    "/home/dibs/agentjw/logs/api_server.log",
+    "/home/dibs/agentjw/logs/20260614_agentjw.log",
+    "/home/dibs/agentjw/logs/20260604_agentjw.log",
+    "/home/dibs/agentjw/logs/sicuan_telegram.log",
+    "/home/dibs/agentjw/logs/20260616_agentjw.log",
+    "/home/dibs/agentjw/logs/20260612_agentjw.log",
+    "/home/dibs/agentjw/logs/20260606_agentjw.log",
+    "/home/dibs/agentjw/logs/20260610_agentjw.log",
+    "/home/dibs/agentjw/logs/20260607_agentjw.log",
+    "/home/dibs/agentjw/logs/20260613_agentjw.log",
+    "/home/dibs/agentjw/logs/20260608_agentjw.log",
+    "/home/dibs/agentjw/logs/20260619_agentjw.log",
+    "/home/dibs/agentjw/logs/20260615_agentjw.log",
+    "/home/dibs/agentjw/logs/20260605_agentjw.log"
+  ],
+  "databases": [
+    "/home/dibs/agentjw/trading.db",
+    "/home/dibs/agentjw/memory/agentjw.db",
+    "/home/dibs/agentjw/projects/godmeme_bot/trading.db",
+    "/home/dibs/agentjw/projects/flask_todo_api/instance/todos.db",
+    "/home/dibs/agentjw/backups/trash/simple_flask_api_bd2eca22_20260616/database.db",
+    "/home/dibs/agentjw/memory/projects_db/projects.db",
+    "/home/dibs/agentjw/memory/projects_db/project_registry.db"
+  ],
+  "python_files": 95,
+  "total_files": 17793,
+  "useful_files": 280,
+  "projects_count": 2,
+  "systems_count": 8
+}

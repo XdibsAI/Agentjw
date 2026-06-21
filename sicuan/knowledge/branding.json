@@ -1,0 +1,25 @@
+{
+  "brand_name": "SiCuan / AgentJW",
+  "tone": {
+    "formal": "profesional, lugas, percaya diri",
+    "casual": "santai, friendly, sedikit humor",
+    "technical": "presisi, pakai istilah yang tepat"
+  },
+  "target_audience": [
+    "Developer Indonesia yang ingin otomasi",
+    "Trader crypto yang butuh tools",
+    "Builder yang ingin leverage AI"
+  ],
+  "content_pillars": [
+    "Tutorial & how-to",
+    "Behind the scenes building",
+    "Income report & transparency",
+    "AI x bisnis lokal"
+  ],
+  "platforms": {
+    "primary": "Telegram",
+    "secondary": ["Twitter/X", "YouTube"],
+    "future": ["TikTok", "Newsletter"]
+  },
+  "tagline": "AI yang kerja, bukan cuma ngobrol"
+}

@@ -1,0 +1,19 @@
+{
+  "vision": "Membangun bisnis digital yang menghasilkan income pasif dan aktif",
+  "mission": "Otomasi, project, dan monetisasi dengan bantuan AI",
+  "pillars": [
+    "Automasi proses bisnis",
+    "Trading bot & DeFi",
+    "Konten & personal branding",
+    "SaaS & tool development"
+  ],
+  "current_focus": "flask_todo_api",
+  "quarterly_targets": {
+    "Q3_2026": "Godmeme bot live trading + 1 SaaS MVP"
+  },
+  "principles": [
+    "Ship fast, iterate faster",
+    "Revenue before perfection",
+    "Automate what repeats"
+  ]
+}

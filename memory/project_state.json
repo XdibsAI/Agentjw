@@ -1,0 +1,12 @@
+{
+  "flask_todo_api": {
+    "path": "/home/dibs/agentjw/projects/flask_todo_api",
+    "python_files": 3,
+    "status": "active"
+  },
+  "godmeme_bot": {
+    "path": "/home/dibs/agentjw/projects/godmeme_bot",
+    "python_files": 14,
+    "status": "active"
+  }
+}

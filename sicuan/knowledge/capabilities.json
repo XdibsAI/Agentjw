@@ -3,7 +3,14 @@
   "tools_yang_sudah_ada": {
     "video_studio": {
       "endpoint": "POST /video/section dan POST /video/package",
-      "kemampuan": ["generate script", "scenes", "voice direction", "thumbnails", "sound design", "editing plan"],
+      "kemampuan": [
+        "generate script",
+        "scenes",
+        "voice direction",
+        "thumbnails",
+        "sound design",
+        "editing plan"
+      ],
       "model": "deepseek/deepseek-r1-0528 via OpenRouter",
       "cara_pakai": "Langsung generate tanpa API key tambahan — sudah terintegrasi"
     },
@@ -20,7 +27,13 @@
     },
     "filesystem": {
       "tool": "mcp/tools/filesystem_tool.py",
-      "kemampuan": ["read_file", "scan_project", "run_and_capture", "read_log", "get_file_hash"]
+      "kemampuan": [
+        "read_file",
+        "scan_project",
+        "run_and_capture",
+        "read_log",
+        "get_file_hash"
+      ]
     },
     "telegram_notif": {
       "tool": "mcp/tools/openclaw_tool.py",
@@ -29,17 +42,26 @@
     "llm": {
       "provider": "OpenRouter",
       "model_utama": "qwen/qwen3-coder",
-      "model_alternatif": ["deepseek/deepseek-chat", "deepseek/deepseek-r1-0528:free"],
+      "model_alternatif": [
+        "deepseek/deepseek-chat",
+        "deepseek/deepseek-r1-0528:free"
+      ],
       "api_key_env": "OPENROUTER_API_KEY — sudah ada di .env"
     },
     "memory": {
       "db": "/home/dibs/agentjw/memory/agentjw.db",
-      "tables": ["chat_history", "memories", "managed_projects", "work_log", "project_files"]
+      "tables": [
+        "chat_history",
+        "memories",
+        "managed_projects",
+        "work_log",
+        "project_files"
+      ]
     }
   },
   "api_keys_yang_sudah_ada": [
     "OPENROUTER_API_KEY",
-    "HELIUS_API_KEY", 
+    "HELIUS_API_KEY",
     "SERPER_API_KEY",
     "TELEGRAM_BOT_TOKEN",
     "TELEGRAM_CHAT_ID",
@@ -56,5 +78,49 @@
     "telegram_id": 5090639343,
     "role": "creator dan owner SiCuan",
     "konteks": "Mas Gen yang custom dan training Cuan setiap hari"
+  },
+  "godmeme_bot_env": {
+    "file": "projects/godmeme_bot/.env",
+    "vars_yang_ada": [
+      "SOLANA_PRIVATE_KEY",
+      "SOLANA_RPC_URL",
+      "HELIUS_API_KEY",
+      "PAPER_TRADING",
+      "LIVE_TRADING",
+      "OPENROUTER_API_KEY",
+      "LOG_LEVEL",
+      "MIN_VOLUME_5M_USD",
+      "MAX_MCAP_USD"
+    ],
+    "vars_yang_belum_ada": [
+      "OPENROUTER_MODEL",
+      "SNIPER_INTERVAL",
+      "STRATEGY_INTERVAL",
+      "TELEGRAM_BOT_TOKEN",
+      "TELEGRAM_CHAT_ID"
+    ],
+    "catatan": "Pakai SOLANA_PRIVATE_KEY bukan WALLET_PRIVATE_KEY. Pakai TELEGRAM_CHAT_ID=5090639343"
+  },
+  "godmeme_bot_env_CORRECT": {
+    "PENTING": "Nama variable yang BENAR di godmeme_bot/.env:",
+    "private_key": "SOLANA_PRIVATE_KEY (BUKAN WALLET_PRIVATE_KEY)",
+    "public_key": "tidak perlu — dihitung otomatis dari private key",
+    "rpc": "SOLANA_RPC_URL dan HELIUS_API_KEY",
+    "status": "Semua sudah terisi. Bot sudah jalan dengan wallet 3Zgpx2pbA4T765V...",
+    "jangan_minta_lagi": [
+      "WALLET_PRIVATE_KEY",
+      "WALLET_PUBLIC_KEY"
+    ]
+  },
+  "godmeme_config": {
+    "MAX_OPEN_POSITIONS": 5,
+    "STOP_LOSS_PERCENT": 10,
+    "TAKE_PROFIT_MULTIPLIER": 2.0,
+    "DEFAULT_POSITION_SIZE_SOL": 0.1,
+    "MIN_LIQUIDITY_USD": 10000,
+    "MIN_VOLUME_5M_USD": 5000,
+    "MAX_MCAP_USD": 5000000,
+    "PAPER_TRADING": true,
+    "source": "dibaca dari projects/godmeme_bot/config.py"
   }
 }

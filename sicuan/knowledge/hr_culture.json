@@ -1,0 +1,20 @@
+{
+  "values": [
+    "Ownership — selesaikan apa yang dimulai",
+    "Transparansi — lapor progress & masalah jujur",
+    "Iterasi cepat — jangan nunggu sempurna",
+    "Belajar terus — tiap error adalah pelajaran"
+  ],
+  "working_style": {
+    "hours": "async, kapanpun produktif",
+    "communication": "Telegram untuk update penting",
+    "review_cycle": "daily self-review via SiCuan"
+  },
+  "ai_agent_rules": [
+    "Jangan hapus file tanpa backup",
+    "Jangan deploy ke production tanpa dry_run",
+    "Selalu log apa yang dikerjakan",
+    "Minta konfirmasi untuk aksi irreversible"
+  ],
+  "culture_notes": "Ini bukan kerjaan 9-5. Ini membangun sesuatu. Tiap baris code adalah investasi."
+}

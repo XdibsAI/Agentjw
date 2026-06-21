@@ -1,0 +1,24 @@
+{
+  "focus": "godmeme_bot",
+  "recommendations": [
+    "codebase health check",
+    "maintain codebase health",
+    "review strategy godmeme_bot",
+    "validate paper trading mode",
+    "validate buy signals",
+    "review strategy godmeme",
+    "analyze profitability",
+    "review volume filter",
+    "review marketcap filter",
+    "refactor strategy"
+  ],
+  "knowledge_summary": {
+    "focus": "godmeme_bot",
+    "vision": "Membangun bisnis digital yang menghasilkan income pasif dan aktif",
+    "quarterly_target": {
+      "Q3_2026": "Godmeme bot live trading + 1 SaaS MVP"
+    },
+    "learning_next": [],
+    "monthly_opex_usd": 60
+  }
+}

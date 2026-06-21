@@ -21,6 +21,44 @@ app = FastAPI(title="AgentJW API", version="2.0.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"],
                    allow_methods=["*"], allow_headers=["*"])
 
+# ── API Key Authentication ──
+import os as _os
+from fastapi import Request as _Request
+from fastapi.responses import JSONResponse as _JSONResponse
+from dotenv import load_dotenv as _load_dotenv
+_load_dotenv()
+
+_SICUAN_API_KEY = _os.getenv("SICUAN_API_KEY", "")
+
+# Endpoint yang TIDAK perlu auth (publik)
+_PUBLIC_PATHS = {
+    "/health", "/", "/docs", "/openapi.json",
+    "/docs/oauth2-redirect", "/redoc"
+}
+
+@app.middleware("http")
+async def _verify_api_key(request: _Request, call_next):
+    path = request.url.path
+
+    # Lewati auth untuk endpoint publik & static files
+    if path in _PUBLIC_PATHS or path.startswith("/uploads"):
+        return await call_next(request)
+
+    if not _SICUAN_API_KEY:
+        # Kalau key belum diset, jangan block (fail-open utk dev)
+        return await call_next(request)
+
+    provided = request.headers.get("x-api-key", "")
+
+    if provided != _SICUAN_API_KEY:
+        return _JSONResponse(
+            status_code=401,
+            content={"detail": "Invalid or missing API key. Set header X-API-Key."}
+        )
+
+    return await call_next(request)
+# ── END API Key Authentication ──
+
 # ── Models ───────────────────────────────────────────────────────────────────
 class ChatReq(BaseModel):
     message: str
@@ -326,8 +364,8 @@ def get_job(job_id: str):
 
 @app.get("/video/projects")
 def video_projects():
-    from memory.memory_store import memory_store
-    projects = memory_store.list_projects(tool_type="youtube")
+    from memory.unified_projects import unified_projects
+    projects = [p for p in unified_projects.list_projects() if p['tool_type']=='youtube']
     return {"projects": projects, "total": len(projects)}
 
 @app.get("/video/download/{project_id}")
@@ -362,7 +400,7 @@ def download_file(path: str):
 @app.get("/projects")
 def projects():
     from memory.memory_store import memory_store
-    return {"projects": memory_store.list_projects()}
+    return {"projects": unified_projects.list_projects()}
 
 
 @app.delete("/projects/{project_id}")
@@ -404,7 +442,7 @@ if __name__ == "__main__":
 async def get_projects():
     try:
         from memory.memory_store import memory_store
-        projects = memory_store.list_projects(limit=50)
+        projects = unified_projects.list_projects()[:50]
         formatted = [{
             "id": p.get("id",""), "name": p.get("name",""),
             "status": p.get("status","unknown"),
@@ -427,7 +465,7 @@ async def get_logs(project_id: str = None, lines: int = 100):
             all_lines = api_log.read_text(errors="ignore").splitlines()
             log_data["api_server"] = "\n".join(all_lines[-lines:])
         if project_id:
-            projects = memory_store.list_projects()
+            projects = unified_projects.list_projects()
             proj = next((p for p in projects if p["id"].startswith(project_id)), None)
             if proj:
                 proj_dir = P(proj["project_dir"])

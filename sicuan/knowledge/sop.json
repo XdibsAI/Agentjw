@@ -1,0 +1,26 @@
+{
+  "project_start": [
+    "Buat folder di projects/",
+    "Init requirements.txt",
+    "Buat README.md dengan goal & status",
+    "Daftarkan ke memory/project_state.json"
+  ],
+  "deploy_checklist": [
+    "Cek semua env variable tersedia",
+    "Test di mode dry_run dulu",
+    "Backup config lama sebelum replace",
+    "Log output ke logs/"
+  ],
+  "bug_handling": [
+    "Reproduksi error dulu",
+    "Buat .bak sebelum edit",
+    "Fix satu hal per commit",
+    "Verifikasi dengan syntax check"
+  ],
+  "daily_routine": [
+    "Review logs kemarin",
+    "Cek task_queue",
+    "Eksekusi 1-3 task prioritas tinggi",
+    "Update executive_state.json"
+  ]
+}

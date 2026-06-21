@@ -77,8 +77,8 @@ async def cmd_memory(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_projects(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    from memory.memory_store import memory_store
-    projects = memory_store.list_projects()
+    from memory.unified_projects import unified_projects
+    projects = unified_projects.list_projects()
     txt = f"📁 PROJECTS ({len(projects)}):\n\n"
     for p in projects[:15]:
         status_icon = "✅" if p["status"] == "success" else "⚠️" if p["status"] == "partial" else "🔄"
@@ -135,14 +135,26 @@ async def _process_and_reply(update: Update, ctx: ContextTypes.DEFAULT_TYPE, nam
                               user_id: int, text: str):
     """Core: SiCuan baca pesan, decide, respond"""
     try:
-        # Kalau pesan panjang (>500 char) dari owner → masuk ke learning pipeline
-        if is_owner(user_id) and len(text) > 500:
-            await update.message.reply_text(
-                "Teks panjang terdeteksi — aku pelajari dulu ya Mas Gen..."
-            )
-            result = await _learn_from_content(text, "telegram_message")
-            await update.message.reply_text(result)
-            return
+        # Kalau pesan panjang dari owner → cek dulu apakah itu log/output atau memang mau dipelajari
+        if is_owner(user_id) and len(text) > 1000:
+            # Jangan pelajari kalau itu output log/sistem
+            skip_keywords = [
+                "INFO", "ERROR", "WARNING", "Traceback", "starting", "initialized",
+                "✓", "✗", "---", "===", "tail -", "grep", "python3",
+                "2026-", "2025-", ".log", ".py:", "venv", "agentjw"
+            ]
+            is_log = sum(1 for k in skip_keywords if k in text) >= 3
+            
+            if is_log:
+                # Ini log/output — proses sebagai chat biasa
+                pass
+            else:
+                await update.message.reply_text(
+                    "Teks panjang terdeteksi — aku pelajari dulu ya Mas Gen..."
+                )
+                result = await _learn_from_content(text, "telegram_message")
+                await update.message.reply_text(result)
+                return
 
         # Image request → langsung generate, tidak perlu brain
         from core.image_service import ImageService

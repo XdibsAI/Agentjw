@@ -106,10 +106,27 @@ async def send_morning_briefing():
     except Exception as e:
         print(f"Morning briefing error: {e}")
 
+
+def run_autonomous_cycle():
+    """LLM-driven autonomous cycle — jalankan setiap 15 menit."""
+    try:
+        import sys
+        sys.path.insert(0, str(BASE.parent))
+        from sicuan.core.llm_task_executor import LLMTaskExecutor
+        executor = LLMTaskExecutor()
+        result = executor.run_cycle()
+        print(f"[autonomous] {result.get('summary', 'cycle done')}")
+    except Exception as e:
+        print(f"[autonomous] error: {e}")
+
 def run_scheduler():
     """Jalankan scheduler — fully autonomous"""
     print("SiCuan Scheduler started — fully autonomous mode")
 
+    # Autonomous LLM cycle setiap 15 menit
+    schedule.every(15).minutes.do(run_autonomous_cycle)
+
+    
     # Morning briefing jam 05:00 WIB = 22:00 UTC
     schedule.every().day.at("22:00").do(
         lambda: asyncio.run(send_morning_briefing())
