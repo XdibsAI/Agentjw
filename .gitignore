@@ -85,3 +85,7 @@ projects/*/*safe_backup
 # Historical backups
 backups/
 
+
+# Sicuan runtime state
+memory/execution_history.json
+memory/executive_state.json
