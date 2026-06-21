@@ -81,3 +81,7 @@ projects/*/paper_wallet.json
 projects/*/token_memory.json
 projects/*/*safe_backup
 
+
+# Historical backups
+backups/
+
