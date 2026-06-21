@@ -1,156 +1,133 @@
-import json
 from pathlib import Path
+import json
+import time
 
-from sicuan.core.task_executor import TaskExecutor
-from sicuan.core.reflection_engine import ReflectionEngine
-from sicuan.core.project_brain import ProjectBrain
-from sicuan.core.capability_engine import CapabilityEngine
-from sicuan.core.workspace_scanner import WorkspaceScanner
-from sicuan.core.task_generator import TaskGenerator
+from sicuan.core.autonomous_executor import AutonomousExecutor
+from sicuan.core.autonomous_action_bridge import AutonomousActionBridge
+from sicuan.core.autonomous_logic_runner import AutonomousLogicRunner
+from sicuan.core.autonomous_agent_executor import AutonomousAgentExecutor
 
-ROOT = Path(__file__).resolve().parents[2]
-MEMORY = ROOT / "memory"
+from sicuan.core.project_autonomy_manager import (
+    ProjectAutonomyManager
+)
 
 
 class AutonomousController:
 
-    def _load(self, file, default):
-        try:
-            if file.exists():
-                return json.loads(file.read_text())
-        except Exception:
-            pass
-        return default
+    def __init__(self):
+        self.manager = ProjectAutonomyManager()
+        self.executor = AutonomousExecutor()
+        self.bridge = AutonomousActionBridge()
+        self.logic_runner = AutonomousLogicRunner()
+        self.agent_executor = AutonomousAgentExecutor()
 
-    def _save(self, file, data):
-        file.write_text(
+
+    def audit(self, project_dir):
+
+        project_dir = Path(project_dir)
+
+        return self.manager.audit_project(
+            project_dir
+        )
+
+
+    def decide(self, project_dir):
+
+        project_dir = Path(project_dir)
+
+        return self.manager.next_action(
+            project_dir
+        )
+
+
+    def save_cycle_report(self, data):
+
+        memory = Path(
+            "memory/autonomy_reports.json"
+        )
+
+        memory.parent.mkdir(
+            exist_ok=True
+        )
+
+        reports = []
+
+        if memory.exists():
+            try:
+                reports = json.loads(
+                    memory.read_text()
+                )
+            except:
+                reports = []
+
+        reports.append(data)
+
+        memory.write_text(
             json.dumps(
-                data,
+                reports[-100:],
                 indent=2,
-                ensure_ascii=False
+                default=str
             )
         )
 
-    def _generate_tasks(self, result):
 
-        tasks = []
+    def run_cycle(self, project_dir):
 
-        if not isinstance(result, dict):
-            return tasks
+        project_dir = Path(project_dir)
 
-        for rec in result.get("recommendations", []):
-
-            r = rec.lower()
-
-            if "volume filter" in r:
-                tasks.append("Analyze volume filter")
-
-            elif "marketcap filter" in r:
-                tasks.append("Analyze marketcap filter")
-
-        return tasks
-
-    def run_once(self):
-
-        queue_file = MEMORY / "task_queue.json"
-
-        queue = self._load(queue_file, [])
-
-        if not queue:
-
-            projects = ProjectBrain().scan()
-            caps = CapabilityEngine().scan()
-            workspace = WorkspaceScanner().scan()
-
-            reflection = ReflectionEngine().reflect(
-                projects,
-                caps,
-                workspace
-            )
-
-            queue = TaskGenerator().generate(
-                reflection
-            )
-
-            self._save(
-                queue_file,
-                queue
-            )
-
-        executor = TaskExecutor()
-
-        result = executor.execute_next()
-
-        queue = self._load(
-            queue_file,
-            []
+        audit = self.audit(
+            project_dir
         )
 
-        new_tasks = self._generate_tasks(
+        decision = self.decide(
+            project_dir
+        )
+
+        result = {
+            "timestamp": time.time(),
+            "project": project_dir.name,
+            "audit": {
+                "confidence":
+                audit["trace"]["confidence"],
+
+                "features":
+                audit["trace"]["features"],
+
+                "functions":
+                list(
+                    audit["trace"]["functions"].keys()
+                )
+            },
+            "decision": decision
+        }
+
+
+        execution = self.executor.execute(
+            project_dir,
+            decision
+        )
+
+        result["execution"] = execution
+
+        result["next_step"] = self.bridge.dispatch(
+            project_dir,
+            execution
+        )
+
+        result["logic_task"] = self.logic_runner.run(
+            project_dir,
+            result["next_step"]
+        )
+
+        if result["logic_task"]["status"] == "QUEUED":
+
+            result["agent_result"] = self.agent_executor.execute(
+                result["logic_task"]["agent_task"]
+            )
+
+        self.save_cycle_report(
             result
         )
 
-        for task in new_tasks:
 
-            if task not in queue:
-                queue.append(task)
-
-        self._save(
-            queue_file,
-            queue
-        )
-
-        projects = ProjectBrain().scan()
-        caps = CapabilityEngine().scan()
-        workspace = WorkspaceScanner().scan()
-
-        reflection = ReflectionEngine().reflect(
-            projects,
-            caps,
-            workspace
-        )
-
-        executive = {
-            "current_focus":
-                reflection.get("current_focus"),
-
-            "priority":
-                reflection.get("priority"),
-
-            "next_action":
-                reflection.get("next_action"),
-
-            "remaining_tasks":
-                len(queue),
-
-            "last_result":
-                result
-        }
-
-        self._save(
-            MEMORY / "executive_state.json",
-            executive
-        )
-
-        review = {
-            "last_execution": result,
-            "generated_tasks": new_tasks,
-            "queue_size": len(queue)
-        }
-
-        self._save(
-            MEMORY / "self_review.json",
-            review
-        )
-
-        return {
-            "result": result,
-            "new_tasks": new_tasks,
-            "executive": executive
-        }
-
-
-if __name__ == "__main__":
-    print(
-        AutonomousController().run_once()
-    )
+        return result

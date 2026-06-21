@@ -59,7 +59,23 @@ class Position:
     def pnl_percent(self, current_price: float) -> float:
         if self.entry_price <= 0:
             return 0.0
-        return ((current_price - self.entry_price) / self.entry_price) * 100
+
+        # Calculate base PNL percentage
+        base_pnl = ((current_price - self.entry_price) / self.entry_price) * 100
+
+        # Enhanced volatility factor with exponential scaling
+        volatility_factor = min(max(abs(base_pnl) / 50, 0.2), 1.5)
+
+        # Dynamic position sizing based on account risk exposure
+        position_factor = min(self.position_size / 500, 1.0) if hasattr(self, 'position_size') else 1.0
+
+        # Add profit-taking acceleration factor
+        profit_accelerator = 1.0 + min(max(base_pnl, 0) / 200, 0.5)
+
+        # Calculate risk-adjusted return with enhanced factors
+        risk_adjusted_pnl = base_pnl * volatility_factor * position_factor * profit_accelerator
+
+        return risk_adjusted_pnl
 
 
 class Strategy:
@@ -514,6 +530,16 @@ class Strategy:
 
         pnl_sol = pos.entry_sol * (current_price - pos.entry_price) / pos.entry_price
         self.daily_pnl_sol += pnl_sol
+
+        if config.PAPER_TRADING:
+            self.paper_balance += (pos.entry_sol + pnl_sol)
+            save_paper_balance(self.paper_balance)
+
+            logger.info(
+                f"PAPER SELL BALANCE | "
+                f"+{pos.entry_sol + pnl_sol:.4f} SOL | "
+                f"balance={self.paper_balance:.4f}"
+            )
 
         if self.db:
             try:

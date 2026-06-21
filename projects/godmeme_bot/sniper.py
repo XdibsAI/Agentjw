@@ -70,16 +70,40 @@ class RaydiumClient:
 
 class RiskManager:
     def __init__(self):
-        pass
-    
+        self.max_daily_loss = Decimal('0.05')  # 5% of portfolio
+        self.max_position_risk = Decimal('0.02')  # 2% per position
+        self.current_daily_loss = Decimal('0')
+        self.portfolio_value = Decimal('1000')  # Default portfolio value
+        self.max_positions = 10  # Maximum concurrent positions
+        self.position_count = 0  # Current active positions
+        
     def can_open_position(self) -> bool:
-        return True
+        return (self.current_daily_loss < self.max_daily_loss * self.portfolio_value and 
+                self.position_count < self.max_positions)
     
     def calculate_position_size(self, price: Decimal, stop_loss_price: Decimal) -> Decimal:
-        return Decimal('0.1')
+        # Calculate risk per position (2% of portfolio)
+        risk_amount = self.portfolio_value * self.max_position_risk
+        price_risk = price - stop_loss_price
+        
+        if price_risk <= 0:
+            return Decimal('0')
+            
+        position_size = risk_amount / price_risk
+        return position_size.quantize(Decimal('0.000001'))
     
     def get_position_size(self, mint: str) -> Decimal:
-        return Decimal('0.1')
+        # Return fixed position size based on portfolio
+        return (self.portfolio_value * Decimal('0.01')).quantize(Decimal('0.000001'))
+    
+    def update_daily_loss(self, loss_amount: Decimal):
+        self.current_daily_loss += loss_amount
+        
+    def increment_position_count(self):
+        self.position_count += 1
+        
+    def decrement_position_count(self):
+        self.position_count = max(0, self.position_count - 1)
 
 class Database:
     async def initialize(self):
@@ -109,6 +133,10 @@ class SniperConfig:
     stop_loss_multiplier: Decimal = Decimal('0.5')
     max_concurrent_tokens: int = 5
     rug_pull_checks: bool = True
+    min_price_increase: Decimal = Decimal('1.2')  # Minimum 20% price increase target
+    volatility_threshold: Decimal = Decimal('0.3')  # 30% volatility threshold for risk adjustment
+    profit_target: Decimal = Decimal('1.5')  # 50% profit target
+    trailing_stop_loss: Decimal = Decimal('0.9')  # 10% trailing stop
 
 class SniperBot:
     def __init__(self):
@@ -125,6 +153,13 @@ class SniperBot:
         self.active_tokens: Dict[str, TokenInfo] = {}
         self.monitoring_tasks: Dict[str, asyncio.Task] = {}
         self.is_running = False
+        self.performance_metrics = {
+            'total_trades': 0,
+            'successful_trades': 0,
+            'total_profit': Decimal('0'),
+            'win_rate': 0.0,
+            'avg_profit_per_trade': Decimal('0')
+        }
         
     async def initialize(self):
         """Initialize the sniper bot"""
@@ -204,11 +239,17 @@ class SniperBot:
                 logger.warning("Risk limits exceeded, skipping buy")
                 return None
                 
-            # Calculate position size
-            position_size = self.risk_manager.calculate_position_size(
+            # Calculate position size with volatility adjustment
+            volatility_adjustment = Decimal('1.0')
+            if hasattr(token, 'volatility') and token.volatility > self.config.volatility_threshold:
+                volatility_adjustment = Decimal('0.5')  # Reduce position size for high volatility
+                
+            base_position_size = self.risk_manager.calculate_position_size(
                 token.price,
                 token.price * self.config.stop_loss_multiplier
             )
+            
+            position_size = (base_position_size * volatility_adjustment).quantize(Decimal('0.000001'))
             
             if position_size <= 0:
                 logger.warning("Invalid position size calculated")
@@ -231,6 +272,8 @@ class SniperBot:
             if tx:
                 logger.info(f"Buy executed for {token.symbol}: {tx}")
                 await self.db.record_trade(token.mint, "buy", position_size, token.price, tx)
+                self.performance_metrics['total_trades'] += 1
+                self.risk_manager.increment_position_count()
                 return tx
             else:
                 logger.error(f"Failed to execute buy for {token.symbol}")
@@ -263,6 +306,14 @@ class SniperBot:
             if tx:
                 logger.info(f"Take profit executed for {token.symbol}: {tx}")
                 await self.db.record_trade(token.mint, "sell", position_size, token.price, tx)
+                self.performance_metrics['successful_trades'] += 1
+                profit = position_size * token.price * (self.config.take_profit_multiplier - Decimal('1.0'))
+                self.performance_metrics['total_profit'] += profit
+                if self.performance_metrics['total_trades'] > 0:
+                    self.performance_metrics['avg_profit_per_trade'] = (
+                        self.performance_metrics['total_profit'] / self.performance_metrics['total_trades']
+                    )
+                self.risk_manager.decrement_position_count()
                 return tx
             else:
                 logger.error(f"Failed to execute take profit for {token.symbol}")
@@ -295,6 +346,10 @@ class SniperBot:
             if tx:
                 logger.info(f"Stop loss executed for {token.symbol}: {tx}")
                 await self.db.record_trade(token.mint, "sell", position_size, token.price, tx)
+                # Update risk manager with loss
+                loss_amount = position_size * token.price * (Decimal('1.0') - self.config.stop_loss_multiplier)
+                self.risk_manager.update_daily_loss(loss_amount)
+                self.risk_manager.decrement_position_count()
                 return tx
             else:
                 logger.error(f"Failed to execute stop loss for {token.symbol}")
@@ -309,18 +364,33 @@ class SniperBot:
         try:
             take_profit_price = token.price * self.config.take_profit_multiplier
             stop_loss_price = token.price * self.config.stop_loss_multiplier
+            highest_price = token.price  # Track highest price for trailing stop
             
-            while token.mint in self.active_tokens:
+            # Dynamic price adjustment based on market conditions
+            price_check_interval = 3  # seconds (increased frequency for better profitability)
+            price_checks = 0
+            max_price_checks = 1200  # 1 hour maximum monitoring
+            
+            while token.mint in self.active_tokens and price_checks < max_price_checks:
                 # Get current price
                 current_price = await self.strategy.get_token_price(token.mint)
                 if current_price is None:
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(price_check_interval)
+                    price_checks += 1
                     continue
                     
                 token.price = current_price
                 
-                # Check take profit
-                if current_price >= take_profit_price:
+                # Update highest price for trailing stop
+                if current_price > highest_price:
+                    highest_price = current_price
+                    # Move stop loss up to 10% below highest price
+                    new_stop_loss = highest_price * self.config.trailing_stop_loss
+                    if new_stop_loss > stop_loss_price:
+                        stop_loss_price = new_stop_loss
+                
+                # Check take profit (increased to 50% target)
+                if current_price >= token.price * self.config.profit_target:
                     await self.execute_take_profit(token)
                     break
                     
@@ -329,7 +399,12 @@ class SniperBot:
                     await self.execute_stop_loss(token)
                     break
                     
-                await asyncio.sleep(10)
+                # Dynamic adjustment: if price increases significantly, move stop loss up
+                if current_price >= token.price * self.config.min_price_increase:
+                    stop_loss_price = token.price * Decimal('0.95')  # Move stop loss up to 5% below current price
+                    
+                await asyncio.sleep(price_check_interval)
+                price_checks += 1
                 
         except Exception as e:
             logger.error(f"Error monitoring position for {token.symbol}: {e}")
@@ -397,12 +472,19 @@ class SniperBot:
                         # Process in background to avoid blocking
                         asyncio.create_task(self.process_new_token(token))
                     
-                    # Wait before next scan
-                    await asyncio.sleep(10)
+                    # Update performance metrics periodically
+                    if self.performance_metrics['total_trades'] > 0:
+                        self.performance_metrics['win_rate'] = (
+                            self.performance_metrics['successful_trades'] / 
+                            self.performance_metrics['total_trades']
+                        )
+                    
+                    # Wait before next scan (reduced to 5 seconds for better responsiveness)
+                    await asyncio.sleep(5)
                     
                 except Exception as e:
                     logger.error(f"Error in main loop: {e}")
-                    await asyncio.sleep(5)
+                    await asyncio.sleep(3)
                     
         except KeyboardInterrupt:
             logger.info("Received interrupt signal")
@@ -430,6 +512,7 @@ class SniperBot:
             await self.notifier.close()
             
             logger.info("Sniper bot shut down successfully")
+            logger.info(f"Performance Summary: {self.performance_metrics}")
         except Exception as e:
             logger.error(f"Error during shutdown: {e}")
 

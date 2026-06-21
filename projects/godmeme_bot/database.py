@@ -343,6 +343,23 @@ class Database:
             """, (since, limit))
             return [self._row_to_position(row) for row in cursor.fetchall()]
             
+    def _row_to_position(self, row):
+        return Position(
+            id=row["id"],
+            token_address=row["token_address"],
+            token_symbol=row["token_symbol"],
+            side=row["side"],
+            amount=Decimal(str(row["amount"])),
+            entry_price=Decimal(str(row["entry_price"])),
+            status=PositionStatus(row["status"]),
+            created_at=row["created_at"],
+            updated_at=row["updated_at"],
+            strategy=row["strategy"],
+            stop_loss=Decimal(str(row["stop_loss"])) if row["stop_loss"] else None,
+            take_profit=Decimal(str(row["take_profit"])) if row["take_profit"] else None,
+            realized_pnl=Decimal(str(row["realized_pnl"])) if row["realized_pnl"] else None,
+        )
+
     def save_risk_metrics(self, metrics: RiskMetrics) -> int:
         """Save risk metrics to database"""
         with self._get_connection() as conn:

@@ -2,27 +2,31 @@
 AutonomousLoop — LLM-driven, bukan keyword parsing.
 Scheduler lama tetap jalan untuk morning briefing & trading monitor.
 """
+
 from sicuan.core.auto_scheduler import AutoScheduler
 from sicuan.core.self_review_loop import SelfReviewLoop
 from sicuan.core.knowledge_engine import KnowledgeEngine
-from sicuan.core.llm_task_executor import LLMTaskExecutor
+from sicuan.brain import SiCuanBrain
 
 
 class AutonomousLoop:
 
     def run(self):
 
-        # ── Step 1: Scheduler (morning briefing, trading monitor) ──
+        # ── Step 1: Scheduler ──
         scheduler = AutoScheduler()
         scheduler.run()
 
-        # ── Step 2: Load knowledge context ──
+        # ── Step 2: Knowledge context ──
         ke = KnowledgeEngine()
         knowledge = ke.load_all()
 
-        # ── Step 3: LLM decide + execute (1 siklus) ──
-        executor = LLMTaskExecutor()
-        result = executor.run_cycle()
+        # ── Step 3: SiCuan Brain planner + executor ──
+        brain = SiCuanBrain()
+
+        result = brain.think_and_respond(
+            "Audit project aktif. Jika ada masalah teknis, lakukan perbaikan melalui planner dan executor."
+        )
 
         # ── Step 4: Self review ──
         review = SelfReviewLoop()

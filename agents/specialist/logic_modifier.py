@@ -263,8 +263,32 @@ class LogicModifier:
                 f"KODE TARGET SAAT INI:\n{target_code}\n\n"
                 f"PROJECT CONTEXT (file lain yang relevan):\n{project_context[:800]}"
                 f"{error_feedback}\n\n"
-                f"Output HANYA kode Python lengkap yang sudah dimodifikasi. "
-                f"Tidak perlu markdown, tidak perlu penjelasan."
+                f"""
+OUTPUT RULES WAJIB:
+
+- Jika TARGET FUNCTION diberikan, output HANYA function tersebut.
+- Jangan output import.
+- Jangan output from.
+- Jangan output class.
+- Jangan output file header.
+- Jangan output function lain.
+- Jangan rewrite seluruh file.
+- Pertahankan nama function.
+- Pertahankan parameter function.
+- Output harus langsung dimulai dengan:
+  def atau async def
+
+Contoh benar:
+
+async def check_risk(self, position):
+    return result
+
+Contoh salah:
+
+import os
+class Config:
+def check_risk(self):
+"""
             )
 
             try:
@@ -277,15 +301,107 @@ class LogicModifier:
                         "logic yang tidak diminta untuk diubah."
                     ),
                     temperature=0.3,
-                    max_tokens=4096,
+                    max_tokens=1800,
                 )
                 fixed = self._clean_code(raw)
+
+                if function_name:
+
+                    forbidden = [
+                        "import ",
+                        "from ",
+                        "class ",
+                    ]
+
+                    bad = [
+                        token
+                        for token in forbidden
+                        if token in fixed
+                    ]
+
+                    if bad:
+                        return {
+                            "status": "failed",
+                            "file": filepath,
+                            "reason": (
+                                f"Patch ditolak: output function "
+                                f"mengandung forbidden token {bad}"
+                            ),
+                            "attempts": attempt,
+                        }
+
+                    first_line = fixed.splitlines()[0].strip()
+
+                    if not (
+                        first_line.startswith("def ")
+                        or first_line.startswith("async def ")
+                    ):
+                        return {
+                            "status": "failed",
+                            "file": filepath,
+                            "reason": (
+                                "Patch ditolak: output bukan function"
+                            ),
+                            "attempts": attempt,
+                        }
+
 
                 print("===== DEBUG FIXED =====")
                 print(fixed[:1000])
                 print("=======================")
 
                 last_output = fixed
+
+
+                # HARD PATCH GUARD
+                # Tolak output LLM yang mencoba rewrite file
+                if function_name:
+
+                    forbidden = [
+                        "import ",
+                        "from ",
+                        "class ",
+                        "```",
+                    ]
+
+                    bad = [
+                        x for x in forbidden
+                        if x in fixed
+                    ]
+
+                    if bad:
+                        return {
+                            "status": "failed",
+                            "file": filepath,
+                            "reason": (
+                                "Patch ditolak: "
+                                f"LLM mengeluarkan forbidden token {bad}"
+                            ),
+                            "attempts": attempt,
+                        }
+
+                    if not fixed.lstrip().startswith(
+                        "def "
+                    ):
+                        return {
+                            "status": "failed",
+                            "file": filepath,
+                            "reason": (
+                                "Patch ditolak: output bukan function"
+                            ),
+                            "attempts": attempt,
+                        }
+
+                    if f"def {function_name}" not in fixed:
+                        return {
+                            "status": "failed",
+                            "file": filepath,
+                            "reason": (
+                                "Patch ditolak: function target hilang"
+                            ),
+                            "attempts": attempt,
+                        }
+
 
                 if not fixed or not self._parse_ok(fixed):
                     try:
@@ -455,10 +571,26 @@ class LogicModifier:
 
             file_path = Path(fname)
 
-            if file_path.is_absolute():
-                fpath = file_path
-            else:
-                fpath = pdir / fname
+            candidates = [
+                file_path,
+                pdir / file_path.name,
+                pdir / file_path,
+                Path.cwd() / file_path,
+            ]
+
+            fpath = None
+
+            for candidate in candidates:
+                if candidate.exists():
+                    fpath = candidate
+                    break
+
+            if fpath is None:
+                failed.append({
+                    "file": fname,
+                    "reason": "File tidak ditemukan setelah resolve path"
+                })
+                continue
 
             result = self.modify_file(
                 str(fpath),
@@ -466,6 +598,16 @@ class LogicModifier:
                 context,
                 function_name
             )
+
+            if result.get("status") == "success":
+                after_size = fpath.stat().st_size
+
+                if after_size < 200:
+                    failed.append({
+                        "file": fname,
+                        "reason": "Patch ditolak: hasil terlalu kecil/rusak"
+                    })
+                    continue
             if result["status"] == "success":
                 modified.append(fname)
             else:
@@ -528,7 +670,7 @@ class LogicModifier:
 
             result = []
 
-            for item in candidates[:2]:
+            for item in candidates[:5]:
 
                 if ":" in item:
                     file_name, function_name = item.split(":", 1)
@@ -571,6 +713,67 @@ class LogicModifier:
                 ) if result else '(tidak ketemu)'}[/dim]"
             )
 
+            priority_keywords = {
+                "risk": [
+                    "risk",
+                    "stop_loss",
+                    "take_profit",
+                    "trailing",
+                    "exposure",
+                    "cooldown",
+                    "loss",
+                ],
+                "profitability": [
+                    "pnl",
+                    "profit",
+                    "return",
+                    "roi",
+                    "sell",
+                    "buy",
+                ],
+                "performance": [
+                    "run",
+                    "execute",
+                    "monitor",
+                    "cache",
+                    "async",
+                ]
+            }
+
+
+            instruction_lower = instruction.lower()
+
+
+            def score(item):
+
+                fn = item["function"].lower()
+
+                value = 0
+
+                for category, words in priority_keywords.items():
+
+                    if category in instruction_lower:
+
+                        for word in words:
+
+                            if word in fn:
+                                value += 10
+
+                return value
+
+
+            result.sort(
+                key=score,
+                reverse=True
+            )
+
+
+            result = [
+                x for x in result
+                if score(x) > 0
+            ][:2]
+
+
             return result, code_trace
         except Exception as e:
             logger.error(f"Trace-based file selection failed: {e}")
@@ -595,4 +798,23 @@ class LogicModifier:
         return "\n\n".join(parts)[:max_chars]
 
 
+
+    def modify(
+        self,
+        project_dir,
+        instruction,
+        target_files=None
+    ):
+        """
+        Compatibility wrapper for autonomous agents.
+        """
+        return self.modify_project(
+            str(project_dir),
+            instruction,
+            target_files
+        )
+
+
 logic_modifier = LogicModifier()
+
+
