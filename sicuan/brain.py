@@ -1,4 +1,7 @@
 """
+from sicuan.core.autonomous_controller import AutonomousController
+
+autonomous_controller = AutonomousController()
 SiCuan Brain - Bukan keyword/parsing/mapping
 Semua keputusan dari LLM yang membaca konteks nyata
 """
@@ -8,6 +11,7 @@ import os
 from pathlib import Path
 from typing import Dict, List, Optional
 from core.logger import logger
+from memory.unified_projects import unified_projects
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -85,13 +89,12 @@ class SiCuanBrain:
                 return p
         return None
 
-    def load_context(self) -> str:
+    def load_context(self, user_message: str = "") -> str:
         """Load semua konteks nyata dari disk"""
         ctx = []
 
         # Projects di memory
         try:
-            from memory.unified_projects import unified_projects
             projects = unified_projects.list_projects()
             if projects:
                 ctx.append("PROJECTS YANG ADA:")
@@ -153,14 +156,30 @@ class SiCuanBrain:
         except Exception:
             pass
 
-        # Second brain: durable facts learned from past conversations
+        # Second brain: durable facts learned from past conversations.
+        # TIDAK dibatasi ke 8 — model punya context window besar, jadi semua
+        # insight penting (importance tinggi) di-include supaya benar-benar
+        # ingat sejarah panjang, bukan cuma 8 fakta terakhir.
         try:
             from memory.memory_store import memory_store
-            mems = memory_store.recall(limit=8)
+
+            # Bagian 1: insight paling penting secara umum (importance tinggi)
+            mems = memory_store.recall(limit=40)
             if mems:
-                ctx.append("\nHAL YANG KAMU INGAT (second brain):")
+                ctx.append("\nHAL YANG KAMU INGAT (second brain, urut prioritas):")
                 for m in mems:
-                    ctx.append(f"  - {m['content'][:150]}")
+                    ctx.append(f"  - [{m['created_at'][:10]}] {m['content'][:200]}")
+
+            # Bagian 2: insight yang RELEVAN dengan pertanyaan saat ini,
+            # walau importance-nya tidak top — supaya pertanyaan spesifik
+            # ("kemarin kita bahas apa soal X") tetap nyantol ke memory lama
+            # yang relevan, bukan cuma yang dianggap "penting secara umum".
+            if user_message:
+                relevant = memory_store.search_memories(user_message, limit=10)
+                if relevant:
+                    ctx.append("\nHAL YANG RELEVAN DENGAN PERTANYAAN INI:")
+                    for m in relevant:
+                        ctx.append(f"  - [{m['created_at'][:10]}] {m['content'][:200]}")
         except Exception:
             pass
 
@@ -186,6 +205,45 @@ class SiCuanBrain:
                 except Exception:
                     pass
 
+        # Planner experience:
+        # Ambil workflow lama supaya LLM belajar urutan penyelesaian masalah.
+        try:
+            from memory.memory_store import memory_store
+
+            plans = memory_store.recall_plans(limit=5)
+
+            if plans:
+                ctx.append("\nPENGALAMAN PLANNER SEBELUMNYA:")
+
+                for item in plans:
+                    status = "SUCCESS" if item["success"] else "FAILED"
+
+                    ctx.append(
+                        f"  [{status}] {item['user_message'][:120]}"
+                    )
+
+                    if item.get("intent"):
+                        ctx.append(
+                            f"    Intent: {item.get('intent')} | "
+                            f"Complexity: {item.get('complexity')} | "
+                            f"Confidence: {item.get('confidence')}%"
+                        )
+
+                    steps = []
+                    for step in item["plan"]:
+                        steps.append(
+                            step.get("action", "")
+                        )
+
+                    ctx.append(
+                        f"    Workflow: {' -> '.join(steps)}"
+                    )
+
+        except Exception as e:
+            logger.error(
+                f"Planner context load failed: {e}"
+            )
+
         return "\n".join(ctx)
 
     def think_and_respond(self, user_message: str,
@@ -196,7 +254,7 @@ class SiCuanBrain:
         - Action apa yang perlu diambil
         - Apa yang perlu diminta dari user
         """
-        real_context = self.load_context()
+        real_context = self.load_context(user_message)
         chat_history = chat_history or []
 
         # Build full system prompt dengan konteks nyata
@@ -227,10 +285,42 @@ JANGAN pilih godmeme_status untuk contoh tersebut.
 godmeme_status hanya untuk pertanyaan spesifik trading Godmeme.
 
 
-Berdasarkan data di atas, respond dengan JSON:
+Berdasarkan data di atas, sebelum memilih action lakukan pemahaman request.
+
+Tentukan:
+
+1. intent:
+- information
+- diagnosis
+- modification
+- execution
+- planning
+
+2. complexity:
+- simple (cukup satu action)
+- compound (butuh beberapa data/action)
+
+3. confidence:
+- angka 0-100 seberapa yakin keputusanmu benar.
+
+Jika compound:
+buat plan berisi langkah yang dibutuhkan.
+
+Format JSON WAJIB:
+
 {{
+  "intent": "jenis tujuan user",
+  "complexity": "simple | compound",
+  "confidence": 0,
+  "plan": [
+    {{
+      "action": "nama action",
+      "action_target": "target",
+      "purpose": "kenapa langkah ini diperlukan"
+    }}
+  ],
   "response": "pesan ke user (bahasa natural, bukan template)",
-  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery",
+  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery",
   "action_target": "untuk repair_project/modify_logic/analyze_project: format wajib nama_project: instruksi. Untuk action lain: nama project atau file saja.",
   "needs_from_user": "null | api_key_name | konfirmasi | data_tambahan",
   "reasoning": "kenapa kamu decide ini (internal, tidak ditampilkan ke user)"
@@ -300,6 +390,45 @@ Gunakan godmeme_status HANYA jika user secara spesifik meminta:
 - balance SOL
 Kalau ada error terdeteksi: proactive mention di response
 
+
+PEMISAHAN TARGET ENGINEERING (WAJIB):
+
+SiCuan adalah ENGINEERING PARTNER yang memperbaiki project lain.
+
+Jika user meminta perbaikan terhadap project tertentu:
+- godmeme
+- godmeme_bot
+- bot trading
+- database trading
+- SELL/BUY logic
+- posisi trading
+- update DB
+- error runtime project
+
+Maka target WAJIB project tersebut.
+
+Contoh:
+User:
+"perbaiki SELL godmeme, posisi tidak CLOSED di DB"
+
+Benar:
+action = modify_logic
+action_target = "godmeme_bot: perbaiki update posisi CLOSED setelah SELL"
+
+SALAH:
+action_target = "sicuan: ..."
+
+
+Target "sicuan" HANYA jika masalah berada di agent:
+- planner salah memilih action
+- router salah membaca intent
+- coder agent gagal bekerja
+- brain.py error
+- memory SiCuan rusak
+- executor SiCuan error
+
+Jangan mengubah target ke sicuan hanya karena user memanggil "cuan".
+
 PENTING SOAL REPAIR VS MODIFY VS ANALYZE:
 Bedakan berdasarkan KONDISI FILE saat ini, bukan kata-kata di request user:
 
@@ -364,7 +493,17 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 json_mode=True,
             )
             result = json.loads(raw)
-            logger.info(f"SiCuan decided: {result.get('action','chat')} | {result.get('reasoning','')[:60]}")
+
+            # Simpan metadata planner terakhir untuk planner memory.
+            self._last_intent = result.get("intent", "")
+            self._last_complexity = result.get("complexity", "")
+            self._last_confidence = int(result.get("confidence", 0) or 0)
+
+            logger.info(
+                f"SiCuan decided: {result.get('action','chat')} | "
+                f"intent={self._last_intent} "
+                f"confidence={self._last_confidence}"
+            )
             return result
         except Exception as e:
             logger.error(f"SiCuan brain error: {e}")
@@ -374,6 +513,94 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 "needs_from_user": None,
                 "reasoning": str(e)
             }
+
+    def reflect_and_maybe_continue(self, user_message: str, first_action: str,
+                                    first_action_result: str, history: List[Dict]) -> Optional[str]:
+        """
+        Sinkronisasi reasoning: setelah 1 action faktual dieksekusi, cek apakah
+        hasilnya SUDAH menjawab tuntas pertanyaan user, atau pertanyaan user
+        sebenarnya butuh langkah lanjutan (misal "kenapa rugi" butuh status
+        DULU baru analisa, bukan cuma status).
+
+        Maksimal 1 putaran lanjutan — tidak infinite loop, tidak boros API call.
+        Return None kalau hasil pertama sudah cukup (tidak ada perubahan).
+        """
+        eval_prompt = (
+            f"User bertanya: \"{user_message}\"\n\n"
+            f"Kamu sudah jalankan action '{first_action}' dan dapat hasil ini:\n"
+            f"{first_action_result[:1500]}\n\n"
+            f"Apakah hasil di atas SUDAH cukup menjawab pertanyaan user secara tuntas?\n"
+            f"Kalau user tanya hal compound (misal \"kenapa rugi\" butuh data trade/analisa, "
+            f"bukan cuma status saldo), dan hasil di atas BELUM mencakup itu — berarti BELUM cukup.\n\n"
+            f"Jawab JSON:\n"
+            f'{{"sufficient": true/false, "next_action": "nama action lanjutan atau null", '
+            f'"next_action_target": "target untuk action lanjutan atau null", '
+            f'"reasoning": "alasan singkat"}}\n\n'
+            f"Action yang tersedia untuk lanjutan: analyze_project, show_log, list_projects, "
+            f"scan_project, godmeme_status, project_summary, business_analysis.\n"
+            f"Kalau next_action sama dengan action yang baru dijalankan ('{first_action}'), "
+            f"set sufficient=true (jangan ulangi action yang sama)."
+        )
+
+        try:
+            raw = self.llm.chat(
+                messages=[{"role": "user", "content": eval_prompt}],
+                system=(
+                    "Kamu adalah reasoning evaluator untuk SiCuan. Tugasmu HANYA menilai "
+                    "apakah hasil action sudah menjawab pertanyaan user secara tuntas, "
+                    "bukan menjawab pertanyaan user sendiri."
+                ),
+                temperature=0.2,
+                max_tokens=300,
+                json_mode=True,
+            )
+            decision = json.loads(raw)
+        except Exception as e:
+            logger.error(f"Reflection eval failed: {e}")
+            return None
+
+        if decision.get("sufficient", True):
+            return None
+
+        next_action = decision.get("next_action")
+        next_target = decision.get("next_action_target", "")
+        if not next_action or next_action == first_action:
+            return None
+
+        logger.info(
+            f"Reflection: action pertama belum cukup, lanjut ke '{next_action}' | "
+            f"reason: {decision.get('reasoning','')[:80]}"
+        )
+
+        try:
+            second_result = self.execute_action(next_action, next_target, user_message, "reflection")
+        except Exception as e:
+            logger.error(f"Reflection follow-up action failed: {e}")
+            return None
+
+        if not second_result:
+            return None
+
+        # Compose jawaban final: hasil pertama + hasil lanjutan, sintesis singkat
+        synth_prompt = (
+            f"User bertanya: \"{user_message}\"\n\n"
+            f"DATA 1 ({first_action}):\n{first_action_result[:1000]}\n\n"
+            f"DATA 2 ({next_action}):\n{second_result[:1500]}\n\n"
+            f"Susun jawaban natural untuk user berdasarkan KEDUA data di atas. "
+            f"Bahasa santai, actionable, jangan ulangi data mentah secara penuh — "
+            f"sintesis insight-nya. Maksimal 400 kata."
+        )
+        try:
+            final = self.llm.chat(
+                messages=[{"role": "user", "content": synth_prompt}],
+                system="Kamu SiCuan, AI partner bisnis. Sintesis data jadi insight actionable.",
+                temperature=0.5,
+                max_tokens=800,
+            )
+            return final
+        except Exception as e:
+            logger.error(f"Reflection synthesis failed: {e}")
+            return first_action_result + "\n\n" + second_result
 
     def handle_api_key_submission(self, key_name: str, key_value: str) -> str:
         """User kirim API key — langsung tulis ke .env"""
@@ -443,6 +670,161 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
             )
         return None
 
+
+    def execute_plan(self, plan, user_message: str, session_id: str = "planner") -> str:
+        """
+        Eksekusi multi-step plan dari planner.
+
+        Plan menjadi source of truth:
+        step 1 -> step 2 -> step 3
+
+        Tidak memakai reflection loop sebagai pengganti planner.
+        """
+
+        if not plan:
+            return ""
+
+        results = []
+
+        for index, step in enumerate(plan, start=1):
+            try:
+                action = step.get("action")
+                target = step.get(
+                    "action_target",
+                    step.get("target", "")
+                )
+
+                if not action:
+                    continue
+
+                logger.info(
+                    f"PLAN EXECUTOR step={index} action={action} target={target}"
+                )
+
+                result = self.execute_action(
+                    action,
+                    target,
+                    user_message,
+                    session_id
+                )
+
+                if result:
+                    results.append(
+                        {
+                            "step": index,
+                            "action": action,
+                            "status": "success",
+                            "result": result[:2000]
+                        }
+                    )
+                else:
+                    results.append(
+                        {
+                            "step": index,
+                            "action": action,
+                            "status": "empty",
+                            "result": ""
+                        }
+                    )
+
+            except Exception as e:
+                logger.error(
+                    f"PLAN EXECUTOR failed step={index}: {e}"
+                )
+
+                results.append(
+                    {
+                        "step": index,
+                        "action": step.get("action"),
+                        "status": "error",
+                        "result": str(e)
+                    }
+                )
+
+                break
+
+        if not results:
+            return ""
+
+        # Simpan pengalaman planner ke persistent memory.
+        # Tujuan:
+        # - SiCuan ingat workflow yang pernah berhasil
+        # - diagnosis compound berikutnya bisa belajar urutan action lama
+        try:
+            from memory.memory_store import memory_store
+
+            planner_success = all(
+                r.get("status") == "success"
+                for r in results
+            )
+
+            memory_store.save_plan(
+                user_message=user_message,
+                plan=plan,
+                result=json.dumps(
+                    results,
+                    ensure_ascii=False
+                ),
+                success=planner_success,
+                intent=getattr(self, "_last_intent", ""),
+                complexity=getattr(self, "_last_complexity", ""),
+                confidence=getattr(self, "_last_confidence", 0)
+            )
+
+            logger.info(
+                f"Planner memory saved: steps={len(plan)} success={planner_success}"
+            )
+
+        except Exception as e:
+            logger.error(
+                f"Planner memory save failed: {e}"
+            )
+
+        # Sintesis semua hasil plan
+        synth_prompt = f"""
+User:
+{user_message}
+
+HASIL EKSEKUSI PLAN:
+
+{json.dumps(results, ensure_ascii=False, indent=2)}
+
+Buat jawaban final:
+- gunakan semua data
+- jangan mengarang data baru
+- bahasa natural
+- actionable
+"""
+
+        try:
+            final = self.llm.chat(
+                messages=[
+                    {
+                        "role":"user",
+                        "content": synth_prompt
+                    }
+                ],
+                system=(
+                    "Kamu SiCuan. "
+                    "Sintesis hasil eksekusi menjadi jawaban final."
+                ),
+                temperature=0.4,
+                max_tokens=800,
+            )
+
+            return final
+
+        except Exception as e:
+            logger.error(
+                f"PLAN synthesis failed: {e}"
+            )
+
+            return "\n\n".join(
+                r["result"]
+                for r in results
+                if r.get("result")
+            )
+
     def execute_action(self, action: str, target: str,
                        user_request: str, session_id: str) -> str:
         """Execute action yang LLM decide"""
@@ -462,7 +844,6 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 Modify existing project berdasarkan request user.
                 """
 
-                from memory.unified_projects import unified_projects
                 from agents.orchestrator import orchestrator
 
                 projects = unified_projects.list_projects()
@@ -520,7 +901,6 @@ Rules:
             
             elif action == "analyze_project":
 
-                from memory.unified_projects import unified_projects
                 from sicuan.project_trace import audit_project
 
                 projects = unified_projects.list_projects()
@@ -566,7 +946,6 @@ Rules:
             elif action == "repair_project":
                 from agents.orchestrator import orchestrator
                 from agents.auditor_agent import auditor_agent
-                from memory.unified_projects import unified_projects
 
                 # target bisa format "nama_project: instruksi" atau cuma nama
                 proj_name = target
@@ -642,7 +1021,6 @@ Rules:
                 from sicuan.core.feature_gap_engine import get_missing_repairs
                 from agents.specialist.logic_modifier import logic_modifier
                 from agents.auditor_agent import auditor_agent
-                from memory.unified_projects import unified_projects
 
                 # target format: "nama_project: instruksi detail" ATAU cuma nama_project
                 proj_name = target
@@ -734,6 +1112,34 @@ USER REQUEST:
 
                 return auditor_agent.format_response(verdict)
 
+
+            elif action == "autonomous_project":
+
+                from pathlib import Path
+
+                project_name = target.split(":")[0].strip()
+
+                project_dir = (
+                    Path("projects")
+                    /
+                    project_name
+                )
+
+                cycle = autonomous_controller.run_cycle(
+                    project_dir
+                )
+
+                autonomous_controller.save_cycle_report(
+                    project_dir,
+                    cycle
+                )
+
+                return json.dumps(
+                    cycle,
+                    indent=2,
+                    default=str
+                )
+
             elif action == "run_bot":
                 from mcp.tools.filesystem_tool import filesystem_tool
                 from memory.memory_store import memory_store
@@ -745,7 +1151,6 @@ USER REQUEST:
 
             elif action == "scan_project":
                 from mcp.tools.filesystem_tool import filesystem_tool
-                from memory.unified_projects import unified_projects
                 projects = unified_projects.list_projects()
                 p = self._find_project(target, projects)
                 if p:
@@ -754,7 +1159,6 @@ USER REQUEST:
                 return f"Project '{target}' tidak ditemukan."
 
             elif action == "get_file":
-                from memory.unified_projects import unified_projects
 
                 # target format: "nama_project: nama_file.py" atau
                 # "nama_project: nama_file.py:start-end" atau cuma nama_project
@@ -907,7 +1311,6 @@ USER REQUEST:
                 return gallery_summary()
 
             elif action == "business_analysis":
-                from memory.unified_projects import unified_projects
 
                 projects = unified_projects.list_projects()
                 if not projects:
@@ -1050,40 +1453,58 @@ USER REQUEST:
 
             elif action == "show_log":
 
-                data = get_godmeme_status()
+                target_lower = str(target).lower()
 
-                process = data.get("process", {})
-                database = data.get("database", {})
-                positions = data.get("positions", [])
+                if "godmeme" in target_lower:
 
-                pos_text = ""
-                if positions:
-                    pos_text = "\\n\\nOpen Positions:\\n"
-                    for p in positions[:5]:
-                        pos_text += (
-                            f"- {p['symbol']} "
-                            f"{p['amount']} SOL "
-                            f"entry {p['entry']}\\n"
-                        )
+                    project_dir = "/home/dibs/agentjw/projects/godmeme_bot"
 
-                return (
-                    "🤖 GODMEME STATUS\\n"
-                    f"Process: {'RUNNING' if process.get('alive') else 'STOPPED'}\\n"
-                    f"PID: {process.get('pid','-')}\\n"
-                    f"Mode: {data.get('mode','-')}\\n"
-                    f"Balance: {data.get('balance','-')} SOL\\n\\n"
-                    f"Trades: {database.get('trades',0)}\\n"
-                    f"BUY: {database.get('buy',0)}\\n"
-                    f"SELL: {database.get('sell',0)}\\n"
-                    f"Realized PnL: {database.get('realized_pnl',0):+.6f} SOL\\n\\n"
-                    f"Last Event: {data.get('last_event','-')}"
-                    + pos_text
-                )
+                    candidates = [
+                        "trading_bot_live.log",
+                        "paper_24h.log",
+                        "trading_bot_live_old.log",
+                        "trading_bot.log"
+                    ]
 
+                    for f in candidates:
+
+                        path = os.path.join(project_dir, f)
+
+                        if os.path.exists(path):
+
+                            with open(path, "r", errors="ignore") as fp:
+                                lines = fp.readlines()
+
+                            return (
+                                f"LOG FILE: {f}\n\n"
+                                + "".join(lines[-200:])
+                            )
+
+                    return "Tidak ada log ditemukan pada godmeme_bot."
+
+                log_file = Path(target)
+
+                if log_file.exists():
+
+                    lines = log_file.read_text(
+                        errors="ignore"
+                    ).splitlines()
+
+                    return "\n".join(lines[-200:])
+
+                return f"Log tidak ditemukan: {target}"
+
+        except Exception as e:
+                    return (
+                        f"Gagal membaca log: {e}"
+                    )
 
         except Exception as e:
             return f"Error saat execute {action}: {e}"
+
         return "Action tidak dikenali."
+
+
 
 
 sicuan_brain = SiCuanBrain()

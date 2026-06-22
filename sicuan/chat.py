@@ -83,23 +83,74 @@ class SiCuanChat:
             "repair_project", "modify_logic", "modify_project",
         }
 
-        # Execute action kalau ada
-        if action and action not in ("null", None, "request_api_key"):
+        # PLAN EXECUTOR:
+        # Multi-step plan adalah source of truth.
+        # Eksekusi dikelola oleh brain.execute_plan()
+        # agar seluruh planner logic berada di satu tempat.
+
+        action_result = None
+
+        plan = result.get("plan", [])
+
+        if isinstance(plan, list) and len(plan) > 0:
+            try:
+                logger.info(
+                    f"Executing planner: {len(plan)} steps"
+                )
+
+                action_result = self.brain.execute_plan(
+                    plan,
+                    user_message,
+                    self.session_id
+                )
+
+                if action_result:
+                    response_text = action_result
+
+            except Exception as e:
+                logger.error(f"Plan execute error: {e}")
+                response_text += f"\n\nAda error Mas: {str(e)[:100]}"
+
+        elif action and action not in ("null", None, "request_api_key"):
             try:
                 action_result = self.brain.execute_action(
-                    action, action_target, user_message, self.session_id
+                    action,
+                    action_target,
+                    user_message,
+                    self.session_id
                 )
+
                 if action_result:
                     if "Sebentar Mas" in action_result and ".env" in action_result:
                         response_text = action_result
                     elif action in FACTUAL_OVERRIDE_ACTIONS or action in AUDITED_ACTIONS:
-                        # Full override — buang response karangan LLM sepenuhnya
                         response_text = action_result
                     elif action_result not in response_text:
                         response_text += "\n\n" + action_result
+
             except Exception as e:
                 logger.error(f"Action execute error: {e}")
                 response_text += f"\n\nAda error Mas: {str(e)[:100]}"
+
+        # REFLECTION: cek apakah hasil action sudah jawab tuntas pertanyaan user.
+        # Cuma jalan kalau ada action_result faktual (bukan untuk "null" action /
+        # obrolan biasa, dan bukan untuk action yang sudah ada audit sendiri).
+        if (
+            action_result
+            and action in FACTUAL_OVERRIDE_ACTIONS
+            and not plan
+        ):
+            try:
+                followup = self.brain.reflect_and_maybe_continue(
+                    user_message=user_message,
+                    first_action=action,
+                    first_action_result=action_result,
+                    history=self.history,
+                )
+                if followup:
+                    response_text = followup
+            except Exception as e:
+                logger.error(f"Reflection error: {e}")
 
         self._save_history(user_message, response_text)
         return response_text

@@ -51,6 +51,37 @@ class MemoryStore:
                 detail TEXT,
                 status TEXT DEFAULT 'done',
                 timestamp TEXT NOT NULL)""")
+
+            # Planner memory:
+            # Menyimpan workflow yang pernah dilakukan SiCuan.
+            conn.execute("""CREATE TABLE IF NOT EXISTS planner_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_message TEXT NOT NULL,
+                plan TEXT NOT NULL,
+                result TEXT,
+                success INTEGER DEFAULT 1,
+                intent TEXT DEFAULT '',
+                complexity TEXT DEFAULT '',
+                confidence INTEGER DEFAULT 0,
+                timestamp TEXT NOT NULL)""")
+
+            # Upgrade existing database tanpa menghapus memory lama
+            existing_cols = [
+                row[1]
+                for row in conn.execute(
+                    "PRAGMA table_info(planner_history)"
+                ).fetchall()
+            ]
+
+            for col, definition in [
+                ("intent", "TEXT DEFAULT ''"),
+                ("complexity", "TEXT DEFAULT ''"),
+                ("confidence", "INTEGER DEFAULT 0"),
+            ]:
+                if col not in existing_cols:
+                    conn.execute(
+                        f"ALTER TABLE planner_history ADD COLUMN {col} {definition}"
+                    )
             conn.execute("""CREATE TABLE IF NOT EXISTS project_files (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 project_id TEXT NOT NULL,
@@ -80,6 +111,65 @@ class MemoryStore:
         with sqlite3.connect(self.db_path) as conn:
             conn.execute("DELETE FROM chat_history WHERE session_id=?", (session_id,))
             conn.commit()
+
+
+    # ── Planner Memory ────────────────────────────────────────────
+    def save_plan(
+        self,
+        user_message: str,
+        plan: list,
+        result: str = "",
+        success: bool = True,
+        intent: str = "",
+        complexity: str = "",
+        confidence: int = 0
+    ):
+        with sqlite3.connect(self.db_path) as conn:
+            conn.execute(
+                """
+                INSERT INTO planner_history
+                (
+                    user_message,
+                    plan,
+                    result,
+                    success,
+                    intent,
+                    complexity,
+                    confidence,
+                    timestamp
+                )
+                VALUES (?,?,?,?,?,?,?,?)
+                """,
+                (
+                    user_message,
+                    json.dumps(plan, ensure_ascii=False),
+                    result[:3000],
+                    1 if success else 0,
+                    intent,
+                    complexity,
+                    int(confidence or 0),
+                    datetime.now().isoformat()
+                )
+            )
+            conn.commit()
+
+    def recall_plans(self, limit: int = 10) -> List[Dict]:
+        with sqlite3.connect(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT user_message,plan,result,success,timestamp FROM planner_history ORDER BY id DESC LIMIT ?",
+                (limit,)
+            ).fetchall()
+
+        return [
+            {
+                "user_message": r[0],
+                "plan": json.loads(r[1]),
+                "result": r[2],
+                "success": bool(r[3]),
+                "timestamp": r[4]
+            }
+            for r in rows
+        ]
 
     # ── General Memory ────────────────────────────────────────────
     def store(self, type: str, content: str, metadata: Dict = None, importance: float = 1.0) -> str:

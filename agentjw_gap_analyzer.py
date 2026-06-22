@@ -50,16 +50,32 @@ def check_action_coverage():
     text = brain_file.read_text(errors="ignore")
 
     # Extract action list dari prompt: "action": "null | x | y | z"
+    # PENTING: ambil match yang isinya benar-benar daftar action (mengandung "|"
+    # dan kata "null"), bukan match pertama yang ditemukan — karena ada contoh
+    # JSON lain di prompt (misal di instruksi planner) yang juga match pattern
+    # "action": "..." tapi isinya cuma placeholder seperti "nama action".
     prompt_actions = set()
-    m = re.search(r'"action":\s*"([^"]+)"', text)
-    if m:
+    for m in re.finditer(r'"action":\s*"([^"]+)"', text):
         raw = m.group(1)
-        prompt_actions = {a.strip() for a in raw.split("|") if a.strip() and a.strip() != "null"}
+        if "|" in raw and "null" in raw:
+            prompt_actions = {a.strip() for a in raw.split("|") if a.strip() and a.strip() != "null"}
+            break
 
     # Extract handler nyata: elif action == "xxx"
     handler_actions = set(re.findall(r'elif\s+action\s*==\s*"([^"]+)"', text))
     if_first = re.findall(r'if\s+action\s*==\s*"([^"]+)"', text)
     handler_actions.update(if_first)
+
+    # CATATAN ARSITEKTUR: action juga bisa dipanggil lewat planner multi-step
+    # ("plan": [{"action": ..., "action_target": ...}, ...] -> execute_plan()
+    # -> execute_action()), bukan cuma field "action" tunggal di top-level
+    # decision. Selama field tunggal "action" di schema tetap include semua
+    # action yang ada handler-nya, planner TIDAK membuat handler jadi "dead" —
+    # planner cuma jalur kedua untuk MEMANGGIL action yang sama.
+    has_planner = '"plan":' in text and "execute_plan" in text
+    if has_planner:
+        log("Terdeteksi planner multi-step (\"plan\": [...] -> execute_plan()) — "
+            "action juga bisa dipanggil lewat sini, bukan cuma field action tunggal.", "info")
 
     log(f"Action di prompt LLM: {len(prompt_actions)} -> {sorted(prompt_actions)}")
     log(f"Handler nyata di kode: {len(handler_actions)} -> {sorted(handler_actions)}")
