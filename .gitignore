@@ -89,3 +89,35 @@ backups/
 # Sicuan runtime state
 memory/execution_history.json
 memory/executive_state.json
+
+# Runtime state
+sicuan_audit_report/
+memory/shadow_mode.log
+memory/shadow_report.json
+memory/trace_cache.json
+memory/autonomy_reports.json
+memory/project_autonomy.json
+*.log
+
+# Backup files
+*.bak
+*.backup_*
+*.py.bak_*
+*.py.backup_*
+*.py.before_*
+
+# Test files
+test_*.py
+fix_*.py
+patch_*.py
+inject_*.py
+restore_*.py
+
+# Datasets (keep structure, ignore data)
+datasets/*.jsonl
+datasets/*.json
+
+# Project runtime
+projects/*/.pid
+projects/*/0
+projects/*/*.bak*

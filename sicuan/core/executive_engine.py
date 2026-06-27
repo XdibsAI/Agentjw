@@ -1,12 +1,18 @@
 import json
 from pathlib import Path
 from memory.project_registry import ProjectRegistry
+from sicuan.core.runtime_consciousness import load_runtime_state
 
 ROOT = Path(__file__).resolve().parents[2]
 
 MEMORY = ROOT / "memory"
 
 class ExecutiveEngine:
+
+
+    def get_runtime_state(self):
+        return load_runtime_state()
+
 
     def _load_json(self, path, default):
         try:

@@ -1,7 +1,13 @@
 from pathlib import Path
+from sicuan.core.runtime_consciousness import load_runtime_state
 
 
 class AutonomousPlanner:
+
+
+    def get_runtime_state(self):
+        return load_runtime_state()
+
 
     def plan(self, audit_result):
 
