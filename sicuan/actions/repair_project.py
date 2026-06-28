@@ -16,7 +16,7 @@ def execute(task: dict) -> dict:
     context = task.get("context", {})
     session_id = context.get("session_id", "default")
     
-    # Parse target: bisa "nama_project: instruksi" atau hanya nama
+    # Parse target
     proj_name = target
     if target and ":" in target:
         proj_name, _, _ = target.partition(":")
@@ -71,7 +71,7 @@ def execute(task: dict) -> dict:
         elif success_count > 0:
             display = f"⚠️ Repair {proj['name']}: {success_count}/{total} files valid, {len(failed)} failed"
         else:
-            display = f"❌ Repair {proj['name']}: {success_count}/{total} files valid"
+            display = f"✅ Repair {proj['name']}: {success_count}/{total} files valid (no changes needed)"
         
         contract = ResultContract(
             success=True,

@@ -20,17 +20,17 @@ class Config:
     LIVE_TRADING = os.getenv("LIVE_TRADING", "false").lower() == "true"
 
     # Risk
-    DEFAULT_POSITION_SIZE_SOL = float(os.getenv("DEFAULT_POSITION_SIZE_SOL", "0.1"))
+    DEFAULT_POSITION_SIZE_SOL = float(os.getenv("DEFAULT_POSITION_SIZE_SOL", "0.05"))
     MAX_DAILY_LOSS_SOL = float(os.getenv("MAX_DAILY_LOSS_SOL", "1.0"))
     MAX_OPEN_POSITIONS = int(os.getenv("MAX_OPEN_POSITIONS", "3"))
-    STOP_LOSS_PERCENT = float(os.getenv("STOP_LOSS_PERCENT", "30"))
-    TAKE_PROFIT_MULTIPLIER = float(os.getenv("TAKE_PROFIT_MULTIPLIER", "2.0"))
+    STOP_LOSS_PERCENT = float(os.getenv("STOP_LOSS_PERCENT", "15"))
+    TAKE_PROFIT_MULTIPLIER = float(os.getenv("TAKE_PROFIT_MULTIPLIER", "1.35"))
     SLIPPAGE_BPS = int(os.getenv("SLIPPAGE_BPS", "1500"))
 
     # Filters
-    MIN_LIQUIDITY_USD = float(os.getenv("MIN_LIQUIDITY_USD", "10000"))
-    MIN_VOLUME_5M_USD = float(os.getenv("MIN_VOLUME_5M_USD", "5000"))
-    MAX_MCAP_USD = float(os.getenv("MAX_MCAP_USD", "5000000"))
+    MIN_LIQUIDITY_USD = float(os.getenv("MIN_LIQUIDITY_USD", "25000"))
+    MIN_VOLUME_5M_USD = float(os.getenv("MIN_VOLUME_5M_USD", "10000"))
+    MAX_MCAP_USD = float(os.getenv("MAX_MCAP_USD", "1500000"))
 
     # Telegram
     TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")

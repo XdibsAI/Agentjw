@@ -164,27 +164,48 @@ class RiskManager:
         except Exception as e: 
             logger.error(f"Error loading positions from database: {e}") 
             
-    def calculate_position_size(self, token_price: Decimal, volatility: Decimal) -> Decimal: 
-        """Calculate appropriate position size based on risk parameters""" 
-        try: 
-            # Get available SOL balance 
-            sol_balance = self.wallet.get_balance() 
-            
-            # Adjust position size based on volatility 
-            volatility_factor = max(Decimal('0.1'), Decimal('1') - (volatility / self.max_volatility)) 
-            
-            # Calculate max position size 
-            max_position_value = sol_balance * self.max_position_size_percent * volatility_factor 
-            
-            # Convert to token amount 
-            position_size = max_position_value / token_price 
-            
-            logger.info(f"Calculated position size: {position_size} tokens at price {token_price}") 
-            return position_size 
-            
-        except Exception as e: 
-            logger.error(f"Error calculating position size: {e}") 
-            return Decimal('0') 
+    def calculate_position_size(self, token_price: Decimal, volatility: Decimal) -> Decimal:
+        """Calculate appropriate position size based on risk parameters"""
+        try:
+            # Get available SOL balance
+            sol_balance = self.wallet.get_balance()
+
+            # Enhanced volatility-based position sizing with optimized risk parameters
+            if volatility > self.max_volatility * Decimal('0.85'):
+                volatility_factor = Decimal('0.3')  # Very high volatility - minimal positions
+            elif volatility > self.max_volatility * Decimal('0.65'):
+                volatility_factor = Decimal('0.55')   # High volatility - small positions
+            elif volatility > self.max_volatility * Decimal('0.35'):
+                volatility_factor = Decimal('0.8')  # Medium volatility - balanced positions
+            else:
+                volatility_factor = Decimal('1.0')   # Low volatility - full positions
+
+            # Risk-aware position sizing with optimized diversification
+            active_positions = len(self.positions)
+            position_diversification_factor = max(Decimal('0.15'), Decimal('1.0') - Decimal(str(active_positions)) * Decimal('0.12'))
+
+            # Account for existing positions in wallet with improved exposure management
+            total_exposure = sum(pos.size * pos.entry_price for pos in self.positions.values())
+            exposure_factor = max(Decimal('0.15'), (sol_balance * Decimal('1.8') - total_exposure) / (sol_balance * Decimal('1.8')))
+
+            # Calculate max position size with enhanced risk adjustment
+            risk_adjustment = min(Decimal('1.2'), sol_balance / Decimal('4'))  # More aggressive but controlled scaling
+            max_position_value = sol_balance * self.max_position_size_percent * volatility_factor * risk_adjustment * position_diversification_factor * exposure_factor
+
+            # Convert to token amount with minimum size check
+            position_size = max_position_value / token_price
+
+            # Ensure minimum position size for low price tokens
+            min_position_value = Decimal('0.075')  # Optimized minimum position value
+            if max_position_value < min_position_value:
+                position_size = min_position_value / token_price
+
+            logger.info(f"Calculated position size: {position_size} tokens at price {token_price} with volatility factor {volatility_factor}")
+            return position_size
+
+        except Exception as e:
+            logger.error(f"Error calculating position size: {e}")
+            return Decimal('0')
             
     def check_stop_loss(self, token_address: str, current_price: Decimal) -> bool: 
         """Check if stop loss should be triggered""" 
@@ -212,22 +233,25 @@ class RiskManager:
         """Check if take profit should be triggered""" 
         if token_address not in self.positions: 
             return False 
-            
+
         position = self.positions[token_address] 
         position.current_price = current_price 
-        
+
         # Update trailing stop if price increased by more than buffer
         self._update_trailing_stop(position, current_price)
-        
+
         # Update in database 
         self._update_position_in_db(position) 
-        
-        if current_price >= position.take_profit_price: 
+
+        # Check take profit with dynamic threshold based on market volatility
+        take_profit_threshold = position.take_profit_price * Decimal('0.995')  # 0.5% buffer
+
+        if current_price >= take_profit_threshold: 
             logger.info(f"Take profit triggered for {token_address} at price {current_price}") 
             self.notifier.send_alert(f"TAKE PROFIT: Sold {token_address} at {current_price}") 
             return True 
-            
-        return False 
+
+        return False
         
     def _update_trailing_stop(self, position: Position, current_price: Decimal):
         """Update trailing stop price based on current price and buffer"""

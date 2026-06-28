@@ -180,7 +180,13 @@ async def _process_and_reply(update: Update, ctx: ContextTypes.DEFAULT_TYPE, nam
         session_id = f"telegram_{user_id}"
         from sicuan.chat import SiCuanChat
         chat = _get_session(session_id, name, is_owner(user_id))
-        response = chat.chat(text)
+        loop = asyncio.get_running_loop()
+
+        response = await loop.run_in_executor(
+            None,
+            chat.chat,
+            text
+        )
 
         # Split kalau terlalu panjang
         if len(response) <= 4096:

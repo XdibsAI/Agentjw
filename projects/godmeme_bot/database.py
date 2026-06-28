@@ -53,6 +53,11 @@ class Position:
     created_at: float
     updated_at: float
     strategy: str
+
+    token_amount: Optional[Decimal] = None
+    entry_sol: Optional[Decimal] = None
+    tx_hash: Optional[str] = None
+
     stop_loss: Optional[Decimal] = None
     take_profit: Optional[Decimal] = None
     realized_pnl: Optional[Decimal] = None
@@ -256,8 +261,9 @@ class Database:
                 cursor = conn.execute("""
                     INSERT INTO positions (
                         token_address, token_symbol, side, amount, entry_price,
-                        status, created_at, updated_at, strategy, stop_loss, take_profit, realized_pnl
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        status, created_at, updated_at, strategy, token_amount, entry_sol, tx_hash,
+                        stop_loss, take_profit, realized_pnl
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     position.token_address,
                     position.token_symbol,
@@ -268,6 +274,9 @@ class Database:
                     position.created_at,
                     position.updated_at,
                     position.strategy,
+                    str(position.token_amount) if position.token_amount is not None else None,
+                    str(position.entry_sol) if position.entry_sol is not None else None,
+                    position.tx_hash,
                     str(position.stop_loss) if position.stop_loss is not None else None,
                     str(position.take_profit) if position.take_profit is not None else None,
                     str(position.realized_pnl) if position.realized_pnl is not None else None
@@ -279,6 +288,7 @@ class Database:
                     UPDATE positions SET
                         token_address = ?, token_symbol = ?, side = ?, amount = ?,
                         entry_price = ?, status = ?, updated_at = ?, strategy = ?,
+                        token_amount = ?, entry_sol = ?, tx_hash = ?,
                         stop_loss = ?, take_profit = ?, realized_pnl = ?
                     WHERE id = ?
                 """, (
@@ -290,6 +300,9 @@ class Database:
                     position.status.value,
                     position.updated_at,
                     position.strategy,
+                    str(position.token_amount) if position.token_amount is not None else None,
+                    str(position.entry_sol) if position.entry_sol is not None else None,
+                    position.tx_hash,
                     str(position.stop_loss) if position.stop_loss is not None else None,
                     str(position.take_profit) if position.take_profit is not None else None,
                     str(position.realized_pnl) if position.realized_pnl is not None else None,
@@ -355,6 +368,9 @@ class Database:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
             strategy=row["strategy"],
+            token_amount=Decimal(str(row["token_amount"])) if row["token_amount"] else None,
+            entry_sol=Decimal(str(row["entry_sol"])) if row["entry_sol"] else None,
+            tx_hash=row["tx_hash"],
             stop_loss=Decimal(str(row["stop_loss"])) if row["stop_loss"] else None,
             take_profit=Decimal(str(row["take_profit"])) if row["take_profit"] else None,
             realized_pnl=Decimal(str(row["realized_pnl"])) if row["realized_pnl"] else None,

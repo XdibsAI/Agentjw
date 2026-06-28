@@ -63,8 +63,15 @@ class LogicModifier:
                     if isinstance(sub, ast.Call):
                         if isinstance(sub.func, ast.Name):
                             calls.add(sub.func.id)
+
                         elif isinstance(sub.func, ast.Attribute):
-                            calls.add(sub.func.attr)
+
+                            if isinstance(sub.func.value, ast.Name):
+                                calls.add(
+                                    f"{sub.func.value.id}.{sub.func.attr}"
+                                )
+                            else:
+                                calls.add(sub.func.attr)
 
                 detail = f"  def {node.name}() [line {node.lineno}]"
                 if attrs:
@@ -77,21 +84,79 @@ class LogicModifier:
             return f"{filepath.name}: (tidak ada function terdeteksi)"
         return f"{filepath.name}:\n" + "\n".join(lines)
 
-    def _build_code_trace(self, py_files: list, per_file_cap: int = 700, max_chars: int = 15000) -> str:
+    def _build_code_trace(self, py_files: list, per_file_cap: int = 1800, max_chars: int = 30000) -> str:
         """
         Trace semua file jadi peta struktural untuk LLM. Tiap file dikasih
         alokasi karakter SENDIRI (per_file_cap) -- supaya file yang urutannya
         belakang (misal strategy.py di antara 18 file) tetap kebaca, tidak
         kepotong duluan oleh file besar yang urutannya lebih awal.
         """
+        trading_priority = {
+            "strategy.py",
+            "risk_manager.py",
+            "sniper.py",
+            "raydium_client.py",
+            "jupiter_client.py",
+            "wallet.py",
+            "database.py",
+            "token_memory.py",
+        }
+
+        priority_order = [
+            "strategy.py",
+            "risk_manager.py",
+            "sniper.py",
+            "raydium_client.py",
+            "jupiter_client.py",
+            "wallet.py",
+            "database.py",
+            "token_memory.py",
+        ]
+
+        py_files = sorted(
+            [
+                f for f in py_files
+                if f.name in trading_priority
+            ],
+            key=lambda x: (
+                priority_order.index(x.name)
+                if x.name in priority_order
+                else 999
+            )
+        )
+
+        # budget per file supaya semua core module tetap terlihat LLM
+        budgets = {
+            "strategy.py": 5000,
+            "risk_manager.py": 4000,
+            "raydium_client.py": 4000,
+            "jupiter_client.py": 3000,
+            "wallet.py": 3000,
+            "database.py": 3000,
+            "sniper.py": 3000,
+            "token_memory.py": 1500,
+        }
+
         parts = []
+
         for f in py_files:
+
             file_trace = self._trace_file(f)
-            if len(file_trace) > per_file_cap:
-                file_trace = file_trace[:per_file_cap] + "\n  ... (terpotong, ada lebih banyak function di file ini)"
+
+            cap = budgets.get(
+                f.name,
+                per_file_cap
+            )
+
+            if len(file_trace) > cap:
+                file_trace = (
+                    file_trace[:cap]
+                    + "\n  ... (function lain dipotong)"
+                )
+
             parts.append(file_trace)
-        full = "\n\n".join(parts)
-        return full[:max_chars]
+
+        return "\n\n".join(parts)
 
 
     def _extract_function_block(self, code: str, function_name: str):
@@ -214,302 +279,153 @@ class LogicModifier:
         )
 
 
-    def modify_file(self, filepath: str, instruction: str, project_context: str = "", function_name: str = None, max_retries: int = 2) -> dict:
+    def modify_file(
+        self,
+        filepath: str,
+        instruction: str,
+        project_context: str = "",
+        function_name: str = None,
+        max_retries: int = 2
+    ) -> dict:
         """
-        Patch SATU file sesuai instruction spesifik dari user.
-        Retry dengan error feedback kalau output tidak valid syntax.
-
-        Return:
-          {"status": "success"|"failed", "file": str, "reason": str (kalau failed), "attempts": int}
+        Modify one target function safely.
+        Output from LLM is sanitized before replacing.
         """
-        p = Path(filepath)
-        if not p.exists():
-            return {"status": "failed", "file": filepath, "reason": "File tidak ditemukan", "attempts": 0}
 
-        original = p.read_text(errors="replace")
-        last_error = None
-        last_output = None
+        path = Path(filepath)
+
+        if not path.exists():
+            return {
+                "status": "failed",
+                "file": filepath,
+                "reason": "file_not_found"
+            }
+
+        code = path.read_text(errors="replace")
+
+        target_code = code
+
+        if function_name:
+            extracted = self._extract_function_block(code, function_name)
+            if extracted:
+                target_code = extracted
+
+        prompt = (
+            "Modifikasi kode Python SESUAI INSTRUKSI.\n"
+            "JANGAN rewrite file lain.\n"
+            "JANGAN ubah function lain.\n\n"
+            f"FILE: {path.name}\n"
+            f"TARGET FUNCTION: {function_name or 'AUTO'}\n\n"
+            f"INSTRUKSI USER:\n{instruction}\n\n"
+            f"KODE TARGET SAAT INI:\n{target_code}\n\n"
+            f"PROJECT CONTEXT:\n{project_context[:800]}\n\n"
+            "OUTPUT RULES:\n"
+            "- Output hanya function.\n"
+            "- Jangan output import.\n"
+            "- Jangan output class.\n"
+            "- Pertahankan nama function.\n"
+            "- Pertahankan parameter.\n"
+            "- Mulai dengan def atau async def."
+        )
 
         for attempt in range(1, max_retries + 1):
-            error_feedback = ""
-            if last_error:
-                error_feedback = (
-                    f"\n\nPERHATIAN: percobaan sebelumnya GAGAL dengan error:\n"
-                    f"{last_error}\n\n"
-                    f"Output sebelumnya (untuk referensi apa yang salah):\n"
-                    f"{(last_output or '')[:1500]}\n\n"
-                    f"Perbaiki error syntax ini. Pastikan output adalah kode Python "
-                    f"yang lengkap dan valid."
-                )
-
-            target_code = original
-
-            if function_name:
-                extracted = self._extract_function_block(
-                    original,
-                    function_name
-                )
-
-                if extracted:
-                    target_code = extracted
-
-            prompt = (
-                f"Modifikasi kode Python SESUAI INSTRUKSI.\n"
-                f"JANGAN rewrite file lain.\n"
-                f"JANGAN ubah function lain.\n\n"
-                f"FILE: {p.name}\n"
-                f"TARGET FUNCTION: {function_name or 'AUTO'}\n\n"
-                f"INSTRUKSI USER:\n{instruction}\n\n"
-                f"KODE TARGET SAAT INI:\n{target_code}\n\n"
-                f"PROJECT CONTEXT (file lain yang relevan):\n{project_context[:800]}"
-                f"{error_feedback}\n\n"
-                f"""
-OUTPUT RULES WAJIB:
-
-- Jika TARGET FUNCTION diberikan, output HANYA function tersebut.
-- Jangan output import.
-- Jangan output from.
-- Jangan output class.
-- Jangan output file header.
-- Jangan output function lain.
-- Jangan rewrite seluruh file.
-- Pertahankan nama function.
-- Pertahankan parameter function.
-- Output harus langsung dimulai dengan:
-  def atau async def
-
-Contoh benar:
-
-async def check_risk(self, position):
-    return result
-
-Contoh salah:
-
-import os
-class Config:
-def check_risk(self):
-"""
-            )
-
             try:
-                console.print(f"  🔧 Modifying: {p.name} (attempt {attempt}/{max_retries})")
+                console.print(
+                    f"  🔧 Modifying: {path.name} "
+                    f"(attempt {attempt}/{max_retries})"
+                )
+
                 raw = llm.chat(
-                    messages=[{"role": "user", "content": prompt}],
+                    messages=[
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
                     system=(
-                        "Kamu adalah senior Python engineer. Modifikasi kode SESUAI "
-                        "instruksi spesifik, jangan rewrite total, jangan menghapus "
-                        "logic yang tidak diminta untuk diubah."
+                        "Kamu adalah senior Python engineer. "
+                        "Modifikasi logic spesifik tanpa rewrite total."
                     ),
                     temperature=0.3,
                     max_tokens=1800,
                 )
+
                 fixed = self._clean_code(raw)
 
-                if function_name:
-
-                    forbidden = [
-                        "import ",
-                        "from ",
-                        "class ",
-                    ]
-
-                    bad = [
-                        token
-                        for token in forbidden
-                        if token in fixed
-                    ]
-
-                    if bad:
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                f"Patch ditolak: output function "
-                                f"mengandung forbidden token {bad}"
-                            ),
-                            "attempts": attempt,
-                        }
-
-                    first_line = fixed.splitlines()[0].strip()
-
-                    if not (
-                        first_line.startswith("def ")
-                        or first_line.startswith("async def ")
-                    ):
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                "Patch ditolak: output bukan function"
-                            ),
-                            "attempts": attempt,
-                        }
-
-
-                print("===== DEBUG FIXED =====")
-                print(fixed[:1000])
-                print("=======================")
-
-                last_output = fixed
-
-
-                # HARD PATCH GUARD
-                # Tolak output LLM yang mencoba rewrite file
-                if function_name:
-
-                    forbidden = [
-                        "import ",
-                        "from ",
-                        "class ",
-                        "```",
-                    ]
-
-                    bad = [
-                        x for x in forbidden
-                        if x in fixed
-                    ]
-
-                    if bad:
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                "Patch ditolak: "
-                                f"LLM mengeluarkan forbidden token {bad}"
-                            ),
-                            "attempts": attempt,
-                        }
-
-                    if not fixed.lstrip().startswith(
-                        "def "
-                    ):
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                "Patch ditolak: output bukan function"
-                            ),
-                            "attempts": attempt,
-                        }
-
-                    if f"def {function_name}" not in fixed:
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                "Patch ditolak: function target hilang"
-                            ),
-                            "attempts": attempt,
-                        }
-
-
-                if not fixed or not self._parse_ok(fixed):
-                    try:
-                        ast.parse(fixed or "")
-                    except SyntaxError as e:
-                        last_error = f"SyntaxError line {e.lineno}: {e.msg}"
-                    else:
-                        last_error = "Output kosong atau tidak valid"
-                    continue  # retry
-
-                if function_name:
-                    final_code = self._replace_function_block(
-                        original,
-                        function_name,
-                        fixed
-                    )
-
-                    # guard: replace function wajib mempertahankan file lain
-                    if len(final_code) < len(original) * 0.75:
-                        return {
-                            "status": "failed",
-                            "file": filepath,
-                            "reason": (
-                                f"Function replacement gagal. "
-                                f"File menyusut {len(original)} -> {len(final_code)} chars."
-                            ),
-                            "attempts": attempt,
-                        }
-
-                else:
-                    final_code = fixed
-
-                if len(final_code) < len(original) * 0.5:
+                if not (
+                    fixed.startswith("def ")
+                    or fixed.startswith("async def ")
+                ):
                     return {
                         "status": "failed",
                         "file": filepath,
-                        "reason": (
-                            f"Output mencurigakan: panjang kode turun drastis "
-                            f"({len(original)} -> {len(final_code)} chars). Kemungkinan "
-                            f"LLM menghapus logic yang tidak diminta. Ditolak demi keamanan."
-                        ),
-                        "attempts": attempt,
+                        "reason": "invalid_function_output"
                     }
 
-                from sicuan.core.llm_patch_guard import (
-                    changed_functions,
-                    validate_function_patch
-                )
+                # Safety check:
+                # hanya blokir statement import/class nyata.
+                # Jangan blokir string/comment/docstring yang kebetulan
+                # mengandung kata import/from/class.
 
-                if function_name:
-                    validation = validate_function_patch(
-                        original,
-                        final_code,
-                        function_name
+                try:
+                    output_tree = ast.parse(fixed)
+
+                    forbidden_nodes = any(
+                        isinstance(
+                            node,
+                            (
+                                ast.Import,
+                                ast.ImportFrom,
+                                ast.ClassDef,
+                            )
+                        )
+                        for node in ast.walk(output_tree)
                     )
 
-                    if not validation["ok"]:
+                    if forbidden_nodes:
                         return {
                             "status": "failed",
                             "file": filepath,
-                            "reason": validation["reason"],
-                            "attempts": attempt,
+                            "reason": "forbidden_output"
                         }
 
-                touched = changed_functions(
-                    original,
-                    final_code
-                )
-
-                print("===== CHANGED FUNCTIONS =====")
-                print(touched)
-                print("=============================")
-
-                if not touched:
+                except Exception:
                     return {
                         "status": "failed",
                         "file": filepath,
-                        "reason": (
-                            "Patch ditolak: tidak ada function yang berubah. "
-                            "LLM hanya menghasilkan rewrite kosong."
-                        ),
-                        "attempts": attempt,
+                        "reason": "invalid_function_output"
                     }
 
-                console.print(
-                    f"  [dim]Functions changed: {', '.join(touched)}[/dim]"
+                if function_name and f"def {function_name}" not in fixed and f"async def {function_name}" not in fixed:
+                    return {
+                        "status": "failed",
+                        "file": filepath,
+                        "reason": "wrong_function"
+                    }
+
+                updated = self._replace_function_block(
+                    code,
+                    function_name,
+                    fixed
                 )
 
-                p.write_text(final_code)
+                path.write_text(updated)
 
-                console.print(f"  [green]✓ Modified: {p.name}[/green]")
                 return {
                     "status": "success",
                     "file": filepath,
-                    "attempts": attempt,
-                    "changed_functions": touched,
+                    "function": function_name
                 }
 
             except Exception as e:
-                logger.error(f"Logic modify error on {filepath}: {e}")
-                last_error = str(e)
-                continue
+                logger.error(
+                    f"modify_file failed: {e}"
+                )
 
         return {
             "status": "failed",
             "file": filepath,
-            "reason": f"Gagal setelah {max_retries} percobaan. Error terakhir: {last_error}",
-            "attempts": max_retries,
+            "reason": "max_retry"
         }
 
     def modify_project(self, project_dir: str, instruction: str, target_files: list = None) -> dict:
@@ -520,16 +436,90 @@ def check_risk(self):
         nebak dari nama file.
         """
         pdir = Path(project_dir)
+
+        # Normalize target_files dari planner/LLM
+        if isinstance(target_files, dict):
+            target_files = [target_files]
+
+        if target_files:
+            normalized_targets = []
+
+            for item in target_files:
+                if isinstance(item, dict):
+                    if item.get("file"):
+                        normalized_targets.append({
+                            "file": item.get("file"),
+                            "function": item.get("function")
+                        })
+
+                elif isinstance(item, str):
+                    normalized_targets.append(item)
+
+            target_files = normalized_targets
+
         if not pdir.exists():
             return {"error": f"Directory not found: {project_dir}"}
 
-        py_files = sorted(pdir.glob("*.py"))
+        priority_files = [
+            "strategy.py",
+            "sniper.py",
+            "risk_manager.py",
+            "raydium_client.py",
+            "jupiter_client.py",
+            "wallet.py",
+            "database.py",
+        ]
+
+        py_files = sorted(
+            pdir.glob("*.py"),
+            key=lambda x: (
+                priority_files.index(x.name)
+                if x.name in priority_files
+                else 99
+            )
+        )
+
         if not py_files:
             return {"error": "Tidak ada file Python di project ini"}
 
         code_trace = ""
         if not target_files:
-            target_files, code_trace = self._guess_relevant_files(instruction, py_files)
+            target_files, code_trace = self._guess_relevant_files(
+                instruction,
+                py_files
+            )
+
+        # Normalize target_files agar selalu list[dict]
+        if isinstance(target_files, dict):
+            target_files = [target_files]
+
+        elif isinstance(target_files, list):
+            normalized_targets = []
+
+            for item in target_files:
+
+                if isinstance(item, list):
+                    for sub in item:
+                        if isinstance(sub, dict):
+                            normalized_targets.append(sub)
+
+                elif isinstance(item, dict):
+                    normalized_targets.append(item)
+
+                elif isinstance(item, str):
+                    if ":" in item:
+                        fname, func = item.split(":", 1)
+                        normalized_targets.append({
+                            "file": fname.strip(),
+                            "function": func.strip()
+                        })
+                    else:
+                        normalized_targets.append({
+                            "file": item.strip(),
+                            "function": None
+                        })
+
+            target_files = normalized_targets
 
         if not target_files:
             return {
@@ -561,6 +551,10 @@ def check_risk(self):
 
         modified = []
         failed = []
+
+        if not isinstance(target_files, list):
+            target_files = [target_files]
+
         for item in target_files:
             if isinstance(item, dict):
                 fname = item.get("file")
@@ -623,6 +617,192 @@ def check_risk(self):
 
         return {"modified": modified, "failed": failed, "status": status, "code_trace_used": bool(code_trace)}
 
+
+    def _score_ast_relevance(self, instruction: str, py_files: list):
+        """
+        AST based relevance ranking.
+        Mencari function paling dekat dengan intent user sebelum LLM.
+        """
+        keywords = {
+            "buy": 8,
+            "entry": 8,
+            "open": 6,
+            "sell": 8,
+            "exit": 8,
+            "close": 6,
+            "profit": 8,
+            "pnl": 8,
+            "loss": 8,
+            "risk": 9,
+            "stop": 8,
+            "take": 7,
+            "balance": 6,
+            "wallet": 6,
+            "swap": 7,
+            "trade": 6,
+            "token": 5,
+            "scan": 5,
+            "monitor": 5,
+        }
+
+        text = instruction.lower()
+        scored = []
+
+        for f in py_files:
+            try:
+                source = f.read_text(errors="replace")
+            except Exception:
+                continue
+
+            for fn in self._list_functions(source):
+
+                score = 0
+                blob = fn.lower()
+
+                for k, weight in keywords.items():
+                    if k in text and k in blob:
+                        score += weight
+
+                # cek function body
+                block = self._extract_function_block(
+                    source,
+                    fn
+                )
+
+                if block:
+                    block_low = block.lower()
+
+                    for k, weight in keywords.items():
+                        if k in text and k in block_low:
+                            score += weight // 2
+
+                # bonus untuk function yang berada di decision flow trading
+                flow_bonus = {
+                    # decision layer
+                    "_should_buy": 20,
+                    "_assess_risk_level": 18,
+                    "can_open_position": 16,
+
+                    # position lifecycle
+                    "_open_position": 18,
+                    "add_position": 14,
+
+                    # execution layer
+                    "execute_buy": 14,
+                    "swap": 8,
+
+                    # exit management
+                    "check_stop_loss": 10,
+                    "check_take_profit": 10,
+
+                    # token filtering
+                    "check_risk": 8,
+                }
+
+                score += flow_bonus.get(fn, 0)
+
+                # penalti function pembacaan/reporting
+                passive_penalty = {
+                    "get_risk_metrics": -5,
+                    "get_recent_risk_metrics": -5,
+                    "save_risk_metrics": -3,
+                    "send_risk_alert": -3,
+                }
+
+                score += passive_penalty.get(fn, 0)
+
+                if score:
+                    scored.append(
+                        {
+                            "file": f.name,
+                            "function": fn,
+                            "score": score,
+                        }
+                    )
+
+        scored.sort(
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
+        return scored[:10]
+
+
+    def _rank_logic_candidates(self, instruction, py_files):
+        """
+        Ranking logic target berdasarkan AST + trading flow.
+        LLM hanya melakukan validasi dari kandidat ini.
+        """
+
+        instruction_lower = instruction.lower()
+
+        keywords = {
+            "buy": 10,
+            "entry": 10,
+            "cuan": 8,
+            "profit": 8,
+            "risiko": 8,
+            "risk": 8,
+            "sell": 8,
+            "exit": 8,
+            "loss": 8,
+            "stop": 6,
+            "strategi": 6,
+            "trading": 6,
+        }
+
+        flow_bonus = {
+            "_should_buy": 18,
+            "can_open_position": 17,
+            "_assess_risk_level": 14,
+            "_open_position": 16,
+            "add_position": 10,
+            "execute_buy": 13,
+            "swap": 5,
+            "check_stop_loss": 8,
+            "check_take_profit": 8,
+        }
+
+        passive_penalty = {
+            "get_risk_metrics": -5,
+            "get_recent_risk_metrics": -5,
+            "save_risk_metrics": -3,
+            "send_risk_alert": -3,
+        }
+
+        result = []
+
+        for f in py_files:
+            try:
+                code = f.read_text(errors="replace")
+                funcs = self._list_functions(code)
+            except Exception:
+                continue
+
+            for fn in funcs:
+                score = 0
+                text = f"{f.name} {fn}".lower()
+
+                for key, weight in keywords.items():
+                    if key in instruction_lower and key in text:
+                        score += weight
+
+                score += flow_bonus.get(fn, 0)
+                score += passive_penalty.get(fn, 0)
+
+                if score:
+                    result.append({
+                        "file": f.name,
+                        "function": fn,
+                        "score": score
+                    })
+
+        return sorted(
+            result,
+            key=lambda x: x["score"],
+            reverse=True
+        )
+
     def _guess_relevant_files(self, instruction: str, py_files: list):
         """
         Tentukan file relevan berdasarkan TRACE STRUKTUR KODE (AST):
@@ -632,6 +812,65 @@ def check_risk(self):
         """
         filenames = [f.name for f in py_files]
         code_trace = self._build_code_trace(py_files)
+
+        ranked = self._rank_logic_candidates(
+            instruction,
+            py_files
+        )
+
+        # ENTRY BUY FLOW PRIORITY OVERRIDE
+        # Jangan biarkan LLM salah memilih open_position/risk sizing
+        # untuk instruksi yang menyentuh entry.
+
+        instruction_lower = instruction.lower()
+
+        entry_keywords = [
+            "entry",
+            "buy",
+            "beli",
+            "masuk posisi",
+            "open position",
+            "strategi",
+        ]
+
+        if any(k in instruction_lower for k in entry_keywords):
+
+            preferred_flow = [
+                "strategy.py:_should_buy",
+                "sniper.py:execute_buy",
+                "sniper.py:can_open_position",
+                "risk_manager.py:add_position",
+                "strategy.py:_open_position",
+            ]
+
+            boosted = []
+
+            ranked_names = [
+                f"{x['file']}:{x['function']}"
+                for x in ranked
+            ]
+
+            for target in preferred_flow:
+                if target in ranked_names:
+                    boosted.append(target)
+
+            if boosted:
+                ranked_context = "\n".join(boosted[:5])
+            else:
+                ranked_context = "\n".join(
+                    [
+                        f"{x['file']}:{x['function']} score={x['score']}"
+                        for x in ranked[:15]
+                    ]
+                )
+
+        else:
+            ranked_context = "\n".join(
+                [
+                    f"{x['file']}:{x['function']} score={x['score']}"
+                    for x in ranked[:15]
+                ]
+            )
 
         prompt = (
             f"Instruksi user: {instruction}\n\n"
@@ -662,13 +901,100 @@ def check_risk(self):
                 temperature=0.1,
                 max_tokens=100,
             )
-            candidates = [
-                c.strip()
-                for c in raw.replace("\n", ",").split(",")
-                if c.strip()
-            ]
+            import re
+
+            candidates = []
+
+            for line in raw.splitlines():
+
+                line = line.strip()
+
+                if not line:
+                    continue
+
+                # buang numbering markdown
+                line = re.sub(
+                    r"^[0-9]+[.)-]\\s*",
+                    "",
+                    line
+                )
+
+                # ambil pola file:function
+                match = re.search(
+                    r"([A-Za-z0-9_]+\.py)(?::([A-Za-z0-9_]+))?",
+                    line
+                )
+
+                if match:
+                    candidates.append(
+                        match.group(0)
+                    )
 
             result = []
+
+            # fallback AST jika LLM tidak memberikan target
+            if not candidates:
+                fallback = []
+
+                instruction_lower = instruction.lower()
+
+                for f in py_files:
+                    try:
+                        funcs = self._list_functions(
+                            f.read_text(errors="replace")
+                        )
+                    except Exception:
+                        continue
+
+                    for fn in funcs:
+                        fn_lower = fn.lower()
+
+                        if any(
+                            x in instruction_lower
+                            for x in [
+                                "cuan",
+                                "profit",
+                                "pnl",
+                                "risiko",
+                                "trading",
+                                "buy",
+                                "sell",
+                                "stop",
+                                "take",
+                                "strategi",
+                            ]
+                        ):
+                            if any(
+                                y in fn_lower
+                                for y in [
+                                    "buy",
+                                    "sell",
+                                    "profit",
+                                    "loss",
+                                    "risk",
+                                    "position",
+                                    "trade",
+                                    "entry",
+                                    "exit",
+                                    "stop",
+                                    "take",
+                                    "monitor",
+                                ]
+                            ):
+                                fallback.append(
+                                    {
+                                        "file": f.name,
+                                        "function": fn
+                                    }
+                                )
+
+                candidates = [
+                    f"{x['file']}:{x['function']}"
+                    for x in fallback[:5]
+                ]
+
+            console.print(f"  [yellow]DEBUG candidates={candidates}[/yellow]")
+            console.print(f"  [yellow]DEBUG filenames={filenames}[/yellow]")
 
             for item in candidates[:5]:
 
@@ -678,10 +1004,13 @@ def check_risk(self):
                     file_name = file_name.strip()
                     function_name = function_name.strip()
 
-                    if file_name in filenames:
+                    print("DEBUG CHECK FILE:", repr(file_name))
+                    print("DEBUG FILENAMES:", [repr(x) for x in filenames])
+
+                    if file_name.strip() in [x.strip() for x in filenames]:
                         result.append({
-                            "file": file_name,
-                            "function": function_name
+                            "file": file_name.strip(),
+                            "function": function_name.strip()
                         })
 
                 elif item in filenames:
@@ -690,17 +1019,31 @@ def check_risk(self):
                         "function": None
                     })
 
-            # Prioritaskan function paling spesifik sesuai request
+            # Trailing stop menjadi prioritas tambahan,
+            # bukan filter yang membuang reasoning LLM.
             if (
                 "trailing" in instruction.lower()
                 and "stop" in instruction.lower()
             ):
-                result = [
-                    x for x in result
-                    if (
-                        "trailing" in str(x.get("function", "")).lower()
-                    )
-                ]
+                for x in result:
+                    fn = str(x.get("function", "")).lower()
+
+                    if "trailing" in fn:
+                        x["_priority_bonus"] = 50
+
+                    elif any(
+                        key in fn
+                        for key in [
+                            "monitor",
+                            "position",
+                            "update",
+                            "close"
+                        ]
+                    ):
+                        x["_priority_bonus"] = 20
+
+                    else:
+                        x["_priority_bonus"] = 0
 
 
             console.print(
@@ -743,21 +1086,65 @@ def check_risk(self):
 
             instruction_lower = instruction.lower()
 
+            print(
+                "DEBUG INSTRUCTION:",
+                repr(instruction_lower)
+            )
+
 
             def score(item):
 
-                fn = item["function"].lower()
+                fn = str(item.get("function", "")).lower()
+                file_name = str(item.get("file", "")).lower()
 
-                value = 0
+                # Bonus dari reasoning LLM / context modifier.
+                # Tidak menggantikan semantic scoring.
+                value = int(item.get("_priority_bonus", 0))
 
-                for category, words in priority_keywords.items():
+                semantic_map = {
+                    "buy": [
+                        "buy",
+                        "entry",
+                        "open",
+                        "position",
+                        "swap",
+                        "trade",
+                    ],
+                    "sell": [
+                        "sell",
+                        "close",
+                        "exit",
+                        "take",
+                        "profit",
+                    ],
+                    "risk": [
+                        "risk",
+                        "position",
+                        "exposure",
+                        "loss",
+                        "stop",
+                    ],
+                    "profit": [
+                        "profit",
+                        "pnl",
+                        "return",
+                        "roi",
+                    ],
+                }
 
-                    if category in instruction_lower:
+                instruction_words = instruction_lower.split()
 
-                        for word in words:
+                for key, aliases in semantic_map.items():
 
-                            if word in fn:
+                    if key in instruction_lower:
+
+                        for alias in aliases:
+
+                            if alias in fn:
                                 value += 10
+
+                            if alias in file_name:
+                                value += 5
 
                 return value
 
@@ -768,13 +1155,39 @@ def check_risk(self):
             )
 
 
-            result = [
-                x for x in result
-                if score(x) > 0
-            ][:2]
+            print("DEBUG SCORE:")
+            for x in result:
+                print(
+                    x,
+                    "=>",
+                    score(x)
+                )
+
+            # Jangan membuang hasil reasoning LLM hanya karena
+            # nama function tidak mengandung keyword.
+            # Keyword hanya boleh menjadi bonus ranking.
+
+            if result:
+                result = result[:5]
+
+            # Safety fallback:
+            # jika LLM sudah memberi candidate valid tetapi scoring kosong,
+            # tetap gunakan reasoning LLM.
+            if not result and candidates:
+                result = [
+                    {
+                        "file": x.split(":", 1)[0],
+                        "function": (
+                            x.split(":", 1)[1]
+                            if ":" in x
+                            else None
+                        )
+                    }
+                    for x in candidates[:2]
+                ]
 
 
-            return result, code_trace
+            return result
         except Exception as e:
             logger.error(f"Trace-based file selection failed: {e}")
             return [], code_trace

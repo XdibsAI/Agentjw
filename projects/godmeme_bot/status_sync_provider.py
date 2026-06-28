@@ -32,6 +32,14 @@ def load_status_file():
 
 
 def read_trades():
+    """
+    PENTING: total/buy/sell/realized_pnl WAJIB dihitung dari SELURUH
+    histori trades (agregat SQL), TIDAK BOLEH dari subset yang dibatasi
+    LIMIT — itu bug lama yang membuat status selalu lapor "20 trades"
+    walau total sebenarnya ratusan. "recent" (daftar 20 transaksi
+    terakhir untuk ditampilkan) tetap dibatasi, tapi terpisah dari
+    angka agregat.
+    """
     result = {
         "total": 0,
         "buy": 0,
@@ -47,6 +55,23 @@ def read_trades():
         conn = sqlite3.connect(DB_PATH)
         cur = conn.cursor()
 
+        # Agregat dari SELURUH tabel — sumber kebenaran untuk total/buy/sell/pnl
+        cur.execute("""
+            SELECT
+                COUNT(*) AS total,
+                SUM(CASE WHEN side = 'BUY' THEN 1 ELSE 0 END) AS buy_count,
+                SUM(CASE WHEN side = 'SELL' THEN 1 ELSE 0 END) AS sell_count,
+                COALESCE(SUM(CASE WHEN realized_pnl IS NOT NULL THEN CAST(realized_pnl AS REAL) ELSE 0 END), 0) AS total_pnl
+            FROM trades
+        """)
+        agg = cur.fetchone()
+        result["total"] = agg[0] or 0
+        result["buy"] = agg[1] or 0
+        result["sell"] = agg[2] or 0
+        result["realized_pnl"] = agg[3] or 0.0
+
+        # Daftar 20 transaksi TERBARU — cuma untuk ditampilkan sebagai preview,
+        # bukan dasar hitung agregat di atas.
         cur.execute("""
             SELECT
                 id,
@@ -60,22 +85,8 @@ def read_trades():
             LIMIT 20
         """)
 
-        rows = cur.fetchall()
-
-        for row in rows:
+        for row in cur.fetchall():
             tid, symbol, side, amount, price, pnl = row
-
-            result["total"] += 1
-
-            if side == "BUY":
-                result["buy"] += 1
-
-            elif side == "SELL":
-                result["sell"] += 1
-
-            if pnl:
-                result["realized_pnl"] += float(pnl)
-
             result["recent"].append({
                 "id": tid,
                 "symbol": symbol,
@@ -167,6 +178,11 @@ def get_godmeme_status():
             )
         },
 
+        # total_positions = jumlah SEBENARNYA posisi terbuka (sebelum
+        # dipotong di pemanggil). Pemanggil (brain.py) boleh tampilkan
+        # cuma sebagian untuk ringkas, TAPI harus tahu dan bilang ke user
+        # kalau ada sisanya — jangan diam-diam memotong tanpa keterangan.
+        "total_open_positions": len(positions),
         "positions": positions,
 
         "last_event": file_status.get(

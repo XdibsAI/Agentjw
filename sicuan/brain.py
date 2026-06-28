@@ -9,6 +9,7 @@ import json
 import re
 import os
 from pathlib import Path
+from pathlib import Path
 from typing import Dict, List, Optional
 from core.logger import logger
 from memory.unified_projects import unified_projects
@@ -827,6 +828,7 @@ Buat jawaban final:
 
     def execute_action(self, action: str, target: str,
                        user_request: str, session_id: str) -> str:
+        from pathlib import Path
         """Execute action yang LLM decide"""
         try:
             if action == "build_project":

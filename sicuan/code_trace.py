@@ -1,3 +1,111 @@
+
+import hashlib
+import json
+from functools import lru_cache
+from pathlib import Path
+
+# Cache untuk AST parsing
+_ast_cache = {}
+_cache_file = Path("/home/dibs/agentjw/memory/ast_cache.json")
+
+def _load_cache():
+    """Load AST cache dari file"""
+    global _ast_cache
+    if _cache_file.exists():
+        try:
+            with open(_cache_file) as f:
+                _ast_cache = json.load(f)
+        except:
+            _ast_cache = {}
+    else:
+        _ast_cache = {}
+
+def _save_cache():
+    """Save AST cache ke file"""
+    try:
+        with open(_cache_file, "w") as f:
+            json.dump(_ast_cache, f)
+    except:
+        pass
+
+def _get_file_hash(filepath: Path) -> str:
+    """Dapatkan hash file untuk cache key"""
+    try:
+        content = filepath.read_bytes()
+        return hashlib.md5(content).hexdigest()
+    except:
+        return ""
+
+# Load cache di awal
+_load_cache()
+
+# Decorator untuk caching trace result
+def cached_trace(func):
+    def wrapper(symbol):
+        # Cek cache memory
+        cache_key = f"trace_{symbol}"
+        if cache_key in _ast_cache:
+            return _ast_cache[cache_key]
+        
+        result = func(symbol)
+        
+        # Simpan ke cache
+        _ast_cache[cache_key] = result
+        _save_cache()
+        
+        return result
+    return wrapper
+
+
+def trace_before_patch(symbol: str, max_depth: int = 3, timeout: int = 5):
+    """
+    Trace symbol dengan timeout dan batasan depth.
+    - max_depth: batas kedalaman dependency (default 3)
+    - timeout: maksimal detik (default 5)
+    """
+    import time
+    import signal
+    
+    def timeout_handler(signum, frame):
+        raise TimeoutError("Trace timeout")
+    
+    start_time = time.time()
+    
+    # Cek symbol kosong
+    if not symbol or not symbol.strip():
+        return R(symbol, [], "Symbol kosong")
+    
+    # Log untuk debugging
+    print(f"Tracing symbol: {symbol} (max_depth={max_depth}, timeout={timeout}s)")
+    
+    try:
+        # Set timeout
+        signal.signal(signal.SIGALRM, timeout_handler)
+        signal.alarm(timeout)
+        
+        # Panggil trace asli (dengan batasan depth)
+        result = _trace_implementation(symbol, max_depth)
+        
+        # Batalkan alarm
+        signal.alarm(0)
+        
+        duration = time.time() - start_time
+        print(f"Trace completed: {duration:.2f}s")
+        return result
+        
+    except TimeoutError:
+        print(f"Trace timeout for {symbol} after {timeout}s")
+        return R(symbol, [], f"Timeout after {timeout}s")
+    except Exception as e:
+        print(f"Trace error: {e}")
+        return R(symbol, [], str(e))
+
+def _trace_implementation(symbol: str, max_depth: int = 3):
+    """
+    Implementasi trace dengan batasan depth.
+    """
+    # ... existing code with depth limit ...
+
 """
 Code trace v3
 Supports:

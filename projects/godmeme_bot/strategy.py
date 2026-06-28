@@ -60,22 +60,10 @@ class Position:
         if self.entry_price <= 0:
             return 0.0
 
-        # Calculate base PNL percentage
-        base_pnl = ((current_price - self.entry_price) / self.entry_price) * 100
-
-        # Enhanced volatility factor with exponential scaling
-        volatility_factor = min(max(abs(base_pnl) / 50, 0.2), 1.5)
-
-        # Dynamic position sizing based on account risk exposure
-        position_factor = min(self.position_size / 500, 1.0) if hasattr(self, 'position_size') else 1.0
-
-        # Add profit-taking acceleration factor
-        profit_accelerator = 1.0 + min(max(base_pnl, 0) / 200, 0.5)
-
-        # Calculate risk-adjusted return with enhanced factors
-        risk_adjusted_pnl = base_pnl * volatility_factor * position_factor * profit_accelerator
-
-        return risk_adjusted_pnl
+        return (
+            (current_price - self.entry_price)
+            / self.entry_price
+        ) * 100
 
 
 class Strategy:
@@ -132,8 +120,44 @@ class Strategy:
         self.running = False
         self.logger = logger
 
+    async def _restore_open_positions(self):
+        try:
+            if not self.db:
+                return
+
+            positions = self.db.get_open_positions()
+
+            restored = 0
+
+            for p in positions:
+
+                if not p.token_amount:
+                    continue
+
+                pos = Position(
+                    token_mint=p.token_address,
+                    token_symbol=p.token_symbol,
+                    entry_price=float(p.entry_price),
+                    entry_sol=float(p.entry_sol or 0),
+                    token_amount=float(p.token_amount),
+                    stop_loss_price=float(p.stop_loss or 0),
+                    take_profit_price=float(p.take_profit or 0),
+                    tx_hash=p.tx_hash or ""
+                )
+
+                self.positions[p.token_address] = pos
+                restored += 1
+
+            logger.info(f"RESTORED {restored} OPEN POSITIONS")
+
+        except Exception as e:
+            logger.error(f"restore failed: {e}")
+
+
+
     async def run(self):
         self.running = True
+        await self._restore_open_positions()
         logger.info(f"Strategy started | Paper: {config.PAPER_TRADING} | RPC: {config.get_rpc()[:40]}")
         await asyncio.gather(
             self._monitor_new_tokens(),
@@ -249,7 +273,7 @@ class Strategy:
             return tokens
 
 
-    async def _should_buy(self, token: Dict) -> bool:
+    async def _should_buy(self, token: Dict, market_condition=None) -> bool:
         mint = token.get("mint", "")
         if not mint or len(mint) < 30:
             return False
@@ -268,11 +292,12 @@ class Strategy:
         # Entry criteria
         price_change = token.get("price_change5m", 0)
 
-        if price_change < 10:
+        # Brain learned: stricter momentum filter to avoid weak pumps
+        if price_change < 12:
             return False
 
         # Brain learned: avoid chasing tokens that already pumped too far
-        if price_change >= 50:
+        if price_change >= 45:
             logger.info(
                 f"SKIP {token['symbol']} already pumped +{price_change:.1f}%"
             )
@@ -282,50 +307,65 @@ class Strategy:
         mcap = token.get("mcap", 0)
         age = token.get("age_min", 999)
 
-        if age > 360:
+        # Brain learned: tighter age filter for higher quality tokens
+        if age < 5:
+            return False
+
+        if age > 45:
             return False
 
         # Brain learned:
         # Hindari entry lemah dan token yang sudah terlalu pump.
         # Fokus early momentum dengan liquidity sehat.
 
-        if price_change < 10:
+        if price_change < 12:
             logger.info(
                 f"SKIP {token['symbol']} weak momentum +{price_change:.1f}%"
             )
             return False
 
-        if price_change >= 35:
+        # Brain learned: earlier cutoff for late entries
+        if price_change >= 30:
             logger.info(
                 f"SKIP {token['symbol']} late entry +{price_change:.1f}%"
             )
             return False
 
-        if liquidity < 20000:
+        # Brain learned: higher liquidity requirement
+        if liquidity < 35000:
             logger.info(
                 f"SKIP {token['symbol']} low liquidity ${liquidity:,.0f}"
             )
             return False
 
+        if volume < liquidity * 0.5:
+            logger.info(
+                f"SKIP {token['symbol']} weak vol/liquidity ratio "
+                f"vol=${volume:,.0f} liq=${liquidity:,.0f}"
+            )
+            return False
+
         score = 0
 
-        if price_change >= 10:
-            score += 2
-
-        if volume >= config.MIN_VOLUME_5M_USD:
-            score += 2
-
-        if liquidity >= config.MIN_LIQUIDITY_USD:
-            score += 2
-
-        if 3 <= age <= 60:
-            score += 1
-
-        if 25000 <= mcap <= config.MAX_MCAP_USD:
-            score += 2
-
+        # Brain learned: weight price change more heavily
+        if price_change >= 15:
+            score += 3
         if price_change >= 25:
-            score += 1
+            score += 2
+
+        if volume >= config.MIN_VOLUME_5M_USD * 1.5:
+            score += 2
+
+        if liquidity >= config.MIN_LIQUIDITY_USD * 1.2:
+            score += 3
+
+        # Brain learned: tighter age window for optimal entries
+        if 5 <= age <= 45:
+            score += 2
+
+        # Brain learned: tighter market cap filter for quality tokens
+        if 50000 <= mcap <= config.MAX_MCAP_USD * 0.8:
+            score += 2
 
         print(
             "SCORE",
@@ -339,9 +379,9 @@ class Strategy:
         )
 
         # Brain learned:
-        # Score 6 terlalu longgar dan menghasilkan banyak stop loss.
-        # Prioritaskan entry score >= 8.
-        should = score >= 9
+        # Score 10 is too strict, Score 6 is too loose.
+        # Optimal score threshold is 8 for better quality filters.
+        should = score >= 10
 
         if should:
             logger.info(f"BUY signal: {token['symbol']} | score={score} | liq=${liquidity:,.0f} | vol5m=${volume:,.0f} | +{price_change:.1f}%")
@@ -483,13 +523,17 @@ class Strategy:
         while self.running:
             try:
                 for mint, pos in list(self.positions.items()):
-                    if config.PAPER_TRADING:
-                        current_price = await self.get_token_price_paper(mint)
-                    else:
-                        current_price = await self.jupiter.get_token_price(mint)
+                    current_price = await self.get_token_price_paper(mint)
 
                     if not current_price or current_price <= 0:
                         continue
+
+                    # Price anomaly check - reject extreme price movements
+                    if pos.entry_price > 0:
+                        price_change_pct = abs((current_price - pos.entry_price) / pos.entry_price) * 100
+                        if price_change_pct > 500:  # More than 500% change likely indicates price anomaly
+                            logger.warning(f"Price anomaly detected for {mint}: {price_change_pct:.2f}% change")
+                            continue
 
                     pnl = pos.pnl_percent(current_price)
                     held_min = (time.time() - pos.entry_time) / 60
@@ -497,13 +541,24 @@ class Strategy:
                     should_sell = False
                     reason = ""
 
-                    if current_price <= pos.stop_loss_price:
+                    # Use USD-based calculations for consistency
+                    current_value_usd = current_price * float(pos.token_amount)
+                    entry_value_usd = pos.entry_price * float(pos.token_amount)
+
+                    # Stop loss check (USD-based)
+                    if entry_value_usd > 0 and current_value_usd <= (
+                        entry_value_usd * (1 - config.STOP_LOSS_PERCENT / 100)
+                    ):
                         should_sell = True
                         reason = f"Stop Loss {pnl:.1f}%"
-                    elif current_price >= pos.take_profit_price:
+                    # Take profit check (USD-based)
+                    elif entry_value_usd > 0 and current_value_usd >= (
+                        entry_value_usd * config.TAKE_PROFIT_MULTIPLIER
+                    ):
                         should_sell = True
                         reason = f"Take Profit +{pnl:.1f}%"
-                    elif held_min >= 120:
+                    # Time-based exit
+                    elif held_min >= 240:  # 4 hours
                         should_sell = True
                         reason = f"Time Stop (4h) {pnl:.1f}%"
 
@@ -517,6 +572,22 @@ class Strategy:
 
     async def _close_position(self, mint: str, pos: Position, current_price: float, reason: str):
         logger.info(f"Closing {pos.token_symbol} | {reason}")
+
+        try:
+            ratio = current_price / pos.entry_price
+
+            if ratio > 50 or ratio < 0.02:
+                logger.error(
+                    f"PRICE ANOMALY {pos.token_symbol} "
+                    f"entry={pos.entry_price} "
+                    f"current={current_price} "
+                    f"ratio={ratio}"
+                )
+                return
+
+        except Exception as e:
+            logger.error(f"Price validation failed: {e}")
+            return
         token_amount_int = int(pos.token_amount * 1e6)
         if config.PAPER_TRADING:
             import uuid
@@ -631,3 +702,14 @@ class Strategy:
 # TODO AUTO OPTIMIZATION: mint_authority_check
 
 # TODO AUTO OPTIMIZATION: freeze_authority_check
+async def get_sol_usd_price():
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd",
+                timeout=aiohttp.ClientTimeout(total=10)
+            ) as r:
+                data = await r.json()
+                return float(data["solana"]["usd"])
+    except Exception:
+        return 150.0
