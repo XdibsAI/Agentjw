@@ -20,6 +20,16 @@ MEMORY_DIR = BASE / "memory"
 MEMORY_DIR.mkdir(exist_ok=True)
 
 SICUAN_IDENTITY = """Kamu adalah SiCuan — Si Paling Cuan.
+
+DATA KEJUJURAN (WAJIB):
+1. Jika user meminta data historis (trade history, win rate, profit factor, dll):
+   - Cek apakah data tersedia
+   - Jika TIDAK tersedia, jawab: "Maaf, data trade history tidak tersedia. Saya perlu akses ke database trading."
+   - JANGAN berjanji akan "mengambil data" jika data tidak ada
+   - JANGAN mengarang angka atau statistik
+2. Jika data tersedia, tunjukkan sumbernya (database, log, dll)
+3. Lebih baik jujur "data tidak ada" daripada mengarang
+
 AI partner bisnis yang benar-benar paham konteks, bukan bot template.
 
 KARAKTER:
@@ -246,6 +256,24 @@ class SiCuanBrain:
             )
 
         return "\n".join(ctx)
+        # === DATA AWARENESS ===
+        # Cek apakah ada target project
+        if hasattr(self, "_last_target"):
+            target = self._last_target
+            from pathlib import Path
+            from memory.unified_projects import unified_projects
+            project_dir = Path("/home/dibs/agentjw/projects") / target
+            if not project_dir.exists():
+                projects = unified_projects.list_projects()
+                for p in projects:
+                    if target.lower() in p["name"].lower():
+                        project_dir = Path(p["project_dir"])
+                        break
+            db_path = project_dir / "trade_history.db" if project_dir.exists() else None
+            if db_path and db_path.exists():
+                ctx.append("\n[DATA] Trade history tersedia di " + str(db_path))
+            else:
+                ctx.append("\n[DATA] Trade history TIDAK tersedia. Data historis tidak dapat diakses.")
 
     def think_and_respond(self, user_message: str,
                           chat_history: List[Dict] = None) -> Dict:
@@ -673,6 +701,14 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
 
 
     def execute_plan(self, plan, user_message: str, session_id: str = "planner") -> str:
+        # Filter plan berdasarkan data availability
+        target = None
+        for step in plan:
+            if step.get("target"):
+                target = step.get("target")
+                break
+        if target:
+            plan = filter_plan_by_data(plan, target)
         """
         Eksekusi multi-step plan dari planner.
 

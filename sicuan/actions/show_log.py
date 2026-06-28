@@ -13,48 +13,52 @@ def execute(task: dict) -> dict:
     target = task.get("target", "")
     target_lower = str(target).lower()
     
-    # Special case: godmeme
-    if "godmeme" in target_lower:
-        project_dir = Path("/home/dibs/agentjw/projects/godmeme_bot")
-        candidates = [
-            "trading_bot_live.log",
-            "paper_24h.log",
-            "trading_bot_live_old.log",
-            "trading_bot.log"
-        ]
+    # Cek apakah ada target yang valid
+    if not target_lower or target_lower in ["", "godmeme", "godmeme_bot"]:
+        # Cek apakah ada project godmeme_bot
+        projects = unified_projects.list_projects()
+        godmeme_project = None
+        for p in projects:
+            if "godmeme" in p["name"].lower():
+                godmeme_project = p
+                break
         
-        for f in candidates:
-            path = project_dir / f
-            if path.exists():
-                try:
-                    lines = path.read_text(errors='ignore').splitlines()
-                    content = "\n".join(lines[-200:])
-                    contract = ResultContract(
-                        success=True,
-                        action="show_log",
-                        entity="godmeme_bot",
-                        display=f"📋 LOG FILE: {f}\n\n{content[:500]}...",
-                        metrics={"lines": len(lines), "file": f},
-                        confidence=0.95,
-                        data={"content": content, "total_lines": len(lines)}
-                    )
-                    return contract.to_dict()
-                except Exception as e:
-                    contract = ResultContract(
-                        success=False,
-                        action="show_log",
-                        entity="godmeme_bot",
-                        display=f"❌ Gagal membaca log: {str(e)}",
-                        errors=[str(e)]
-                    )
-                    return contract.to_dict()
+        if godmeme_project:
+            project_dir = Path(godmeme_project["project_dir"])
+            # Cek apakah ada log file
+            log_files = list(project_dir.glob("*.log"))
+            if log_files:
+                latest = max(log_files, key=lambda f: f.stat().st_mtime)
+                lines = latest.read_text(errors='ignore').splitlines()
+                content = "\n".join(lines[-200:])
+                contract = ResultContract(
+                    success=True,
+                    action="show_log",
+                    entity=godmeme_project["name"],
+                    display=f"📋 LOG FILE: {latest.name}\n\n{content[:500]}...",
+                    metrics={"lines": len(lines), "file": latest.name},
+                    confidence=0.95,
+                    data={"content": content, "total_lines": len(lines)}
+                )
+                return contract.to_dict()
+            else:
+                contract = ResultContract(
+                    success=False,
+                    action="show_log",
+                    entity=godmeme_project["name"],
+                    display="📋 Log tidak ditemukan. Data trade history tidak tersedia.",
+                    errors=["Log tidak ditemukan"],
+                    warnings=["Data trade history tidak tersedia"]
+                )
+                return contract.to_dict()
         
         contract = ResultContract(
             success=False,
             action="show_log",
-            entity="godmeme_bot",
-            display="❌ Tidak ada log ditemukan pada godmeme_bot",
-            errors=["Tidak ada log ditemukan pada godmeme_bot"]
+            entity=target,
+            display="📋 Log tidak ditemukan. Data trade history tidak tersedia.",
+            errors=["Log tidak ditemukan"],
+            warnings=["Data trade history tidak tersedia"]
         )
         return contract.to_dict()
     
@@ -71,8 +75,9 @@ def execute(task: dict) -> dict:
             success=False,
             action="show_log",
             entity=target,
-            display=f"❌ Project '{target}' tidak ditemukan",
-            errors=[f"Project '{target}' tidak ditemukan"]
+            display=f"📋 Project '{target}' tidak ditemukan. Data trade history tidak tersedia.",
+            errors=[f"Project '{target}' tidak ditemukan"],
+            warnings=["Data trade history tidak tersedia"]
         )
         return contract.to_dict()
     
@@ -84,8 +89,9 @@ def execute(task: dict) -> dict:
             success=False,
             action="show_log",
             entity=proj['name'],
-            display=f"❌ Tidak ada log ditemukan di project {proj['name']}",
-            errors=[f"Tidak ada log ditemukan di project {proj['name']}"]
+            display=f"📋 Log tidak ditemukan di project {proj['name']}. Data trade history tidak tersedia.",
+            errors=[f"Log tidak ditemukan di project {proj['name']}"],
+            warnings=["Data trade history tidak tersedia"]
         )
         return contract.to_dict()
     
@@ -111,7 +117,8 @@ def execute(task: dict) -> dict:
             success=False,
             action="show_log",
             entity=proj['name'],
-            display=f"❌ Gagal membaca log: {str(e)}",
-            errors=[str(e)]
+            display=f"📋 Gagal membaca log: {str(e)}. Data trade history tidak tersedia.",
+            errors=[str(e)],
+            warnings=["Data trade history tidak tersedia"]
         )
         return contract.to_dict()

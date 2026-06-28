@@ -1,173 +1,266 @@
 """
-SiCuan Chat Interface
-Terima pesan, think, respond, execute — semua dari LLM
+SiCuan Chat Interface - Wajah & Kepribadian SiCuan
 """
+
 import uuid
 import re
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
+
 from core.logger import logger, console
 from rich.panel import Panel
 from rich.text import Text
 
-BASE = Path(__file__).parent
+from sicuan.brain import SiCuanBrain
+from sicuan.core.personality import Personality
+from sicuan.core.conversation_memory import ConversationMemory
+from sicuan.core.conversation_state import ConversationState
+from sicuan.core.execution_state import ExecutionState
+from sicuan.core.state_persistence import load_state, state_exists
 
 
 class SiCuanChat:
+    """Wajah dan kepribadian SiCuan"""
+    
+    
     def __init__(self):
         self.session_id = str(uuid.uuid4())[:8]
         self.history: List[Dict] = []
-        self._brain = None
-
-    @property
-    def brain(self):
-        if self._brain is None:
-            from sicuan.brain import sicuan_brain
-            self._brain = sicuan_brain
-        return self._brain
+        self.brain = SiCuanBrain()
+        self.personality = Personality()
+        self.memory = ConversationMemory()
+        
+        # Load state dari file
+        try:
+            from sicuan.core.state_persistence import load_state, state_exists
+            print("[STATE] Checking for existing state...")
+            if state_exists():
+                print("[STATE] State file exists, loading...")
+                loaded = load_state()
+                if loaded:
+                    self.state = loaded
+                    print("[STATE] ✅ Loaded existing state")
+                else:
+                    self.state = ConversationState()
+                    print("[STATE] ⚠️ Load failed, using new state")
+            else:
+                self.state = ConversationState()
+                print("[STATE] ℹ️ No state file, using new state")
+        except Exception as e:
+            print(f"[STATE] ❌ Error loading state: {e}")
+            self.state = ConversationState()
+        
+        # Execution state
+        self.execution = ExecutionState()
 
     def chat(self, user_message: str) -> str:
-        """Main entry — user kirim pesan, SiCuan respond + execute"""
-
-        # Deteksi kalau user kirim API key
-        # Format: "ini keynya: sk-or-v1-xxx" atau "OPENROUTER_API_KEY=sk-or-v1-xxx"
-        api_key_pattern = re.search(
-            r'([A-Z_]+(?:API_KEY|TOKEN|SECRET)[A-Z_]*)[\s=:]+([^\s]+)',
-            user_message.upper()
-        )
-        if api_key_pattern:
-            key_name = api_key_pattern.group(1)
-            # Get actual value (case sensitive)
-            val_match = re.search(
-                key_name + r'[\s=:]+(\S+)',
-                user_message, re.IGNORECASE
+        """Main entry - user kirim pesan, SiCuan respond"""
+        
+        print("[CHAT DEBUG] Step 1: Received message:", user_message[:50])
+        
+        # Update memory
+        self.memory.add_interaction(user_message, "")
+        
+        # Deteksi intent
+        intent = self._detect_intent(user_message)
+        print(f"[CHAT DEBUG] Step 2: intent = {intent}")
+        
+        # Small talk
+        if intent == "small_talk":
+            response = self._handle_small_talk(user_message)
+            self.memory.add_interaction(user_message, response)
+            print("[CHAT DEBUG] Small talk response")
+            return response
+        
+        # Task
+        if intent == "task":
+            print("[CHAT DEBUG] Processing task...")
+            
+            # Continuation
+            if self._is_continuation(user_message):
+                print("[CHAT DEBUG] Continuation detected")
+                next_task = self.state.advance_task()
+                if next_task:
+                    response = self._execute_task(next_task)
+                    self.state.add_completed_task(next_task)
+                    return response
+                else:
+                    return "Tidak ada task yang sedang berjalan. Ada yang bisa aku bantu?"
+            
+            # Proses dengan brain
+            print("[CHAT DEBUG] Calling brain...")
+            result = self.brain.think_and_respond(user_message, self.history)
+            action = result.get("action")
+            print(f"[CHAT DEBUG] Brain action: {action}")
+            
+            # Update state SEBELUM eksekusi
+            if action and action != "null":
+                print("[CHAT DEBUG] Updating state before execution...")
+                project = self._extract_project(user_message)
+                if project:
+                    self.state.project = project
+                elif not self.state.project:
+                    self.state.project = "godmeme_bot"
+                self.state.last_action = action
+                self.state.status = "running"
+                self.state.current_task = action
+                if action not in self.state.completed_tasks and action not in self.state.pending_tasks:
+                    self.state.add_pending_task(action)
+                print(f"[CHAT DEBUG] State before: {self.state.get_summary()[:100]}")
+                
+                # Update execution state
+                self.execution.start(action, 1)
+                self.execution.current_step = action
+                self.execution.progress(action)  # Progress 1/1
+                print(f"[CHAT DEBUG] Execution started: {action}")
+            
+            # Eksekusi
+            print("[CHAT DEBUG] Executing...")
+            response = self._execute_and_format(result, user_message)
+            print(f"[CHAT DEBUG] Response: {response[:100]}")
+            
+            # Update state SETELAH eksekusi
+            if action and action != "null":
+                print("[CHAT DEBUG] Updating state after execution...")
+                self.state.last_result = response[:200] if response else "Selesai"
+                self.state.status = "completed"
+                self.state.add_completed_task(action)
+                if action in self.state.pending_tasks:
+                    self.state.pending_tasks.remove(action)
+                if action == "scan_project":
+                    self.state.add_pending_task("analyze_project")
+                    self.state.add_pending_task("review_strategy")
+                elif action == "analyze_project":
+                    self.state.add_pending_task("repair_project")
+                    self.state.add_pending_task("run_bot")
+                elif action == "repair_project":
+                    self.state.add_pending_task("run_bot")
+                    self.state.add_pending_task("analyze_project")
+                print(f"[CHAT DEBUG] State after: {self.state.get_summary()[:100]}")
+                
+                # Update execution state
+                self.execution.complete()
+                self.execution.current_step = action
+                print(f"[CHAT DEBUG] Execution completed: {action}")
+            
+            self.memory.update(
+                last_action=result.get("action"),
+                last_file=self._extract_file(result)
             )
-            if val_match:
-                response = self.brain.handle_api_key_submission(
-                    key_name, val_match.group(1)
-                )
-                self._save_history(user_message, response)
-                return response
-
-        # Cek kalau user cuma kirim value setelah diminta API key
-        last_assistant = self.history[-1]["content"] if self.history and self.history[-1]["role"] == "assistant" else ""
-        if "kirimkan ke sini" in last_assistant.lower() or "paste di sini" in last_assistant.lower():
-            # Extract key name yang diminta
-            key_match = re.search(r'\b([A-Z_]+(?:KEY|TOKEN|SECRET))\b', last_assistant)
-            if key_match and len(user_message.strip()) > 10 and " " not in user_message.strip():
-                key_name = key_match.group(1)
-                response = self.brain.handle_api_key_submission(key_name, user_message.strip())
-                self._save_history(user_message, response)
-                return response
-
-        # Normal flow — LLM decide everything
-        result = self.brain.think_and_respond(user_message, self.history)
-
-        response_text = result.get("response", "...")
-        action = result.get("action")
-        action_target = result.get("action_target", "")
-
-        # Action yang FAKTUAL — hasil eksekusi WAJIB menggantikan total response
-        # LLM sebelumnya, karena LLM bisa mengarang detail (nama file, isi kode,
-        # angka) sebelum action benar-benar dijalankan. Jangan pernah digabung,
-        # supaya karangan tidak nempel di depan data asli.
-        FACTUAL_OVERRIDE_ACTIONS = {
-            "scan_project", "get_file", "show_log", "video_info",
-            "list_projects", "gallery", "godmeme_status", "project_summary",
-            "trace_code",
-        }
-
-        # Action yang sudah punya verifikasi sendiri (lewat auditor_agent) —
-        # response auditor JUGA wajib full-override, bukan digabung.
-        AUDITED_ACTIONS = {
-            "repair_project", "modify_logic", "modify_project",
-        }
-
-        # PLAN EXECUTOR:
-        # Multi-step plan adalah source of truth.
-        # Eksekusi dikelola oleh brain.execute_plan()
-        # agar seluruh planner logic berada di satu tempat.
-
-        action_result = None
-
-        plan = result.get("plan", [])
-
-        if isinstance(plan, list) and len(plan) > 0:
-            try:
-                logger.info(
-                    f"Executing planner: {len(plan)} steps"
-                )
-
-                action_result = self.brain.execute_plan(
-                    plan,
-                    user_message,
-                    self.session_id
-                )
-
-                if action_result:
-                    response_text = action_result
-
-            except Exception as e:
-                logger.error(f"Plan execute error: {e}")
-                response_text += f"\n\nAda error Mas: {str(e)[:100]}"
-
-        elif action and action not in ("null", None, "request_api_key"):
-            try:
-                action_result = self.brain.execute_action(
-                    action,
-                    action_target,
-                    user_message,
-                    self.session_id
-                )
-
-                if action_result:
-                    if "Sebentar Mas" in action_result and ".env" in action_result:
-                        response_text = action_result
-                    elif action in FACTUAL_OVERRIDE_ACTIONS or action in AUDITED_ACTIONS:
-                        response_text = action_result
-                    elif action_result not in response_text:
-                        response_text += "\n\n" + action_result
-
-            except Exception as e:
-                logger.error(f"Action execute error: {e}")
-                response_text += f"\n\nAda error Mas: {str(e)[:100]}"
-
-        # REFLECTION: cek apakah hasil action sudah jawab tuntas pertanyaan user.
-        # Cuma jalan kalau ada action_result faktual (bukan untuk "null" action /
-        # obrolan biasa, dan bukan untuk action yang sudah ada audit sendiri).
-        if (
-            action_result
-            and action in FACTUAL_OVERRIDE_ACTIONS
-            and not plan
-        ):
-            try:
-                followup = self.brain.reflect_and_maybe_continue(
-                    user_message=user_message,
-                    first_action=action,
-                    first_action_result=action_result,
-                    history=self.history,
-                )
-                if followup:
-                    response_text = followup
-            except Exception as e:
-                logger.error(f"Reflection error: {e}")
-
-        self._save_history(user_message, response_text)
-        return response_text
-
-    def _save_history(self, user_msg: str, assistant_msg: str):
-        self.history.append({"role": "user", "content": user_msg})
-        self.history.append({"role": "assistant", "content": assistant_msg})
-        if len(self.history) > 40:
-            self.history = self.history[-40:]
-
-        # Persist to memory
+            self.memory.add_interaction(user_message, response)
+            
+            return response
+        
+        return "Maaf, aku belum paham maksudnya. Bisa dijelaskan lagi?"
+    
+    def _extract_project(self, user_message: str) -> Optional[str]:
+        """Extract project dari user message"""
+        match = re.search(r'(godmeme|flask|video)', user_message.lower())
+        if match:
+            return match.group(1)
+        return None
+    
+    def _extract_file(self, result: dict) -> Optional[str]:
+        """Extract file dari result"""
+        target = result.get("action_target", "")
+        if target and ":" in target:
+            return target.split(":")[1].strip()
+        return None
+    
+    def _detect_intent(self, user_message: str) -> str:
+        """Deteksi intent dari pesan user"""
+        message_lower = user_message.lower()
+        
+        if not message_lower:
+            return "unknown"
+        
+        small_talk_patterns = [
+            "halo", "hai", "hi", "hello", "selamat", "apa kabar",
+            "cuaca", "bagaimana", "terima kasih", "makasih",
+            "pagi", "siang", "malam", "salam"
+        ]
+        
+        for pattern in small_talk_patterns:
+            if pattern in message_lower:
+                return "small_talk"
+        
+        task_patterns = [
+            "scan", "analyze", "analisa", "trace", "modify", "repair",
+            "build", "run", "cek", "lihat", "tampilkan", "perbaiki",
+            "godmeme", "flask", "project", "bot", "trading", "status",
+            "log", "file", "code", "debug", "test", "deploy",
+            "lanjut", "next", "continue", "gas", "ayo", "oke"
+        ]
+        
+        for pattern in task_patterns:
+            if pattern in message_lower:
+                return "task"
+        
+        return "unknown"
+    
+    def _is_continuation(self, user_message: str) -> bool:
+        """Cek apakah user meminta lanjut"""
+        words = user_message.lower().split()
+        if len(words) > 3:
+            return False
+        
+        patterns = ["lanjut", "teruskan", "next", "continue", "gas", "ayo", "oke", "ya"]
+        return any(p in user_message.lower() for p in patterns)
+    
+    def _execute_task(self, action: str) -> str:
+        """Eksekusi task tertentu"""
         try:
-            from memory.memory_store import memory_store
-            memory_store.save_chat(self.session_id, "user", user_msg)
-            memory_store.save_chat(self.session_id, "assistant", assistant_msg)
-        except Exception:
-            pass
-
-
-sicuan_chat = SiCuanChat()
+            result = self.brain.execute_action(
+                action,
+                self.state.project or "",
+                f"Execute {action}",
+                self.session_id
+            )
+            return result or f"✅ {action} selesai"
+        except Exception as e:
+            return f"❌ Gagal menjalankan {action}: {e}"
+    
+    def _execute_and_format(self, result: dict, user_message: str) -> str:
+        """Eksekusi dan format response"""
+        action = result.get("action")
+        response = result.get("response", "Task selesai")
+        
+        if action and action != "null":
+            try:
+                exec_result = self.brain.execute_action(
+                    action,
+                    result.get("action_target", ""),
+                    user_message,
+                    self.session_id
+                )
+                return f"{response}\n\n{exec_result}"
+            except Exception as e:
+                return f"{response}\n\n⚠️ Gagal menjalankan action: {e}"
+        
+        return response
+    
+    def _handle_small_talk(self, user_message: str) -> str:
+        """Handle small talk"""
+        message_lower = user_message.lower()
+        
+        if any(w in message_lower for w in ["halo", "hai", "hi"]):
+            return "Halo juga! Ada yang bisa aku bantu hari ini?"
+        
+        if "apa kabar" in message_lower:
+            return "Baik-baik saja! Siap membantu kapan saja."
+        
+        if any(w in message_lower for w in ["terima kasih", "makasih"]):
+            return "Sama-sama! Senang bisa membantu."
+        
+        return "Halo! Ada yang bisa aku kerjakan?"
+    
+    def get_context(self) -> str:
+        """Dapatkan konteks percakapan"""
+        return self.memory.get_context()
+    
+    def reset(self):
+        """Reset chat"""
+        self.memory = ConversationMemory()
+        self.state = ConversationState()
+        self.execution = ExecutionState()
+        self.history = []

@@ -243,9 +243,20 @@ class RiskManager:
         # Update in database 
         self._update_position_in_db(position) 
 
-        # Check take profit with dynamic threshold based on market volatility
+        # Enhanced take profit logic with multiple profit levels
+        # Primary take profit level
         take_profit_threshold = position.take_profit_price * Decimal('0.995')  # 0.5% buffer
 
+        # Early profit taking for high momentum moves (2% gain)
+        early_take_profit = position.entry_price * Decimal('1.02')
+
+        # Check for early take profit opportunity first
+        if current_price >= early_take_profit and position.pnl_percentage >= Decimal('1.5'):
+            logger.info(f"Early take profit triggered for {token_address} at price {current_price}")
+            self.notifier.send_alert(f"EARLY TAKE PROFIT: Sold {token_address} at {current_price}")
+            return True
+
+        # Check primary take profit with dynamic threshold based on market volatility
         if current_price >= take_profit_threshold: 
             logger.info(f"Take profit triggered for {token_address} at price {current_price}") 
             self.notifier.send_alert(f"TAKE PROFIT: Sold {token_address} at {current_price}") 
@@ -254,14 +265,39 @@ class RiskManager:
         return False
         
     def _update_trailing_stop(self, position: Position, current_price: Decimal):
-        """Update trailing stop price based on current price and buffer"""
+        """Update trailing stop price based on current price and buffer with multi-tier exit strategy"""
         # Calculate trailing stop price (2% below current price)
         trailing_stop_candidate = current_price * (1 - self.trailing_stop_buffer)
-        
+
         # Only update if the new trailing stop is higher than existing one
         if trailing_stop_candidate > position.trailing_stop_price:
             position.trailing_stop_price = trailing_stop_candidate
             logger.info(f"Updated trailing stop for {position.token_address} to {position.trailing_stop_price}")
+
+        # Multi-tier exit strategy based on profit levels
+        if position.entry_price > 0:
+            price_change_pct = (current_price - position.entry_price) / position.entry_price
+
+            # Tier 1: 5% profit - tighten trailing stop to 1% below current price
+            if price_change_pct > Decimal('0.05') and price_change_pct <= Decimal('0.10'):
+                optimized_trailing_stop = current_price * (1 - Decimal('0.01'))
+                if optimized_trailing_stop > position.trailing_stop_price:
+                    position.trailing_stop_price = optimized_trailing_stop
+                    logger.info(f"Tier 1 trailing stop for {position.token_address} to {position.trailing_stop_price} ({price_change_pct*100:.2f}% profit)")
+
+            # Tier 2: 10% profit - tighten trailing stop to 0.5% below current price
+            elif price_change_pct > Decimal('0.10') and price_change_pct <= Decimal('0.20'):
+                optimized_trailing_stop = current_price * (1 - Decimal('0.005'))
+                if optimized_trailing_stop > position.trailing_stop_price:
+                    position.trailing_stop_price = optimized_trailing_stop
+                    logger.info(f"Tier 2 trailing stop for {position.token_address} to {position.trailing_stop_price} ({price_change_pct*100:.2f}% profit)")
+
+            # Tier 3: 20%+ profit - tighten trailing stop to 0.25% below current price
+            elif price_change_pct > Decimal('0.20'):
+                optimized_trailing_stop = current_price * (1 - Decimal('0.0025'))
+                if optimized_trailing_stop > position.trailing_stop_price:
+                    position.trailing_stop_price = optimized_trailing_stop
+                    logger.info(f"Tier 3 trailing stop for {position.token_address} to {position.trailing_stop_price} ({price_change_pct*100:.2f}% profit)")
         
     def add_position(self, token_address: str, amount: Decimal, entry_price: Decimal, 
                      stop_loss_price: Decimal, take_profit_price: Decimal) -> bool: 

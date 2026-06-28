@@ -232,3 +232,28 @@ class PlannerDAG:
             plan["steps"] = steps
 
         return plan
+
+    def plan_with_constraints(self, goal: str, target: str, user_message: str, context: Dict = None) -> Dict:
+        """Generate plan dengan constraint dari user"""
+        from sicuan.core.constraint_engine import ConstraintEngine
+        
+        # Ekstrak constraint
+        constraints = ConstraintEngine.extract_constraints(user_message)
+        
+        # Generate plan normal
+        plan = self.plan(goal, target, context)
+        
+        # Apply constraint
+        if constraints.no_code_change or constraints.only_read:
+            steps = plan.get("steps", [])
+            filtered_steps = ConstraintEngine.apply_constraints(steps, constraints)
+            plan["steps"] = filtered_steps
+            
+            # Tambahkan info constraint ke plan
+            plan["constraints"] = {
+                "no_code_change": constraints.no_code_change,
+                "only_read": constraints.only_read,
+                "filtered": len(steps) - len(filtered_steps)
+            }
+        
+        return plan

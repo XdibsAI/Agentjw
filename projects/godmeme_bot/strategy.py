@@ -545,27 +545,74 @@ class Strategy:
                     current_value_usd = current_price * float(pos.token_amount)
                     entry_value_usd = pos.entry_price * float(pos.token_amount)
 
-                    # Stop loss check (USD-based)
+                    # Dynamic stop loss based on volatility and market conditions
+                    volatility_adjusted_stop_loss = config.STOP_LOSS_PERCENT * (1 + pos.volatility)
+
+                    # Enhanced trailing stop with volatility adjustment
+                    if not hasattr(pos, 'highest_price'):
+                        pos.highest_price = pos.entry_price
+
+                    if current_price > pos.highest_price:
+                        pos.highest_price = current_price
+
+                    # Debug logging for position monitoring
+                    logger.debug(f"Monitoring position {mint}: price={current_price}, entry={pos.entry_price}, pnl={pnl:.2f}%, held_min={held_min:.1f}")
+
+                    # Multi-tier exit strategy
+                    # Tier 1: Immediate stop loss
                     if entry_value_usd > 0 and current_value_usd <= (
-                        entry_value_usd * (1 - config.STOP_LOSS_PERCENT / 100)
+                        entry_value_usd * (1 - volatility_adjusted_stop_loss / 100)
                     ):
                         should_sell = True
                         reason = f"Stop Loss {pnl:.1f}%"
-                    # Take profit check (USD-based)
+                        logger.debug(f"Stop loss triggered for {mint}: {reason}")
+
+                    # Tier 2: Take profit with dynamic scaling
                     elif entry_value_usd > 0 and current_value_usd >= (
                         entry_value_usd * config.TAKE_PROFIT_MULTIPLIER
                     ):
                         should_sell = True
                         reason = f"Take Profit +{pnl:.1f}%"
-                    # Time-based exit
-                    elif held_min >= 240:  # 4 hours
+                        logger.debug(f"Take profit triggered for {mint}: {reason}")
+
+                    # Tier 3: Trailing stop with volatility adjustment
+                    elif pos.highest_price > pos.entry_price:
+                        trailing_distance = pos.highest_price * (config.TRAILING_STOP_PERCENT / 100) * (1 + pos.volatility)
+                        trailing_stop_price = pos.highest_price - trailing_distance
+                        if current_price < trailing_stop_price:
+                            should_sell = True
+                            reason = f"Trailing Stop {pnl:.1f}%"
+                            logger.debug(f"Trailing stop triggered for {mint}: current_price={current_price}, trailing_stop_price={trailing_stop_price}")
+
+                    # Tier 4: Volatility breakout protection
+                    elif pos.volatility > 0 and abs(pnl) > (config.STOP_LOSS_PERCENT * 2 * (1 + pos.volatility)):
                         should_sell = True
-                        reason = f"Time Stop (4h) {pnl:.1f}%"
+                        reason = f"Volatility Breakout {pnl:.1f}%"
+                        logger.debug(f"Volatility breakout triggered for {mint}: volatility={pos.volatility}, pnl={pnl}")
+
+                    # Tier 5: Time-based exit with volatility-adjusted timing
+                    elif held_min >= (240 - (pos.volatility * 60)):  # Adjust hold time based on volatility
+                        should_sell = True
+                        reason = f"Time Stop {held_min:.0f}m {pnl:.1f}%"
+                        logger.debug(f"Time stop triggered for {mint}: held_min={held_min}")
+
+                    # Tier 6: RSI-based exit (if RSI available)
+                    elif hasattr(pos, 'rsi') and pos.rsi > 70:  # Overbought condition
+                        should_sell = True
+                        reason = f"RSI Overbought {pos.rsi:.0f}"
+                        logger.debug(f"RSI overbought triggered for {mint}: rsi={pos.rsi}")
+
+                    # Debug logging for decision making
+                    logger.debug(f"Position {mint} evaluation - should_sell: {should_sell}, reason: {reason}, current_price: {current_price}, pnl: {pnl:.2f}%")
+
+                    # Additional debug logging for detailed state tracking
+                    logger.debug(f"Position {mint} detailed state - token_amount: {pos.token_amount}, current_value_usd: {current_value_usd:.4f}, entry_value_usd: {entry_value_usd:.4f}, volatility: {pos.volatility:.4f}")
 
                     if should_sell:
+                        logger.info(f"Closing position for {mint}: {reason}")
                         await self._close_position(mint, pos, current_price, reason)
 
-                await asyncio.sleep(15)
+                await asyncio.sleep(5)  # Check more frequently for better timing
             except Exception as e:
                 logger.error(f"Position monitor error: {e}")
                 await asyncio.sleep(20)
