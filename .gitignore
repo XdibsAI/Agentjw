@@ -121,3 +121,31 @@ datasets/*.json
 projects/*/.pid
 projects/*/0
 projects/*/*.bak*
+
+# Backup files
+*.backup_*
+*.before_*
+*.bak_*
+*.pre_registry
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime files
+sicuan/memory/*.json
+sicuan_audit_report/
+memory/*.log
+memory/*.json
+!memory/.gitkeep
+
+# Reports
+reports/*.json
+!reports/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
