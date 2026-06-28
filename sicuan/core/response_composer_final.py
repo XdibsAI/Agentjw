@@ -21,17 +21,17 @@ class ResponseComposerFinal:
         # Natural explanations berdasarkan reason_code
         if reason_code == "PROJECT_NOT_SCANNED":
             if action == "scan_project":
-                return f"Aku memilih melakukan scan terlebih dahulu karena project belum memiliki hasil scan yang valid. Kalau langsung masuk ke tahap analisis, ada risiko analisis dilakukan berdasarkan struktur project yang belum diverifikasi.\n\nKeyakinan keputusan: {confidence:.0f}%."
+                return f"Aku memilih melakukan scan terlebih dahulu karena project belum memiliki hasil scan yang valid. Kalau langsung masuk ke tahap analisis, ada risiko analisis dilakukan berdasarkan struktur project yang belum diverifikasi.\n\nKeyakinan keputusan: {(confidence * 100):.0f}%."
             else:
-                return f"Aku memilih {action} karena project belum memiliki hasil scan yang valid. Langkah ini diperlukan untuk memastikan struktur project diverifikasi terlebih dahulu.\n\nKeyakinan keputusan: {confidence:.0f}%."
+                return f"Aku memilih {action} karena project belum memiliki hasil scan yang valid. Langkah ini diperlukan untuk memastikan struktur project diverifikasi terlebih dahulu.\n\nKeyakinan keputusan: {(confidence * 100):.0f}%."
         
         elif reason_code == "SCAN_COMPLETED":
-            return f"Aku memilih {action} karena scan sudah selesai dan hasilnya valid. Langkah ini melanjutkan alur kerja yang sudah direncanakan.\n\nKeyakinan keputusan: {confidence:.0f}%."
+            return f"Aku memilih {action} karena scan sudah selesai dan hasilnya valid. Langkah ini melanjutkan alur kerja yang sudah direncanakan.\n\nKeyakinan keputusan: {(confidence * 100):.0f}%."
         
         else:
             # Generic explanation
             candidate_text = f"Alternatif yang dipertimbangkan: {', '.join(candidates[:3])}" if candidates else ""
-            return f"Aku memilih {action} berdasarkan alur kerja yang sudah direncanakan.\n\n{candidate_text}\nKeyakinan keputusan: {confidence:.0f}%."
+            return f"Aku memilih {action} berdasarkan alur kerja yang sudah direncanakan.\n\n{candidate_text}\nKeyakinan keputusan: {(confidence * 100):.0f}%."
     
     @staticmethod
     def compose_knowledge(entity: str, data: Dict, question: str = "") -> str:
@@ -58,7 +58,7 @@ class ResponseComposerFinal:
         # Jika pertanyaan tentang status
         if "status" in question.lower():
             if files:
-                return f"Project {entity} telah di-scan dengan {files} file valid." + (f" Keyakinan: {confidence:.0f}%." if confidence else "")
+                return f"Project {entity} telah di-scan dengan {files} file valid." + (f" Keyakinan: {(confidence * 100):.0f}%." if confidence else "")
             return f"Project {entity} belum di-scan."
         
         # Default: berikan ringkasan
