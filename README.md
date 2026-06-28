@@ -106,7 +106,28 @@ Shadow Mode menjalankan Executive Brain dan Legacy Executor secara paralel.
 Status pilot:
 
 - Overall Match Rate : **80.6%**
-- Core Actions Match : **100%**
+### 🔦 Shadow Mode Status
+
+| Kategori | Match Rate | Status |
+|----------|------------|--------|
+| **Core Actions** | **100%** | ✅ Production Ready |
+| **Non-Core Actions** | **~50%** | 🧪 Experimental |
+| **Overall** | **80.6%** | 🟡 Stabil |
+
+### ✅ Core Actions (100% Match)
+
+- scan_project
+- analyze_project
+- trace_code
+- modify_logic
+- repair_project
+- build_project
+- modify_project
+- get_file
+- run_bot
+- list_projects
+- project_summary
+- show_log
 
 Core actions yang sudah 100%:
 
