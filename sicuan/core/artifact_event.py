@@ -91,6 +91,13 @@ class ArtifactEvent:
     
     def publish(self):
         """Publish event ke semua subscriber"""
+        # Save dulu ke disk
+        try:
+            self.save()
+            print(f"[ARTIFACT] Saved to disk: {self.artifact_id}")
+        except Exception as e:
+            print(f"[ARTIFACT] Save error: {e}")
+        # Baru publish ke subscriber
         from sicuan.core.artifact_subscribers import ArtifactSubscriberRegistry
         registry = ArtifactSubscriberRegistry()
         registry.publish(self)

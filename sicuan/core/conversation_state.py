@@ -10,6 +10,19 @@ from datetime import datetime
 @dataclass
 class ConversationState:
 
+    def get_artifact(self) -> Optional[Dict]:
+        """Dapatkan artifact terakhir"""
+        if not self.last_artifact_id:
+            return None
+        from pathlib import Path
+        import json
+        artifact_path = Path(f"/home/dibs/agentjw/memory/artifacts/{self.last_artifact_id}.json")
+        if artifact_path.exists():
+            with open(artifact_path) as f:
+                return json.load(f)
+        return None
+
+
     @classmethod
     def from_dict(cls, data: dict) -> 'ConversationState':
         """Create ConversationState dari dict"""
@@ -32,6 +45,7 @@ class ConversationState:
     
     # Aksi terakhir
     last_action: Optional[str] = None
+    last_artifact_id: Optional[str] = None
     last_result: Optional[str] = None
     
     # Status pekerjaan

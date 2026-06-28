@@ -874,6 +874,25 @@ Buat jawaban final:
                     return req_check
                 from agents.orchestrator import orchestrator
                 result = orchestrator.execute(user_request, [], session_id)
+                # Save artifact
+                try:
+                    from sicuan.core.artifact_event import ArtifactEvent, OutcomeEvent
+                    from sicuan.core.artifact_subscribers import ArtifactSubscriberRegistry
+                    event = ArtifactEvent(
+                        session_id=session_id,
+                        project=target,
+                        action="build_project",
+                        target=target
+                    )
+                    event.outcome = OutcomeEvent(
+                        success=True,
+                        result=str(result),
+                        duration=0
+                    )
+                    registry = ArtifactSubscriberRegistry()
+                    registry.publish(event)
+                except Exception as e:
+                    logger.error(f"Artifact save error: {e}")
                 return f"Project '{target}' sedang dibangun. Status: {result.get('status','running')}"
 
 

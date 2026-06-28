@@ -1,0 +1,66 @@
+{
+  "artifact_id": "art_ed7a877d",
+  "parent_artifact_id": null,
+  "schema_version": "2.0",
+  "session_id": "8190e316",
+  "project": "godmeme",
+  "action": "analyze_project",
+  "target": "godmeme",
+  "timestamp": "2026-06-28T16:28:07.616110",
+  "executor_version": "2.0.0",
+  "planner_version": "2.0.0",
+  "brain_version": "2.0.0",
+  "knowledge": [
+    {
+      "entity": "project",
+      "attribute": "status",
+      "value": "godmeme",
+      "confidence": 0.95,
+      "source": "analyze_project",
+      "metadata": {}
+    },
+    {
+      "entity": "action",
+      "attribute": "status",
+      "value": "analyze_project",
+      "confidence": 0.95,
+      "source": "analyze_project",
+      "metadata": {}
+    },
+    {
+      "entity": "status",
+      "attribute": "status",
+      "value": "completed",
+      "confidence": 0.95,
+      "source": "analyze_project",
+      "metadata": {}
+    }
+  ],
+  "decision": {
+    "selected_action": "analyze_project",
+    "candidate_actions": [
+      {
+        "action": "analyze_project",
+        "score": 0.95,
+        "reason": "Selected based on state"
+      }
+    ],
+    "reason_code": "TASK_EXECUTED",
+    "evidence": {},
+    "confidence": 0.95,
+    "constraints": []
+  },
+  "outcome": {
+    "success": true,
+    "result": "Baik, aku akan cek risiko trading kita saat ini. Sebentar ya...\n\nPROJECT: godmeme_bot\nTrace confidence: 100.0%\nTotal functions: 129\n\nFEATURE CHECK:\n\u2705 close_position: FOUND\n   - /home/dibs/agentjw/projects/godmeme_bot/token_memory.py\n   - /home/dibs/agentjw/projects/godmeme_bot/strategy.py\n   - /home/dibs/agentjw/projects/godmeme_bot/dashboard.py\n\u2705 liquidity_filter: FOUND\n   - /home/dibs/agentjw/projects/godmeme_bot/sniper.py\n   - /home/dibs/agentjw/projects/godmeme_bot/patch_strategy_filters.py\n",
+    "duration": 0,
+    "evidence": {
+      "files": [],
+      "logs": [],
+      "metrics": {},
+      "artifacts": []
+    },
+    "errors": []
+  },
+  "reflection": null
+}
