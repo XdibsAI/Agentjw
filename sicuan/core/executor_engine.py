@@ -238,3 +238,26 @@ class ExecutorEngine:
             "queue_size": self.queue_size(),
             "stats": self.runtime.get_stats()
         }
+
+    def _handle_api_error(self, error: Exception, retry_count: int = 0) -> Dict:
+        """Handle API error dengan graceful fallback"""
+        max_retries = 3
+        if retry_count < max_retries:
+            wait_time = 2 ** retry_count  # Exponential backoff
+            logger.warning(f"API error, retrying in {wait_time}s... ({retry_count+1}/{max_retries})")
+            time.sleep(wait_time)
+            return self._retry_with_backoff(error, retry_count + 1)
+        else:
+            logger.error(f"API error after {max_retries} retries: {error}")
+            return {
+                "success": False,
+                "error": f"API error after {max_retries} retries: {str(error)}",
+                "fallback": True
+            }
+
+    def _retry_with_backoff(self, error: Exception, retry_count: int) -> Dict:
+        """Retry dengan exponential backoff"""
+        try:
+            return self.execute_next()
+        except Exception as e:
+            return self._handle_api_error(e, retry_count)

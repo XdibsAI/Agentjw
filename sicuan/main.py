@@ -31,3 +31,21 @@ if __name__ == "__main__":
     import time
     while True:
         time.sleep(60)
+
+import signal
+import sys
+
+def graceful_shutdown(signum, frame):
+    """Handle SIGINT dan SIGTERM dengan graceful shutdown"""
+    logger.info("Received shutdown signal. Cleaning up...")
+    # Save state
+    if hasattr(brain, 'executor'):
+        brain.executor.clear_queue()
+    # Save runtime state
+    if hasattr(brain, 'runtime_bus'):
+        brain.runtime_bus.clear()
+    logger.info("Shutdown complete.")
+    sys.exit(0)
+
+signal.signal(signal.SIGINT, graceful_shutdown)
+signal.signal(signal.SIGTERM, graceful_shutdown)
