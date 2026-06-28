@@ -271,3 +271,32 @@ AgentJW V2 — Executive Brain Architecture
 Production Ready 🚀
 
 </div>
+
+## 📋 Version History
+
+| Version | Date | Changes |
+|---------|------|---------|
+| **v2.1.1** | 2026-06-28 | Documentation & cleanup, add ROADMAP.md, move unused files to archive |
+| **v2.1.0** | 2026-06-28 | Remove backup files, clean __pycache__, update .gitignore |
+| **v2.0.1** | 2026-06-27 | README rewrite, cleanup backup files |
+| **v2.0.0** | 2026-06-26 | Executive Brain architecture, 100% core actions match |
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📞 Support
+
+- Issues: [GitHub Issues](https://github.com/XdibsAI/Agentjw/issues)
+- Documentation: [Wiki](https://github.com/XdibsAI/Agentjw/wiki)
+
+## ⚠️ Disclaimer
+
+AgentJW V2 is designed as an AI assistant for software engineering tasks. 
+Always review code changes before deployment. 
+The creator is not responsible for any damages or losses caused by the use of this software.
+
