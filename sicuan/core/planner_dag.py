@@ -13,10 +13,10 @@ class PlannerDAG:
     # Template DAG untuk setiap jenis plan
     TEMPLATES = {
         "repair": [
-            {"id": "step_1", "action": "scan_project", "depends_on": [], "optional": False},
-            {"id": "step_2", "action": "analyze_project", "depends_on": ["step_1"], "optional": False},
-            {"id": "step_3", "action": "repair_project", "depends_on": ["step_2"], "optional": False},
-            {"id": "step_4", "action": "analyze_project", "depends_on": ["step_3"], "optional": False},
+            {"id": "step_1", "action": "scan_project", "depends_on": [], "optional": False, "reason": "Project belum pernah discan sehingga struktur belum diketahui."},
+            {"id": "step_2", "action": "analyze_project", "depends_on": ["step_1"], "optional": False, "reason": "Setelah scan, perlu menganalisis kode untuk menemukan potensi masalah."},
+            {"id": "step_3", "action": "repair_project", "depends_on": ["step_2"], "optional": False, "reason": "Memperbaiki masalah yang ditemukan saat analisis."},
+            {"id": "step_4", "action": "analyze_project", "depends_on": ["step_3"], "optional": False, "reason": "Memverifikasi perbaikan dengan analisis ulang."},
         ],
         "modify": [
             {"id": "step_1", "action": "trace_code", "depends_on": [], "optional": False},
