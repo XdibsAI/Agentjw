@@ -15,6 +15,7 @@ from sicuan.brain import SiCuanBrain
 from sicuan.core.personality import Personality
 from sicuan.core.conversation_memory import ConversationMemory
 from sicuan.core.conversation_state import ConversationState
+from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.state_persistence import load_state, state_exists
 from sicuan.core.execution_state import ExecutionState
 from sicuan.core.artifact_event import ArtifactEvent, OutcomeEvent
@@ -48,6 +49,7 @@ class SiCuanChat:
         
         # Execution state
         self.execution = ExecutionState()
+        self.context = ConversationContext()
     
     def chat(self, user_message: str) -> str:
         """Main entry - user kirim pesan, SiCuan respond"""
@@ -207,6 +209,7 @@ class SiCuanChat:
                     print(f"[ARTIFACT] Error: {e}")
             
             # Update memory
+            self.context.update(action=action, entity=self.state.project, intent=action, result=response[:100])
             self.memory.update(
                 last_action=result.get("action"),
                 last_file=self._extract_file(result)
@@ -456,6 +459,7 @@ class SiCuanChat:
         self.memory = ConversationMemory()
         self.state = ConversationState()
         self.execution = ExecutionState()
+        self.context = ConversationContext()
         self.history = []
 
     def _handle_memory_query(self, user_message: str) -> str:

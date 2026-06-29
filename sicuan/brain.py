@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Dict, List, Optional
 from core.logger import logger
 from memory.unified_projects import unified_projects
+from sicuan.core.long_term_memory import get_long_term_memory
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -262,6 +263,7 @@ class SiCuanBrain:
             target = self._last_target
             from pathlib import Path
             from memory.unified_projects import unified_projects
+from sicuan.core.long_term_memory import get_long_term_memory
             project_dir = Path("/home/dibs/agentjw/projects") / target
             if not project_dir.exists():
                 projects = unified_projects.list_projects()
