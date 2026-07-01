@@ -570,6 +570,14 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
             return result
         except Exception as e:
             logger.error(f"SiCuan brain error: {e}")
+            # Coba parse response dari LLM jika result bukan dict
+            try:
+                if isinstance(raw, list):
+                    raw = raw[0] if raw else {}
+                if isinstance(raw, dict):
+                    return raw
+            except:
+                pass
             return {
                 "response": "Waduh, ada yang ga beres di otak aku sebentar. Coba lagi ya Mas.",
                 "action": None,
@@ -1558,10 +1566,10 @@ USER REQUEST:
 
                 return f"Log tidak ditemukan: {target}"
 
-        except Exception as e:
-                    return (
-                        f"Gagal membaca log: {e}"
-                    )
+
+            elif action == "build_task_queue":
+                from sicuan.actions.build_task_queue import execute as _btq
+                return _btq(brain=self)
 
         except Exception as e:
             return f"Error saat execute {action}: {e}"
