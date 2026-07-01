@@ -142,6 +142,43 @@ class SiCuanBrain:
             pass
 
 
+
+        # ── Workspace Scanner ─────────────────────────────────────────────
+        try:
+            from sicuan.core.workspace_scanner import WorkspaceScanner
+            _ws = WorkspaceScanner()
+            _ws_data = _ws.scan()
+            _py = _ws_data.get("python_files", 0)
+            _proj_count = _ws_data.get("projects_count", 0)
+            _sys_count = _ws_data.get("systems_count", 0)
+            _projects = list(_ws_data.get("projects", {}).keys())
+            _systems = list(_ws_data.get("systems", {}).keys())
+            ctx.append("\nWORKSPACE KONDISI SEKARANG:")
+            ctx.append(f"  Python files: {_py} | Projects: {_proj_count} | Systems: {_sys_count}")
+            if _projects:
+                ctx.append(f"  Projects: {', '.join(_projects[:5])}")
+            if _systems:
+                ctx.append(f"  Systems aktif: {', '.join(_systems[:5])}")
+        except Exception:
+            pass
+        # ── End Workspace Scanner ─────────────────────────────────────────
+
+        # ── Context Manager (recent session context) ──────────────────────
+        try:
+            from sicuan.core.context_manager import ContextManager as _CM
+            _cm = _CM()
+            _recent_ctx = _cm.get_recent_contexts(limit=2)
+            if _recent_ctx:
+                ctx.append("\nKONTEKS SESI SEBELUMNYA:")
+                for _rc in _recent_ctx:
+                    _topic = _rc.get("topic", "")
+                    _summary = _rc.get("summary", "")
+                    if _topic:
+                        ctx.append(f"  [{_topic}] {_summary[:150]}")
+        except Exception:
+            pass
+        # ── End Context Manager ───────────────────────────────────────────
+
         # ── Goals SiCuan ──────────────────────────────────────────────
         try:
             from sicuan.core.goal_manager import GoalManager
@@ -571,7 +608,13 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 max_tokens=1000,
                 json_mode=True,
             )
-            result = json.loads(raw)
+            # Normalisasi: llm.chat() kadang return list atau dict langsung
+            if isinstance(raw, list):
+                raw = raw[0] if raw else "{}"
+            if isinstance(raw, dict):
+                result = raw
+            else:
+                result = json.loads(raw)
 
             # Simpan metadata planner terakhir untuk planner memory.
             self._last_intent = result.get("intent", "")
