@@ -142,6 +142,22 @@ class SiCuanBrain:
             pass
 
 
+        # ── Goals SiCuan ──────────────────────────────────────────────
+        try:
+            from sicuan.core.goal_manager import GoalManager
+            _gm = GoalManager()
+            _goals = _gm.load()
+            if _goals:
+                _primary = _goals.get("primary_goal", "")
+                _long_term = _goals.get("long_term_goals", [])
+                if _primary:
+                    ctx.append("\nPRIMARY GOAL SICUAN: " + _primary)
+                if _long_term:
+                    ctx.append("LONG TERM GOALS: " + " | ".join(str(g) for g in _long_term[:5]))
+        except Exception:
+            pass
+        # ── End Goals ─────────────────────────────────────────────────────
+
         # ── Knowledge base SiCuan ─────────────────────────────────────────
         # Dibaca setiap request supaya LLM selalu tahu:
         #   1. Task queue & fokus aktif (dari ExecutiveEngine)
