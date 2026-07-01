@@ -20,6 +20,7 @@ from sicuan.core.semantic_query import SemanticQuery
 from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.goal_engine import GoalEngine
 from sicuan.core.shadow_mode import ShadowMode
+from sicuan.core.provenance_engine import ProvenanceEngine
 from sicuan.core.state_persistence import load_state, state_exists
 from sicuan.core.execution_state import ExecutionState
 from sicuan.core.artifact_event import ArtifactEvent, OutcomeEvent
@@ -56,6 +57,7 @@ class SiCuanChat:
         self.context = ConversationContext()
         self.goal_engine = GoalEngine()
         self.shadow = ShadowMode()
+        self.provenance = ProvenanceEngine()
         self._load_context()
     
     def chat(self, user_message: str) -> str:
@@ -79,7 +81,29 @@ class SiCuanChat:
             return "Waduh, ada yang ga beres sebentar. Coba lagi ya Mas."
 
         action = result.get("action") if isinstance(result, dict) else None
+        intent = result.get("intent", "unknown") if isinstance(result, dict) else "unknown"
         print(f"[CHAT] Brain decided: action={action}")
+
+        # === PROVENANCE: Catat keputusan ===
+        try:
+            if hasattr(self, 'provenance') and action and action != "null":
+                self.provenance.record_decision(
+                    action=action,
+                    target=self.state.project or "unknown",
+                    source_type="llm",
+                    source_details={
+                        "intent": intent,
+                        "confidence": result.get('confidence', 0.9) if isinstance(result, dict) else 0.9
+                    },
+                    input_data={"user_message": user_message[:200]},
+                    output_data={"action": action, "target": self.state.project or "unknown"},
+                    reasoning=[f"LLM decided: {action} with intent {intent}"],
+                    confidence=result.get('confidence', 0.9) if isinstance(result, dict) else 0.9,
+                    session_id=self.session_id
+                )
+                print(f"[PROVENANCE] ✅ Recorded: {action}")
+        except Exception as e:
+            print(f"[PROVENANCE] Error: {e}")
 
         # Execute dan format response
         response = self._execute_and_format(result, user_message)
@@ -381,6 +405,7 @@ class SiCuanChat:
         self.context = ConversationContext()
         self.goal_engine = GoalEngine()
         self.shadow = ShadowMode()
+        self.provenance = ProvenanceEngine()
         self._load_context()
         self.history = []
 
