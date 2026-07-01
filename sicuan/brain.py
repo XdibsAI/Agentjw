@@ -141,6 +141,47 @@ class SiCuanBrain:
         except Exception:
             pass
 
+        # Knowledge base SiCuan — capabilities & self-audit summary
+        try:
+            from pathlib import Path as _KPath
+            k_dir = _KPath(__file__).parent / 'knowledge'
+
+            # Capabilities
+            caps_file = k_dir / 'capabilities.json'
+            if caps_file.exists():
+                caps = json.loads(caps_file.read_text(encoding='utf-8'))
+                if caps:
+                    cap_list = caps if isinstance(caps, list) else list(caps.keys())
+                    ctx.append(f"
+KEMAMPUAN SICUAN: {', '.join(str(c) for c in cap_list[:20])}")
+
+            # Self-audit summary (action list & priorities)
+            audit_file = k_dir / 'self_audit.json'
+            if audit_file.exists():
+                audit = json.loads(audit_file.read_text(encoding='utf-8'))
+                summary = audit.get('static_analysis_summary', {})
+                if summary:
+                    ctx.append(f"
+SELF-AUDIT TERAKHIR: {audit.get('generated_at','')[:10]}")
+                    ctx.append(f"  Orphan files: {summary.get('orphan_files_count',0)} | Broken imports: {summary.get('broken_imports_count',0)}")
+
+            # Task queue dari executive engine
+            mem_dir = _KPath(__file__).parent.parent / 'memory'
+            exec_state = mem_dir / 'executive_state.json'
+            task_q = mem_dir / 'task_queue.json'
+            if exec_state.exists() and task_q.exists():
+                state = json.loads(exec_state.read_text(encoding='utf-8'))
+                queue = json.loads(task_q.read_text(encoding='utf-8'))
+                focus = state.get('current_focus') or 'idle'
+                ctx.append(f"
+TASK QUEUE SICUAN:")
+                ctx.append(f"  Fokus: {focus}")
+                if queue:
+                    for i, t in enumerate(queue[:3], 1):
+                        ctx.append(f"  {i}. {t}")
+        except Exception:
+            pass
+
         # Video projects: REAL render status (never let the LLM guess this)
         try:
             from memory.memory_store import memory_store
