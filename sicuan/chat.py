@@ -54,210 +54,48 @@ class SiCuanChat:
         self.context = ConversationContext()
     
     def chat(self, user_message: str) -> str:
-        """Main entry - user kirim pesan, SiCuan respond"""
-        
-        print("[CHAT DEBUG] Step 1: Received message:", user_message[:50])
-        
+        """Main entry - semua pesan langsung ke brain (semantic routing).
+        LLM yang decide intent dan action, bukan keyword matching."""
+
+        print("[CHAT] Received:", user_message[:60])
+
         # Update memory
         self.memory.add_interaction(user_message, "")
-        
-        # Deteksi intent
-        intent = self._detect_intent(user_message)
-        print(f"[CHAT DEBUG] Step 2: intent = {intent}")
-        
-        # Small talk
-        if intent == "small_talk":
-            response = self._handle_small_talk(user_message)
-            self.memory.add_interaction(user_message, response)
-            print("[CHAT DEBUG] Small talk response")
-            return response
-        
-        # Memory Query
-        if intent == "memory_query":
-            return self._handle_memory_query(user_message)
-        
-        # Progress Query
-        if intent == "progress_query":
-            return self._handle_progress_query(user_message)
-        
-        # Summary Query
-        if intent == "summary_query":
-            return self._handle_summary_query(user_message)
-        
-        # Decision Query - gunakan semantic
-        if intent == "decision_query":
-            return self._handle_semantic_query(user_message)
-        
-        # Knowledge Query
-        if intent == "knowledge_query":
-            return self._handle_knowledge_query(user_message)
-        
-        # Resume Query - untuk "besok lanjut", "nanti lanjut"
-        if "besok" in user_message.lower() or "nanti" in user_message.lower() or "lanjut dari" in user_message.lower():
-            return self._handle_resume_query(user_message)
-        
-        # Task
-        if intent == "task":
-            print("[CHAT DEBUG] Processing task...")
-            
-            # Check continuation
-            if self._is_continuation(user_message):
-                print("[CHAT DEBUG] Continuation detected")
-                next_task = self.state.advance_task()
-                if next_task:
-                    print(f"[TASK] Advancing to: {next_task}")
-                    response = self._execute_task(next_task)
-                    return response
-                else:
-                    return "Tidak ada task yang sedang berjalan. Ada yang bisa aku bantu?"
-            
-            # New task - proses dengan brain
-            print("[CHAT DEBUG] New task, calling brain...")
-            result = self.brain.think_and_respond(user_message, self.history)
-            action = result.get("action")
-            print(f"[CHAT DEBUG] Brain action: {action}")
-            
-            # Update state sebelum eksekusi
-            if action and action != "null":
-                project = self._extract_project(user_message)
-                if project:
-                    self.state.project = project
-                elif not self.state.project:
-                    self.state.project = "godmeme_bot"
-                self.state.last_action = action
-                self.state.status = "running"
-                self.state.current_task = action
-                if action not in self.state.completed_tasks and action not in self.state.pending_tasks:
-                    self.state.add_pending_task(action)
-                print(f"[CHAT DEBUG] State before: {self.state.get_summary()[:100]}")
-            
-            # Eksekusi
-            print("[CHAT DEBUG] Executing...")
-            response = self._execute_and_format(result, user_message)
-            print(f"[CHAT DEBUG] Response: {response[:100]}")
-            
-            # Update state setelah eksekusi
-            if action and action != "null":
-                print("[CHAT DEBUG] Updating state after execution...")
-                self.state.last_result = response[:200] if response else "Selesai"
-                self.state.status = "completed"
-                self.state.add_completed_task(action)
-                if action in self.state.pending_tasks:
-                    self.state.pending_tasks.remove(action)
-                if action == "scan_project":
-                    self.state.add_pending_task("analyze_project")
-                    self.state.add_pending_task("review_strategy")
-                elif action == "analyze_project":
-                    self.state.add_pending_task("repair_project")
-                    self.state.add_pending_task("run_bot")
-                elif action == "repair_project":
-                    self.state.add_pending_task("run_bot")
-                    self.state.add_pending_task("analyze_project")
-                print(f"[CHAT DEBUG] State after: {self.state.get_summary()[:100]}")
-                
-                # Save artifact - publish akan otomatis save
-                try:
-                    from sicuan.core.artifact_event import KnowledgeEvent, DecisionEvent, CandidateAction
-                    
-                    event = ArtifactEvent(
-                        session_id=self.session_id,
-                        project=self.state.project or "",
-                        action=action,
-                        target=self.state.project or ""
-                    )
-                    
-                    # Tambahkan knowledge dari result
-                    if result:
-                        # Extract knowledge dari result
-                        knowledge_items = [
-                            ("project", self.state.project or ""),
-                            ("action", action),
-                            ("status", "completed")
-                        ]
-                        for entity, value in knowledge_items:
-                            if value:
-                                event.knowledge.append(
-                                    KnowledgeEvent(
-                                        entity=entity,
-                                        attribute="status",
-                                        value=value,
-                                        confidence=0.95,
-                                        source=action
-                                    )
-                                )
-                        print(f"[KNOWLEDGE] Added {len(event.knowledge)} knowledge items")
-                    
-                    # Tambahkan decision
-                    event.decision = DecisionEvent(
-                        selected_action=action,
-                        candidate_actions=[
-                            CandidateAction(action, 0.95, "Selected based on state")
-                        ],
-                        reason_code="TASK_EXECUTED",
-                        confidence=0.95
-                    )
-                    print(f"[DECISION] Added decision for {action}")
-                    
-                    event.outcome = OutcomeEvent(
-                        success=True,
-                        result=str(response)[:500],
-                        duration=0
-                    )
-                    
-                    # Publish akan otomatis save ke disk
-                    event.publish()
-                    print(f"[ARTIFACT] Published and saved for {action}")
-                except Exception as e:
-                    print(f"[ARTIFACT] Error: {e}")
-            
-            # Update memory
-            self.context.update(action=action, entity=self.state.project, intent=action, result=response[:100])
-            self.memory.update(
-                last_action=result.get("action"),
-                last_file=self._extract_file(result)
-            )
-            self.memory.add_interaction(user_message, response)
-            
-            return response
-        
-        # Fallback: daripada return template "tidak paham", forward ke brain.
-        # LLM punya full context (load_context) dan bisa jawab apapun
-        # yang tidak dikenali routing keyword-based di atas.
-        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
+
+        # Shortcut: pesan sangat pendek (1-2 karakter) → tanya balik
+        if len(user_message.strip()) <= 2:
+            return "Halo! Ada yang bisa aku bantu?"
+
+        # Semua pesan → brain (LLM decide intent + action)
         try:
             result = self.brain.think_and_respond(user_message, self.history)
-            action = result.get("action")
-            response = self._execute_and_format(result, user_message)
-            self.memory.add_interaction(user_message, response)
-            return response
-        except Exception as _e:
-            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
-            # Fallback: daripada return template "tidak paham", forward ke brain.
-        # LLM punya full context (load_context) dan bisa jawab apapun
-        # yang tidak dikenali routing keyword-based di atas.
-        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
-        try:
-            result = self.brain.think_and_respond(user_message, self.history)
-            action = result.get("action")
-            response = self._execute_and_format(result, user_message)
-            self.memory.add_interaction(user_message, response)
-            return response
-        except Exception as _e:
-            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
-            # Fallback: daripada return template "tidak paham", forward ke brain.
-        # LLM punya full context (load_context) dan bisa jawab apapun
-        # yang tidak dikenali routing keyword-based di atas.
-        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
-        try:
-            result = self.brain.think_and_respond(user_message, self.history)
-            action = result.get("action")
-            response = self._execute_and_format(result, user_message)
-            self.memory.add_interaction(user_message, response)
-            return response
-        except Exception as _e:
-            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
-            return "Maaf, aku belum paham maksudnya. Bisa dijelaskan lagi?"
-    
+        except Exception as e:
+            print(f"[CHAT] Brain error: {e}")
+            return "Waduh, ada yang ga beres sebentar. Coba lagi ya Mas."
+
+        action = result.get("action") if isinstance(result, dict) else None
+        print(f"[CHAT] Brain decided: action={action}")
+
+        # Execute dan format response
+        response = self._execute_and_format(result, user_message)
+
+        # Update memory dan state
+        self.memory.add_interaction(user_message, response)
+        if action and action != "null" and isinstance(result, dict):
+            project = self._extract_project(user_message)
+            if project:
+                self.state.project = project
+            self.state.last_action = action
+            self.state.status = "completed"
+            self.state.add_completed_task(action)
+            try:
+                from sicuan.core.state_persistence import save_state
+                save_state(self.state)
+            except Exception:
+                pass
+
+        return response
+
     def _handle_knowledge_query(self, user_message: str) -> str:
         """Forward ke brain — LLM jawab dari context nyata."""
         try:
