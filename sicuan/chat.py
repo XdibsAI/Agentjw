@@ -218,7 +218,31 @@ class SiCuanChat:
             
             return response
         
-        return "Maaf, aku belum paham maksudnya. Bisa dijelaskan lagi?"
+        # Fallback: daripada return template "tidak paham", forward ke brain.
+        # LLM punya full context (load_context) dan bisa jawab apapun
+        # yang tidak dikenali routing keyword-based di atas.
+        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
+        try:
+            result = self.brain.think_and_respond(user_message, self.history)
+            action = result.get("action")
+            response = self._execute_and_format(result, user_message)
+            self.memory.add_interaction(user_message, response)
+            return response
+        except Exception as _e:
+            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
+            # Fallback: daripada return template "tidak paham", forward ke brain.
+        # LLM punya full context (load_context) dan bisa jawab apapun
+        # yang tidak dikenali routing keyword-based di atas.
+        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
+        try:
+            result = self.brain.think_and_respond(user_message, self.history)
+            action = result.get("action")
+            response = self._execute_and_format(result, user_message)
+            self.memory.add_interaction(user_message, response)
+            return response
+        except Exception as _e:
+            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
+            return "Maaf, aku belum paham maksudnya. Bisa dijelaskan lagi?"
     
     def _extract_project(self, user_message: str) -> Optional[str]:
         """Extract project dari user message"""
@@ -351,7 +375,10 @@ class SiCuanChat:
             "build", "run", "cek", "lihat", "tampilkan", "perbaiki",
             "godmeme", "flask", "project", "bot", "trading",
             "log", "file", "code", "debug", "test", "deploy",
-            "lanjut", "next", "continue", "gas", "ayo", "oke"
+            "lanjut", "next", "continue", "gas", "ayo", "oke",
+            # prioritas & fokus — supaya "apa prioritas sekarang" tidak jatuh ke unknown
+            "prioritas", "fokus", "tugas", "task", "antrian", "kerjakan",
+            "agenda", "rencana", "jadwal", "target"
         ]
         for pattern in task_patterns:
             if pattern in message_lower:
