@@ -129,6 +129,12 @@ class SiCuanChat:
                 print("[MEMORY] Error:", e)
                 return "Maaf, aku tidak bisa mengakses memory saat ini."
         
+        # Normalisasi result: brain kadang return list bukan dict
+        if isinstance(result, list):
+            result = result[0] if result else {}
+        if not isinstance(result, dict):
+            result = {"response": str(result), "action": None}
+
         # Execute dan format response
         response = self._execute_and_format(result, user_message)
 
