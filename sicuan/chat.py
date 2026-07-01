@@ -15,6 +15,8 @@ from sicuan.brain import SiCuanBrain
 from sicuan.core.personality import Personality
 from sicuan.core.conversation_memory import ConversationMemory
 from sicuan.core.conversation_state import ConversationState
+from sicuan.core.intent_classifier import IntentClassifier
+from sicuan.core.semantic_query import SemanticQuery
 from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.state_persistence import load_state, state_exists
 from sicuan.core.execution_state import ExecutionState
@@ -82,9 +84,9 @@ class SiCuanChat:
         if intent == "summary_query":
             return self._handle_summary_query(user_message)
         
-        # Decision Query
+        # Decision Query - gunakan semantic
         if intent == "decision_query":
-            return self._handle_decision_query(user_message)
+            return self._handle_semantic_query(user_message)
         
         # Knowledge Query
         if intent == "knowledge_query":
@@ -219,6 +221,18 @@ class SiCuanChat:
             return response
         
         # Fallback: daripada return template "tidak paham", forward ke brain.
+        # LLM punya full context (load_context) dan bisa jawab apapun
+        # yang tidak dikenali routing keyword-based di atas.
+        print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
+        try:
+            result = self.brain.think_and_respond(user_message, self.history)
+            action = result.get("action")
+            response = self._execute_and_format(result, user_message)
+            self.memory.add_interaction(user_message, response)
+            return response
+        except Exception as _e:
+            print(f"[CHAT DEBUG] Brain fallback error: {_e}")
+            # Fallback: daripada return template "tidak paham", forward ke brain.
         # LLM punya full context (load_context) dan bisa jawab apapun
         # yang tidak dikenali routing keyword-based di atas.
         print("[CHAT DEBUG] Unknown intent — forwarding to brain as general query")
@@ -401,6 +415,11 @@ class SiCuanChat:
     def _execute_task(self, action: str) -> str:
         """Eksekusi task tertentu"""
         try:
+            # Validasi action ada di registry
+            if not self.brain.registry.has(action):
+                available = ', '.join(self.brain.registry.list_actions()[:10])
+                return f"❌ Action '{action}' tidak dikenal. Action yang tersedia: {available}..."
+            
             print(f"[TASK] Executing: {action}")
             result = self.brain.execute_action(
                 action,
@@ -412,6 +431,21 @@ class SiCuanChat:
             self.state.add_completed_task(action)
             if action in self.state.pending_tasks:
                 self.state.pending_tasks.remove(action)
+            
+            # Update current_task ke task berikutnya atau None
+            if self.state.pending_tasks:
+                self.state.current_task = self.state.pending_tasks[0]
+            else:
+                self.state.current_task = None
+            print(f"[TASK] Current task updated to: {self.state.current_task}")
+            
+            # Save state ke file
+            try:
+                from sicuan.core.state_persistence import save_state
+                save_state(self.state)
+                print(f"[STATE] ✅ State saved after {action}")
+            except Exception as e:
+                print(f"[STATE] ❌ Failed to save state: {e}")
             
             # Save artifact
             try:
@@ -517,3 +551,68 @@ class SiCuanChat:
             return result
         
         return "Aku belum ingat ada pekerjaan terakhir. Ada yang mau kita kerjakan?"
+
+    def _handle_progress_query(self, user_message: str) -> str:
+        """Handle progress query"""
+        if not self.state:
+            return "Belum ada pekerjaan yang dimulai."
+        
+        # Gunakan state yang sudah ada
+        project = self.state.project or "Tidak ada"
+        current = self.state.current_task or "Tidak ada"
+        completed = self.state.completed_tasks or []
+        pending = self.state.pending_tasks or []
+        
+        lines = [
+            f"📊 Progress untuk {project}:",
+            f"  ✅ Selesai: {', '.join(completed) if completed else 'Belum ada'}",
+            f"  🔄 Sedang: {current}",
+            f"  📌 Tersisa: {', '.join(pending) if pending else 'Tidak ada'}"
+        ]
+        return "\n".join(lines)
+
+    def _handle_knowledge_query(self, user_message: str) -> str:
+        """Handle knowledge query - pakai knowledge store"""
+        from sicuan.core.knowledge_query import KnowledgeQuery
+        
+        query = KnowledgeQuery()
+        
+        # Extract entity dari pertanyaan
+        entity = "godmeme_bot"
+        if "flask" in user_message.lower():
+            entity = "flask_todo_api"
+        elif "video" in user_message.lower():
+            entity = "video"
+        
+        data = query.get_entity(entity)
+        if not data:
+            return f"Belum ada pengetahuan tentang {entity}. Coba scan project dulu."
+        
+        lines = [f"📚 Pengetahuan tentang {entity}:"]
+        for attr, info in data.items():
+            lines.append(f"  {attr}: {info['value']} (confidence: {info['confidence']:.0%})")
+        
+        return "\n".join(lines)
+
+    def _handle_semantic_query(self, user_message: str) -> str:
+        """Handle query secara semantic - tidak hardcoded"""
+        try:
+            from sicuan.core.semantic_query import SemanticQuery
+            
+            context = {
+                "project": self.state.project if self.state else "godmeme_bot",
+                "history": self.history[-5:] if self.history else []
+            }
+            
+            result = SemanticQuery.understand(user_message, context)
+            
+            # Jika result tidak valid, fallback ke brain
+            if not result or not result.get("response"):
+                return self.brain.think_and_respond(user_message, self.history)
+            
+            return result.get("response", "Maaf, aku belum bisa menjawab.")
+            
+        except Exception as e:
+            print(f"[SEMANTIC] Error: {e}")
+            # Fallback ke brain jika semantic gagal
+            return self.brain.think_and_respond(user_message, self.history)
