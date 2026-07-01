@@ -306,27 +306,6 @@ class SiCuanChat:
         else:
             return f"Aku memilih {action} berdasarkan alur kerja yang sudah direncanakan. Keyakinan keputusan: {confidence:.0f}%."
     
-    def _handle_knowledge_query(self, user_message: str) -> str:
-        from sicuan.core.knowledge_query import KnowledgeQuery
-        query = KnowledgeQuery()
-        entity = "godmeme_bot"
-        if "flask" in user_message.lower():
-            entity = "flask_todo_api"
-        elif "video" in user_message.lower():
-            entity = "video"
-        data = query.get_entity(entity)
-        if not data:
-            return f"Belum ada pengetahuan tentang {entity}."
-        files = data.get("total_files", {}).get("value")
-        functions = data.get("functions", {}).get("value")
-        if "risiko" in user_message.lower() or "resiko" in user_message.lower():
-            if files:
-                return f"Kalau langsung melakukan analyze, risikonya adalah analisis dilakukan pada struktur project yang belum dipastikan valid. Pada scan terakhir ditemukan {files} file dalam kondisi valid, sehingga scan dipilih lebih dulu agar proses analyze menggunakan data yang sudah diverifikasi."
-            return "Belum ada data scan yang cukup untuk menganalisis risiko."
-        if files:
-            return f"Dari scan terakhir, ditemukan {files} file dalam kondisi valid." + (f" Total fungsi: {functions}." if functions else "")
-        return "Belum ada data scan yang cukup."
-    
     def _handle_resume_query(self, user_message: str) -> str:
         """Handle resume query - dengan Response Composer"""
         from sicuan.core.response_composer_final import ResponseComposerFinal
