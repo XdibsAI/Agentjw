@@ -149,3 +149,12 @@ reports/*.json
 .idea/
 *.swp
 *.swo
+
+# Backup files
+*.bak
+*.bak_*
+*.backup.*
+*.bak2
+*.archived
+audit_output.txt
+audit_report.json
