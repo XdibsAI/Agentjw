@@ -550,29 +550,6 @@ class SiCuanChat:
         ]
         return "\n".join(lines)
 
-    def _handle_knowledge_query(self, user_message: str) -> str:
-        """Handle knowledge query - pakai knowledge store"""
-        from sicuan.core.knowledge_query import KnowledgeQuery
-        
-        query = KnowledgeQuery()
-        
-        # Extract entity dari pertanyaan
-        entity = "godmeme_bot"
-        if "flask" in user_message.lower():
-            entity = "flask_todo_api"
-        elif "video" in user_message.lower():
-            entity = "video"
-        
-        data = query.get_entity(entity)
-        if not data:
-            return f"Belum ada pengetahuan tentang {entity}. Coba scan project dulu."
-        
-        lines = [f"📚 Pengetahuan tentang {entity}:"]
-        for attr, info in data.items():
-            lines.append(f"  {attr}: {info['value']} (confidence: {info['confidence']:.0%})")
-        
-        return "\n".join(lines)
-
     def _handle_semantic_query(self, user_message: str) -> str:
         """Handle query secara semantic - tidak hardcoded"""
         try:
