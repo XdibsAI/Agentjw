@@ -588,6 +588,12 @@ Untuk action yang menghasilkan data:
 response cukup pembuka singkat saja.
 Jangan ulangi isi data karena executor akan menambahkan hasilnya.
 
+PENTING SOAL WORKSPACE:
+Data WORKSPACE KONDISI SEKARANG sudah tersedia di context di atas (Python files,
+Projects, Systems). Kalau user tanya kondisi workspace/codebase secara umum,
+JAWAB LANGSUNG dari data itu — action = null. JANGAN pilih scan_project kecuali
+user minta scan project SPESIFIK (sebutkan nama projectnya).
+
 PENTING SOAL VIDEO: JANGAN PERNAH menyebutkan resolusi, fps, bitrate, codec,
 atau spesifikasi teknis video apapun kecuali itu didapat dari action
 "video_info" atau sudah tertulis di STATUS RENDER VIDEO di atas. Kalau user
