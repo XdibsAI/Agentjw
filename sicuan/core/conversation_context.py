@@ -77,3 +77,67 @@ class ConversationContext:
         # Cek kata kunci
         keywords = ["hasil", "review", "strategi", "lanjut", "tadi", "itu", "yang"]
         return any(k in message.lower() for k in keywords)
+
+
+    def save(self, memory_dir: str = "memory") -> bool:
+        """Save conversation context ke disk"""
+        from pathlib import Path
+        import json
+        from datetime import datetime
+        
+        path = Path(memory_dir)
+        path.mkdir(exist_ok=True)
+        file_path = path / "conversation_context.json"
+        
+        # Convert ke dict (handle semua atribut)
+        data = {
+            "last_topic": self.last_topic,
+            "last_action": self.last_action,
+            "last_entity": self.last_entity,
+            "last_intent": self.last_intent,
+            "last_result": self.last_result,
+            "topics": self.topics[-20:],  # Simpan 20 terakhir
+            "actions": self.actions[-20:],
+            "entities": self.entities[-20:],
+            "updated_at": self.updated_at
+        }
+        
+        with open(file_path, "w") as f:
+            json.dump(data, f, indent=2)
+        
+        print(f"[CONTEXT] ✅ Saved conversation to {file_path}")
+        return True
+    
+    def load(self, memory_dir: str = "memory") -> bool:
+        """Load conversation context dari disk"""
+        from pathlib import Path
+        import json
+        from datetime import datetime
+        
+        file_path = Path(memory_dir) / "conversation_context.json"
+        if not file_path.exists():
+            print(f"[CONTEXT] ℹ️ No conversation file at {file_path}")
+            return False
+        
+        try:
+            with open(file_path, "r") as f:
+                data = json.load(f)
+            
+            # Restore atribut
+            self.last_topic = data.get("last_topic")
+            self.last_action = data.get("last_action")
+            self.last_entity = data.get("last_entity")
+            self.last_intent = data.get("last_intent")
+            self.last_result = data.get("last_result")
+            self.topics = data.get("topics", [])
+            self.actions = data.get("actions", [])
+            self.entities = data.get("entities", [])
+            self.updated_at = data.get("updated_at", datetime.now().isoformat())
+            
+            print(f"[CONTEXT] ✅ Loaded conversation from {file_path}")
+            print(f"[CONTEXT]   Last topic: {self.last_topic}")
+            print(f"[CONTEXT]   History: {len(self.topics)} topics, {len(self.actions)} actions")
+            return True
+        except Exception as e:
+            print(f"[CONTEXT] ❌ Failed to load: {e}")
+            return False

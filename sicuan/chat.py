@@ -52,6 +52,7 @@ class SiCuanChat:
         # Execution state
         self.execution = ExecutionState()
         self.context = ConversationContext()
+        self._load_context()
     
     def chat(self, user_message: str) -> str:
         """Main entry - semua pesan langsung ke brain (semantic routing).
@@ -85,6 +86,29 @@ class SiCuanChat:
             project = self._extract_project(user_message)
             if project:
                 self.state.project = project
+        
+        # === UPDATE CONTEXT ===
+        try:
+            if action and action != "null":
+                # Extract entity/target dari result
+                target = result.get("target", "") if isinstance(result, dict) else ""
+                self.context.update(
+                    topic=user_message[:100],
+                    action=action,
+                    entity=target if target else None,
+                    intent=result.get("intent", "unknown") if isinstance(result, dict) else None,
+                    result=response[:200] if response else None
+                )
+                print(f"[CONTEXT] Updated: action={action}, topic={self.context.last_topic}")
+            else:
+                # Untuk greeting/small talk, update topic saja
+                self.context.update(topic=user_message[:100])
+                print(f"[CONTEXT] Updated topic: {self.context.last_topic}")
+            
+            # Save context ke disk
+            self._save_context()
+        except Exception as e:
+            print(f"[CONTEXT] Failed to update: {e}")
             self.state.last_action = action
             self.state.status = "completed"
             self.state.add_completed_task(action)
@@ -94,6 +118,7 @@ class SiCuanChat:
             except Exception:
                 pass
 
+            self._save_context()
         return response
 
     def _handle_knowledge_query(self, user_message: str) -> str:
@@ -102,6 +127,7 @@ class SiCuanChat:
             result = self.brain.think_and_respond(user_message, self.history)
             response = self._execute_and_format(result, user_message)
             self.memory.add_interaction(user_message, response)
+            self._save_context()
             return response
         except Exception as e:
             return f"Tidak bisa mengambil informasi saat ini. ({e})"
@@ -321,6 +347,7 @@ class SiCuanChat:
             except Exception as e:
                 return f"{response}\n\n⚠️ Gagal menjalankan action: {e}"
         
+            self._save_context()
         return response
     
     def _handle_small_talk(self, user_message: str) -> str:
@@ -348,6 +375,7 @@ class SiCuanChat:
         self.state = ConversationState()
         self.execution = ExecutionState()
         self.context = ConversationContext()
+        self._load_context()
         self.history = []
 
     def _handle_memory_query(self, user_message: str) -> str:
@@ -420,3 +448,19 @@ class SiCuanChat:
             print(f"[SEMANTIC] Error: {e}")
             # Fallback ke brain jika semantic gagal
             return self.brain.think_and_respond(user_message, self.history)
+
+    def _save_context(self):
+        """Auto-save conversation context"""
+        try:
+            if hasattr(self, 'context') and hasattr(self.context, 'save'):
+                self.context.save("memory")
+        except Exception as e:
+            print(f"[CONTEXT] Failed to save: {e}")
+    
+    def _load_context(self):
+        """Auto-load conversation context"""
+        try:
+            if hasattr(self, 'context') and hasattr(self.context, 'load'):
+                self.context.load("memory")
+        except Exception as e:
+            print(f"[CONTEXT] Failed to load: {e}")
