@@ -258,13 +258,23 @@ class SiCuanChat:
             print(f"[CHAT DEBUG] Brain fallback error: {_e}")
             return "Maaf, aku belum paham maksudnya. Bisa dijelaskan lagi?"
     
+    def _handle_knowledge_query(self, user_message: str) -> str:
+        """Forward ke brain — LLM jawab dari context nyata."""
+        try:
+            result = self.brain.think_and_respond(user_message, self.history)
+            response = self._execute_and_format(result, user_message)
+            self.memory.add_interaction(user_message, response)
+            return response
+        except Exception as e:
+            return f"Tidak bisa mengambil informasi saat ini. ({e})"
+
     def _extract_project(self, user_message: str) -> Optional[str]:
         """Extract project dari user message"""
         match = re.search(r'(godmeme|flask|video)', user_message.lower())
         if match:
             return match.group(1)
         return None
-    
+        
     def _extract_file(self, result: dict) -> Optional[str]:
         """Extract file dari result"""
         target = result.get("action_target", "")
