@@ -14,6 +14,25 @@ if str(BASE) not in sys.path:
 
 
 class ActionRegistry:
+
+    def _discover_actions(self):
+        """Auto-discover actions from sicuan/actions/ folder"""
+        from pathlib import Path
+        actions_dir = Path(__file__).parent / "actions"
+        if not actions_dir.exists():
+            return
+        for file in actions_dir.glob("*.py"):
+            if file.stem in ["__init__", "base"]:
+                continue
+            if file.stem not in self._actions:
+                self._actions[file.stem] = {
+                    "module": f"sicuan.actions.{file.stem}",
+                    "entry": "execute",
+                    "category": "auto_discovered",
+                    "description": f"Auto-discovered action: {file.stem}",
+                }
+                print(f"[ACTION] Auto-discovered: {file.stem}")
+
     """Registry metadata action - resolve, has, get_metadata, list_actions"""
     
     def __init__(self):

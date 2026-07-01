@@ -3,6 +3,10 @@ interface/cli.py - SiCuan CLI
 Semua input user → SiCuan brain, tidak ada keyword/template
 """
 import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
+import sys
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from prompt_toolkit.auto_suggest import AutoSuggestFromHistory
