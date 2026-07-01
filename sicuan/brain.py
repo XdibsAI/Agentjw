@@ -624,7 +624,13 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
             if isinstance(raw, dict):
                 result = raw
             else:
-                result = json.loads(raw)
+                # Normalisasi: LLM kadang return list atau dict langsung
+                if isinstance(raw, list):
+                    raw = raw[0] if raw else "{}"
+                if isinstance(raw, dict):
+                    result = raw
+                else:
+                    result = json.loads(raw)
 
             # Simpan metadata planner terakhir untuk planner memory.
             self._last_intent = result.get("intent", "")
@@ -645,6 +651,9 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                     raw = raw[0] if raw else {}
                 if isinstance(raw, dict):
                     return raw
+                if isinstance(raw, str):
+                    import json as _j
+                    return _j.loads(raw)
             except:
                 pass
             return {
