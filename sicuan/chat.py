@@ -28,6 +28,13 @@ from sicuan.core.artifact_subscribers import ArtifactSubscriberRegistry
 
 
 class SiCuanChat:
+
+    def _safe_get(self, data, key, default=None):
+        """Safe get dari dict atau list"""
+        if isinstance(data, dict):
+            return data.get(key, default)
+        return default
+
     """Wajah dan kepribadian SiCuan"""
     
     def __init__(self):
@@ -80,8 +87,8 @@ class SiCuanChat:
             print(f"[CHAT] Brain error: {e}")
             return "Waduh, ada yang ga beres sebentar. Coba lagi ya Mas."
 
-        action = result.get("action") if isinstance(result, dict) else None
-        intent = result.get("intent", "unknown") if isinstance(result, dict) else "unknown"
+        action = self._safe_get(result, "action")
+        intent = self._safe_get(result, "intent", "unknown")
         print(f"[CHAT] Brain decided: action={action}")
 
         # === PROVENANCE: Catat keputusan ===
@@ -105,6 +112,23 @@ class SiCuanChat:
         except Exception as e:
             print(f"[PROVENANCE] Error: {e}")
 
+        # === HANDLE MEMORY/CONTEXT QUERY ===
+        if action == "memory_query" or action == "context_query":
+            try:
+                ctx = self.context.get_context()
+                if ctx:
+                    last_topic = ctx.get('last_topic', 'N/A')
+                    response = "Dari percakapan sebelumnya: " + str(last_topic)
+                    if hasattr(self.context, 'topics') and self.context.topics:
+                        recent = self.context.topics[-3:]
+                        response = response + "\n\nTopik terakhir: " + ", ".join(recent)
+                else:
+                    response = "Belum ada percakapan sebelumnya."
+                return response
+            except Exception as e:
+                print("[MEMORY] Error:", e)
+                return "Maaf, aku tidak bisa mengakses memory saat ini."
+        
         # Execute dan format response
         response = self._execute_and_format(result, user_message)
 

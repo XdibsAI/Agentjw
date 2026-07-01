@@ -370,6 +370,10 @@ DATA NYATA SEKARANG:
 {real_context}
 
 ATURAN PRIORITAS ROUTING (WAJIB):
+
+- Jika user bertanya "apa yang aku tanyakan" / "apa yang kita bahas" / "tadi kita bahas apa":
+  → action: memory_query, intent: context
+  → Jawab dari history percakapan
 Jika user memakai kata "cuan" tetapi TIDAK menyebut:
 - godmeme
 - trading
