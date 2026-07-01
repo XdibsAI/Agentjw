@@ -392,6 +392,16 @@ Gunakan godmeme_status HANYA jika user secara spesifik meminta:
 - balance SOL
 Kalau ada error terdeteksi: proactive mention di response
 
+Jika user bertanya tentang PRIORITAS KERJA / TASK QUEUE SiCuan:
+- "apa prioritas sekarang"
+- "apa yang harus dikerjakan"
+- "buat task queue"
+- "update prioritas"
+- "fokus sekarang apa"
+- "tugas hari ini"
+- "antrian kerja"
+maka action = build_task_queue
+
 
 PEMISAHAN TARGET ENGINEERING (WAJIB):
 
