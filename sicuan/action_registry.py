@@ -61,6 +61,13 @@ class ActionRegistry:
             "requires_target": True,
         }
         
+        self._actions["build_task_queue"] = {
+            "module": "sicuan.actions.build_task_queue",
+            "entry": "execute",
+            "category": "planning",
+            "description": "Generate task queue dari goals, projects, reflection state",
+            "requires_target": False,
+        }
         # Aliases
         self._aliases = {
             "system_audit": "analyze_project",
@@ -70,6 +77,11 @@ class ActionRegistry:
             "inspect_codebase": "scan_project",
             "review_architecture": "analyze_project",
             "compare_results": "analyze_project",
+            "buat task queue": "build_task_queue",
+            "update prioritas": "build_task_queue",
+            "apa prioritas": "build_task_queue",
+            "update fokus": "build_task_queue",
+            "fokus sekarang": "build_task_queue",
         }
     
     def resolve(self, name: str) -> Optional[str]:
