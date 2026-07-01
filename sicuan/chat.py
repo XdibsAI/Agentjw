@@ -18,6 +18,7 @@ from sicuan.core.conversation_state import ConversationState
 from sicuan.core.intent_classifier import IntentClassifier
 from sicuan.core.semantic_query import SemanticQuery
 from sicuan.core.conversation_context import ConversationContext
+from sicuan.core.goal_engine import GoalEngine
 from sicuan.core.state_persistence import load_state, state_exists
 from sicuan.core.execution_state import ExecutionState
 from sicuan.core.artifact_event import ArtifactEvent, OutcomeEvent
@@ -52,6 +53,7 @@ class SiCuanChat:
         # Execution state
         self.execution = ExecutionState()
         self.context = ConversationContext()
+        self.goal_engine = GoalEngine()
         self._load_context()
     
     def chat(self, user_message: str) -> str:
@@ -375,6 +377,7 @@ class SiCuanChat:
         self.state = ConversationState()
         self.execution = ExecutionState()
         self.context = ConversationContext()
+        self.goal_engine = GoalEngine()
         self._load_context()
         self.history = []
 
