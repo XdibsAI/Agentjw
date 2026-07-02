@@ -143,6 +143,29 @@ class SiCuanBrain:
 
 
 
+
+        # ── Reflection Engine summary ─────────────────────────────────────
+        try:
+            import json as _rjson
+            _rlog = ROOT / "memory" / "reflection_log.json"
+            if _rlog.exists():
+                _records = _rjson.loads(_rlog.read_text(encoding="utf-8"))
+                if _records:
+                    _latest = _records[-3:]  # 3 reflection terbaru
+                    ctx.append("\nREFLECTION TERBARU (evaluasi diri):")
+                    for _r in _latest:
+                        _act = _r.get("action", "?")
+                        _next = _r.get("next_action", "continue")
+                        _conf = _r.get("confidence", 0)
+                        _reason = _r.get("reason", "")[:80]
+                        ctx.append(
+                            f"  [{_act}] → {_next} "
+                            f"(conf={_conf:.0%}) {_reason}"
+                        )
+        except Exception:
+            pass
+        # ── End Reflection Engine ─────────────────────────────────────────
+
         # ── Workspace Scanner ─────────────────────────────────────────────
         try:
             from sicuan.core.workspace_scanner import WorkspaceScanner
@@ -597,6 +620,12 @@ Data WORKSPACE KONDISI SEKARANG sudah tersedia di context di atas (Python files,
 Projects, Systems). Kalau user tanya kondisi workspace/codebase secara umum,
 JAWAB LANGSUNG dari data itu — action = null. JANGAN pilih scan_project kecuali
 user minta scan project SPESIFIK (sebutkan nama projectnya).
+
+PENTING SOAL EVALUASI DIRI SICUAN:
+Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, atau laporan
+kemampuan — JANGAN pilih analyze_project. Gunakan action = null dan jawab
+dari data REFLECTION TERBARU, GOAL ENGINE, PROVENANCE, dan WORKSPACE yang
+sudah ada di context. Target analisa adalah SiCuan sendiri, bukan project lain.
 
 PENTING SOAL VIDEO: JANGAN PERNAH menyebutkan resolusi, fps, bitrate, codec,
 atau spesifikasi teknis video apapun kecuali itu didapat dari action
@@ -1651,6 +1680,48 @@ USER REQUEST:
 
         except Exception as e:
             return f"Error saat execute {action}: {e}"
+
+
+        # ── Reflection Engine: evaluasi hasil action ──────────────────────
+        try:
+            from sicuan.core.reflection_engine import ReflectionEngine
+            import json as _rjson
+            _re = ReflectionEngine()
+            _task = {"action": action, "target": target}
+            _result_data = {
+                "success": bool(exec_result and "error" not in str(exec_result).lower()[:50]),
+                "data": {},
+                "summary": str(exec_result)[:200] if exec_result else "",
+            }
+            _reflection = _re.analyze(_task, _result_data, {})
+
+            # Simpan ke reflection log
+            _rlog_path = BASE.parent / "memory" / "reflection_log.json"
+            _rlog_path.parent.mkdir(parents=True, exist_ok=True)
+            _rlog = []
+            if _rlog_path.exists():
+                try:
+                    _rlog = _rjson.loads(_rlog_path.read_text(encoding="utf-8"))
+                except Exception:
+                    _rlog = []
+            _rlog.append({
+                "timestamp": __import__("datetime").datetime.now().isoformat(),
+                "action": action,
+                "target": target[:50] if target else "",
+                "confidence": _reflection.get("confidence", 0),
+                "next_action": _reflection.get("next_action", "continue"),
+                "reason": _reflection.get("reason", ""),
+                "learnings": _reflection.get("learnings", []),
+            })
+            # Trim: simpan 50 record terbaru
+            _rlog = _rlog[-50:]
+            _rlog_path.write_text(
+                _rjson.dumps(_rlog, indent=2, ensure_ascii=False),
+                encoding="utf-8"
+            )
+        except Exception:
+            pass
+        # ── End Reflection ────────────────────────────────────────────────
 
         return "Action tidak dikenali."
 
