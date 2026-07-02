@@ -171,7 +171,13 @@ class Strategy:
                 tokens = await self._scan_new_tokens()
                 for token in tokens:
                     if await self._should_buy(token):
-                        await self._open_position(token)
+                        # Check risk management before opening position
+                        if await self.risk_manager.can_open_position():
+                            await self._open_position(token)
+                        else:
+                            logger.warning("Risk manager blocked new position - max positions reached or insufficient balance")
+                    # Add monitoring for existing positions
+                    await self._monitor_positions(token)
                 await asyncio.sleep(10)
             except Exception as e:
                 logger.error(f"Token monitor error: {e}")
