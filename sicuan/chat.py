@@ -83,8 +83,15 @@ class SiCuanChat:
         # Semua pesan → brain (LLM decide intent + action)
         try:
             result = self.brain.think_and_respond(user_message, self.history)
+            # Normalisasi result
+            if isinstance(result, list):
+                result = result[0] if result else {}
+            if not isinstance(result, dict):
+                result = {"response": str(result), "action": None}
         except Exception as e:
-            print(f"[CHAT] Brain error: {e}")
+            import traceback
+            print(f"[CHAT] Brain error full trace:")
+            traceback.print_exc()
             return "Waduh, ada yang ga beres sebentar. Coba lagi ya Mas."
 
         action = self._safe_get(result, "action")
@@ -390,6 +397,11 @@ class SiCuanChat:
     
     def _execute_and_format(self, result: dict, user_message: str) -> str:
         """Eksekusi dan format response"""
+        # Guard: pastikan result selalu dict
+        if isinstance(result, list):
+            result = result[0] if result and isinstance(result[0], dict) else {}
+        if not isinstance(result, dict):
+            result = {"response": str(result) if result else "Task selesai", "action": None}
         action = result.get("action")
         response = result.get("response", "Task selesai")
         
