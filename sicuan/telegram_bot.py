@@ -238,7 +238,7 @@ Respond JSON:
             messages=[{"role": "user", "content": prompt}],
             system="Kamu SiCuan yang sedang mengklasifikasi memory. JSON only.",
             temperature=0.3,
-            max_tokens=2000,
+            max_tokens=16000,
             json_mode=True,
         )
         data = json.loads(raw)

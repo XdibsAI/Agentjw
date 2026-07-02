@@ -105,7 +105,7 @@ Respond JSON:
             messages=[{"role": "user", "content": prompt}],
             system="Kamu SiCuan dalam mode self-reflection. JSON only.",
             temperature=0.4,
-            max_tokens=2000,
+            max_tokens=16000,
             json_mode=True,
         )
         data = json.loads(raw)

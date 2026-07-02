@@ -61,7 +61,7 @@ Find ALL issues. Respond with JSON."""
             }
         ]
 
-        response = self._chat(messages, temperature=0.4, max_tokens=1500, json_mode=True)
+        response = self._chat(messages, temperature=0.4, max_tokens=16000, json_mode=True)
 
         try:
             critique = json.loads(response)

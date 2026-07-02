@@ -229,7 +229,7 @@ class RepairSpecialist:
         response = self.llm.chat(
             messages=[{"role": "user", "content": prompt}],
             system="Expert developer. Complete the project task.",
-            temperature=0.2, max_tokens=8192,
+            temperature=0.2, max_tokens=16000,
         )
         new_files = self._parse_blocks(response)
         for cf in new_files:
@@ -260,7 +260,7 @@ class RepairSpecialist:
             fixed = self.llm.chat(
                 messages=[{"role": "user", "content": prompt}],
                 system="Expert Python debugger. Fix all errors. Raw code only.",
-                temperature=0.1, max_tokens=8192,
+                temperature=0.1, max_tokens=16000,
             )
             return self._clean(fixed)
         except Exception as e:

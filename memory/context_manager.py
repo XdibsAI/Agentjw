@@ -55,7 +55,7 @@ preserving key decisions, errors found, and solutions applied:
             summary = llm.chat(
                 messages=[{"role": "user", "content": summary_prompt}],
                 temperature=0.3,
-                max_tokens=500,
+                max_tokens=16000,
             )
             compressed = [{"role": "system", "content": f"[CONVERSATION SUMMARY]: {summary}"}]
             compressed.extend(recent_messages)

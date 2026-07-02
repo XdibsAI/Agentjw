@@ -86,7 +86,7 @@ class LLMClient:
         messages: List[Dict],
         system: Optional[str] = None,
         temperature: float = 0.7,
-        max_tokens: int = 16000,
+        max_tokens: int = 8192,
         json_mode: bool = False,
     ) -> str:
 

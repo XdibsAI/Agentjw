@@ -46,7 +46,7 @@ class ReviewerAgent(BaseAgent):
             {"role": "user", "content": review_text}
         ]
 
-        response = self._chat(messages, temperature=0.2, max_tokens=2000, json_mode=True)
+        response = self._chat(messages, temperature=0.2, max_tokens=16000, json_mode=True)
 
         try:
             review = json.loads(response)

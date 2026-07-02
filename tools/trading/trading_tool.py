@@ -164,7 +164,7 @@ Write COMPLETE code for {file_name}. Raw Python only, no markdown."""
                     messages=[{"role": "user", "content": prompt}],
                     system=system_prompt,
                     temperature=0.2,
-                    max_tokens=8192,
+                    max_tokens=16000,
                 )
                 # Clean markdown
                 import re
@@ -225,7 +225,7 @@ Be specific and technical."""
             messages=[{"role": "user", "content": prompt}],
             system="You are a quant analyst and algorithmic trading expert.",
             temperature=0.3,
-            max_tokens=3000,
+            max_tokens=16000,
         )
         return response
 
@@ -270,7 +270,7 @@ Provide the COMPLETE modified file. Raw Python only."""
                     messages=[{"role": "user", "content": prompt}],
                     system="You are an expert algorithmic trading developer. Modify code precisely as requested.",
                     temperature=0.2,
-                    max_tokens=8192,
+                    max_tokens=16000,
                 )
                 import re
                 new_code = re.sub(r'^```(?:python|py)?\n?', '', new_code, flags=re.MULTILINE)

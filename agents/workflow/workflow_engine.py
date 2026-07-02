@@ -338,7 +338,7 @@ class WorkflowEngine:
                 fixed_code = llm.chat(
                     messages=[{"role": "user", "content": prompt}],
                     system="Expert Python developer. Fix all issues precisely.",
-                    temperature=0.1, max_tokens=8192,
+                    temperature=0.1, max_tokens=16000,
                 )
                 fixed_code = re.sub(r'<think>.*?</think>', '', fixed_code, flags=re.DOTALL)
                 fixed_code = re.sub(r'^```(?:python|py)?\n?', '', fixed_code, flags=re.MULTILINE)

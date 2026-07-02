@@ -224,14 +224,14 @@ class VideoStudioTool:
                     system=cfg["system"],
                     user=user_prompt,
                     temperature=0.75,
-                    max_tokens=4096,
+                    max_tokens=16000,
                 )
             else:
                 result = self.llm.chat(
                     messages=[{"role": "user", "content": user_prompt}],
                     system=cfg["system"],
                     temperature=0.75,
-                    max_tokens=4096,
+                    max_tokens=16000,
                 )
             logger.info(f"Section '{section}' generated: {len(result)} chars")
             return result

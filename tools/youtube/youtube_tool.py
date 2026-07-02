@@ -145,7 +145,7 @@ Write COMPLETE code for {file_name}. Raw Python only."""
                     messages=[{"role": "user", "content": prompt}],
                     system=system_prompt,
                     temperature=0.2,
-                    max_tokens=8192,
+                    max_tokens=16000,
                 )
                 code = re.sub(r'^```(?:python|py|markdown)?\n?', '', code, flags=re.MULTILINE)
                 code = re.sub(r'\n?```$', '', code, flags=re.MULTILINE)
@@ -168,7 +168,7 @@ Include: Overview, Setup, Configuration, Usage, Features"""
         try:
             return self.llm.chat(
                 messages=[{"role": "user", "content": prompt}],
-                temperature=0.3, max_tokens=2000,
+                temperature=0.3, max_tokens=16000,
             )
         except Exception:
             return f"# YouTube Tool: {intent['template']}\n\n{template['description']}\n\n## Install\n```\npip install {' '.join(template['deps'])}\n```"

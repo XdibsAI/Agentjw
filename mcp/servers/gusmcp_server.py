@@ -135,7 +135,7 @@ Return JSON with:
         response = self.llm.chat(
             messages=[{"role": "user", "content": prompt}],
             system="You are a quantitative trading analyst.",
-            temperature=0.2, max_tokens=2000, json_mode=True,
+            temperature=0.2, max_tokens=16000, json_mode=True,
         )
         return json.loads(response)
 
@@ -217,7 +217,7 @@ Return JSON:
         response = self.llm.chat(
             messages=[{"role": "user", "content": prompt}],
             system="You are an algorithmic trading signal generator.",
-            temperature=0.1, max_tokens=500, json_mode=True,
+            temperature=0.1, max_tokens=16000, json_mode=True,
         )
         return json.loads(response)
 

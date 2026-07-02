@@ -91,7 +91,7 @@ Respond ONLY with JSON."""
                 messages=[{"role": "user", "content": prompt}],
                 system=DIALOG_SYSTEM,
                 temperature=0.1,
-                max_tokens=1000,
+                max_tokens=16000,
                 json_mode=True,
             )
             parsed = json.loads(response)

@@ -59,7 +59,7 @@ Return ONLY JSON with these fields:
                 messages=messages,
                 system=system,
                 temperature=0.1,
-                max_tokens=3000,
+                max_tokens=16000,
                 json_mode=True,
             )
             parsed = json.loads(response)

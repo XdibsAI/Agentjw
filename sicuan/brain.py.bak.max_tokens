@@ -644,7 +644,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 messages=messages,
                 system=system,
                 temperature=0.7,
-                max_tokens=16000,
+                max_tokens=1000,
                 json_mode=True,
             )
             # Normalisasi: llm.chat() kadang return list atau dict langsung
@@ -729,7 +729,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                     "bukan menjawab pertanyaan user sendiri."
                 ),
                 temperature=0.2,
-                max_tokens=16000,
+                max_tokens=300,
                 json_mode=True,
             )
             decision = json.loads(raw)
@@ -773,7 +773,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 messages=[{"role": "user", "content": synth_prompt}],
                 system="Kamu SiCuan, AI partner bisnis. Sintesis data jadi insight actionable.",
                 temperature=0.5,
-                max_tokens=16000,
+                max_tokens=800,
             )
             return final
         except Exception as e:
@@ -987,7 +987,7 @@ Buat jawaban final:
                     "Sintesis hasil eksekusi menjadi jawaban final."
                 ),
                 temperature=0.4,
-                max_tokens=16000,
+                max_tokens=800,
             )
 
             return final

@@ -347,7 +347,7 @@ class LogicModifier:
                         "Modifikasi logic spesifik tanpa rewrite total."
                     ),
                     temperature=0.3,
-                    max_tokens=1800,
+                    max_tokens=16000,
                 )
 
                 fixed = self._clean_code(raw)
@@ -899,7 +899,7 @@ class LogicModifier:
                     "tertentu yang relevan, ikuti jejak itu sampai ke file aslinya."
                 ),
                 temperature=0.1,
-                max_tokens=100,
+                max_tokens=16000,
             )
             import re
 

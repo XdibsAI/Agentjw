@@ -169,7 +169,7 @@ Jawab JSON:
                     "false positive 'sudah diperbaiki'."
                 ),
                 temperature=0.2,
-                max_tokens=600,
+                max_tokens=16000,
                 json_mode=True,
             )
             parsed = json.loads(raw)

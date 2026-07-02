@@ -65,7 +65,7 @@ class PlannerAgent(BaseAgent):
             }
         ]
 
-        response = self._chat(messages, temperature=0.3, max_tokens=3000, json_mode=True)
+        response = self._chat(messages, temperature=0.3, max_tokens=16000, json_mode=True)
 
         try:
             plan_data = json.loads(response)

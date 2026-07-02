@@ -218,7 +218,7 @@ Respond ONLY with JSON:
                 messages=[{"role": "user", "content": prompt}],
                 system="You are a tool selector. Pick the most appropriate tool.",
                 temperature=0.1,
-                max_tokens=300,
+                max_tokens=16000,
                 json_mode=True,
             )
             return json.loads(response)
@@ -327,7 +327,7 @@ Respond ONLY with JSON:
                 fixed = self.llm.chat(
                     messages=[{"role": "user", "content": prompt}],
                     system="Expert Python debugger.",
-                    temperature=0.1, max_tokens=4096,
+                    temperature=0.1, max_tokens=16000,
                 )
                 fixed = re.sub(r'<think>.*?</think>', '', fixed, flags=re.DOTALL)
                 fixed = re.sub(r'^```(?:python|py)?\n?', '', fixed, flags=re.MULTILINE)
@@ -340,7 +340,7 @@ Respond ONLY with JSON:
             try:
                 explanation = self.llm.chat(
                     messages=[{"role": "user", "content": f"Explain this code:\n{params.get('code','')}"}],
-                    temperature=0.3, max_tokens=1000,
+                    temperature=0.3, max_tokens=16000,
                 )
                 return {"status": "ok", "explanation": explanation}
             except Exception as e:

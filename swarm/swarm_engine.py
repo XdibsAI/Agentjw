@@ -82,7 +82,7 @@ Reply with only a JSON object: {{"score": 85, "reason": "brief reason"}}"""
             }]
 
             try:
-                response = llm.chat(messages=messages, temperature=0.1, max_tokens=200, json_mode=True)
+                response = llm.chat(messages=messages, temperature=0.1, max_tokens=16000, json_mode=True)
                 data = json.loads(response)
                 score = data.get("score", 0)
                 solutions[i]["score"] = score

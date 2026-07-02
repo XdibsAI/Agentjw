@@ -68,7 +68,7 @@ Extract important memories as JSON.
             response = self._chat(
                 messages,
                 temperature=0.3,
-                max_tokens=1000,
+                max_tokens=16000,
                 json_mode=True
             )
 
