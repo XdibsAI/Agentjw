@@ -204,3 +204,30 @@ def check_drift():
 
 # Tambahkan ke run_scheduler()
 # Setiap 6 jam, check drift
+
+def collect_experiences():
+    """Kumpulkan pengalaman dari daily operations"""
+    try:
+        from sicuan.core.experience_engine import get_experience_engine
+        from sicuan.core.continuous_learning import ContinuousLearning
+        
+        engine = get_experience_engine()
+        stats = engine.get_stats()
+        
+        print(f"[EXPERIENCE] Total: {stats['total']}, Success: {stats['successful']}")
+        
+        # Jika pengalaman cukup, trigger auto learning
+        if stats['total'] >= 10:
+            learner = ContinuousLearning()
+            learner.load_datasets()
+            learner.analyze()
+            learner.apply_learnings()
+            print("[EXPERIENCE] Auto learning triggered")
+        
+        return stats
+    except Exception as e:
+        print(f"[EXPERIENCE] Error: {e}")
+        return None
+
+# Tambahkan ke scheduler - setiap 6 jam
+schedule.every(6).hours.do(collect_experiences)
