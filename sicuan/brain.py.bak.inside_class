@@ -1915,12 +1915,6 @@ USER REQUEST:
         brain = get_executive_brain_evolved()
         return brain.decide(user_request, context)
 
-    def get_optimized_plan(self, intent: str, user_request: str = "") -> Dict:
-        """Dapatkan plan yang dioptimasi dari planner optimizer"""
-        from sicuan.core.planner_optimizer import get_planner_optimizer
-        optimizer = get_planner_optimizer()
-        return optimizer.get_plan_recommendation(intent, user_request)
-
 
 sicuan_brain = SiCuanBrain()
 
