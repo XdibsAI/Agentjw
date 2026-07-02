@@ -86,6 +86,7 @@
     "/home/dibs/agentjw/logs/20260606_agentjw.log",
     "/home/dibs/agentjw/logs/20260624_agentjw.log",
     "/home/dibs/agentjw/logs/20260610_agentjw.log",
+    "/home/dibs/agentjw/logs/20260702_agentjw.log",
     "/home/dibs/agentjw/logs/20260607_agentjw.log",
     "/home/dibs/agentjw/logs/20260613_agentjw.log",
     "/home/dibs/agentjw/logs/20260608_agentjw.log",
@@ -107,8 +108,8 @@
     "/home/dibs/agentjw/memory/projects_db/project_registry.db"
   ],
   "python_files": 183,
-  "total_files": 17999,
-  "useful_files": 499,
+  "total_files": 18015,
+  "useful_files": 502,
   "projects_count": 2,
   "systems_count": 8
 }
