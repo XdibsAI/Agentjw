@@ -628,6 +628,11 @@ Untuk action yang menghasilkan data:
 response cukup pembuka singkat saja.
 Jangan ulangi isi data karena executor akan menambahkan hasilnya.
 
+Untuk action = null (jawab langsung tanpa executor):
+Response HARUS lengkap dan substantif — ini satu-satunya output yang user terima.
+Jangan tulis hanya pembuka/intro. Langsung berikan jawaban penuh, detail, actionable.
+Kalau user minta evaluasi, analisis, atau penjelasan → tulis semua di response field.
+
 PENTING SOAL WORKSPACE:
 Data WORKSPACE KONDISI SEKARANG sudah tersedia di context di atas (Python files,
 Projects, Systems). Kalau user tanya kondisi workspace/codebase secara umum,
