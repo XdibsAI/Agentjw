@@ -466,7 +466,7 @@ Format JSON WAJIB:
     }}
   ],
   "response": "pesan ke user (bahasa natural, bukan template)",
-  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue",
+  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue | shadow_mode_report",
   "action_target": "untuk repair_project/modify_logic/analyze_project: format wajib nama_project: instruksi. Untuk action lain: nama project atau file saja.",
   "needs_from_user": "null | api_key_name | konfirmasi | data_tambahan",
   "reasoning": "kenapa kamu decide ini (internal, tidak ditampilkan ke user)"
@@ -644,6 +644,9 @@ Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, atau laporan
 kemampuan — JANGAN pilih analyze_project. Gunakan action = null dan jawab
 dari data REFLECTION TERBARU, GOAL ENGINE, PROVENANCE, dan WORKSPACE yang
 sudah ada di context. Target analisa adalah SiCuan sendiri, bukan project lain.
+
+Kalau user minta Shadow Mode report, shadow report, laporan shadow:
+action = shadow_mode_report
 
 PENTING SOAL VIDEO: JANGAN PERNAH menyebutkan resolusi, fps, bitrate, codec,
 atau spesifikasi teknis video apapun kecuali itu didapat dari action
@@ -1691,6 +1694,10 @@ USER REQUEST:
 
                 return f"Log tidak ditemukan: {target}"
 
+
+            elif action == "shadow_mode_report":
+                from sicuan.actions.shadow_mode_report import execute as _smr
+                return _smr(brain=self)
 
             elif action == "build_task_queue":
                 from sicuan.actions.build_task_queue import execute as _btq
