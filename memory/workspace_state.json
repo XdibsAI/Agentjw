@@ -38,7 +38,7 @@
     },
     "sicuan": {
       "path": "/home/dibs/agentjw/sicuan",
-      "python_files": 125,
+      "python_files": 126,
       "exists": true
     }
   },
@@ -107,9 +107,9 @@
     "/home/dibs/agentjw/memory/projects_db/projects.db",
     "/home/dibs/agentjw/memory/projects_db/project_registry.db"
   ],
-  "python_files": 186,
-  "total_files": 18974,
-  "useful_files": 602,
+  "python_files": 187,
+  "total_files": 18981,
+  "useful_files": 603,
   "projects_count": 2,
   "systems_count": 8
 }
