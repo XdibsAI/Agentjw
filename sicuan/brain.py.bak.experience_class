@@ -1884,31 +1884,5 @@ USER REQUEST:
         except Exception as e:
             return f"❌ Error processing image: {e}"
 
-
-    def save_experience(self, user_request: str, intent: str, plan: List[Dict],
-                        actions: List[str], result: str, success: bool,
-                        confidence: float, duration: float, project: str = ""):
-        """Simpan pengalaman dari workflow"""
-        from sicuan.core.experience_engine import get_experience_engine
-        engine = get_experience_engine()
-        return engine.save_experience(
-            user_request=user_request,
-            intent=intent,
-            plan=plan,
-            actions=actions,
-            result=result,
-            success=success,
-            confidence=confidence,
-            duration=duration,
-            project=project
-        )
-
-    def find_similar_experiences(self, user_request: str, intent: str = None, limit: int = 3):
-        """Cari pengalaman yang mirip"""
-        from sicuan.core.experience_engine import get_experience_engine
-        engine = get_experience_engine()
-        return engine.get_similar_experiences(user_request, intent, limit)
-
-
 sicuan_brain = SiCuanBrain()
 
