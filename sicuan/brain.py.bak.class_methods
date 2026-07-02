@@ -1909,11 +1909,12 @@ USER REQUEST:
         engine = get_experience_engine()
         return engine.get_similar_experiences(user_request, intent, limit)
 
+
+sicuan_brain = SiCuanBrain()
+
+
     def evolve_decision(self, user_request: str, context: Dict = None) -> Dict:
         """Gunakan Executive Brain Evolved untuk decision"""
         from sicuan.core.executive_brain_evolved import get_executive_brain_evolved
         brain = get_executive_brain_evolved()
         return brain.decide(user_request, context)
-
-
-sicuan_brain = SiCuanBrain()
