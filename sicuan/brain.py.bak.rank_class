@@ -1921,27 +1921,6 @@ USER REQUEST:
         optimizer = get_planner_optimizer()
         return optimizer.get_plan_recommendation(intent, user_request)
 
-    def get_action_rank(self, action: str) -> Dict:
-        """Dapatkan ranking untuk sebuah action"""
-        from sicuan.core.action_ranker import get_action_ranker
-        ranker = get_action_ranker()
-        rank = ranker.get_action_rank(action)
-        return {
-            "action": rank.action,
-            "score": rank.score,
-            "success_rate": rank.success_rate,
-            "confidence": rank.confidence,
-            "priority": rank.priority,
-            "rank": rank.rank,
-            "reason": rank.reason
-        }
-    
-    def get_top_actions(self, limit: int = 5) -> List:
-        """Dapatkan top actions"""
-        from sicuan.core.action_ranker import get_action_ranker
-        ranker = get_action_ranker()
-        return [r.__dict__ for r in ranker.get_top_actions(limit)]
-
 
 sicuan_brain = SiCuanBrain()
 
