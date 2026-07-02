@@ -68,15 +68,13 @@ class SiCuanChat:
         self._load_context()
     
     def chat(self, user_message: str, image_path: str = None) -> str:
-        """Main entry - semua pesan langsung ke brain (semantic routing).
-        LLM yang decide intent dan action, bukan keyword matching.
-        Jika ada image_path, proses gambar dulu."""
-        
+        """Main entry - dengan dukungan image"""
         # Jika ada gambar, proses dulu
         if image_path:
-            print(f"[CHAT] 📸 Processing image: {image_path}")
             return self.brain.process_image(image_path, user_message)
-        
+        """Main entry - semua pesan langsung ke brain (semantic routing).
+        LLM yang decide intent dan action, bukan keyword matching."""
+
         print("[CHAT] Received:", user_message[:60])
 
         # Update memory
@@ -543,8 +541,3 @@ class SiCuanChat:
                 self.context.load("memory")
         except Exception as e:
             print(f"[CONTEXT] Failed to load: {e}")
-
-    def _handle_self_review(self, user_message: str) -> str:
-        """Handle self-review request"""
-        from sicuan.core.self_review import get_self_review_report
-        return get_self_review_report()

@@ -543,8 +543,3 @@ class SiCuanChat:
                 self.context.load("memory")
         except Exception as e:
             print(f"[CONTEXT] Failed to load: {e}")
-
-    def _handle_self_review(self, user_message: str) -> str:
-        """Handle self-review request"""
-        from sicuan.core.self_review import get_self_review_report
-        return get_self_review_report()
