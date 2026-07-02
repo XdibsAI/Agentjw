@@ -326,30 +326,3 @@ def run_bot():
 
 if __name__ == "__main__":
     run_bot()
-
-async def handle_photo(update: Update, context):
-    """Handle foto/gambar yang dikirim user"""
-    try:
-        # Download foto
-        photo_file = await update.message.photo[-1].get_file()
-        photo_bytes = await photo_file.download_as_bytearray()
-        
-        # Simpan sementara
-        from pathlib import Path
-        import uuid
-        temp_dir = Path("memory/images")
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        image_path = temp_dir / f"img_{uuid.uuid4().hex[:8]}.jpg"
-        image_path.write_bytes(photo_bytes)
-        
-        # Ambil caption jika ada
-        caption = update.message.caption or "Analisis gambar ini"
-        
-        # Proses dengan SiCuan
-        from sicuan.chat import SiCuanChat
-        chat = SiCuanChat()
-        response = chat.chat(caption, image_path=str(image_path))
-        
-        await update.message.reply_text(response)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error processing image: {e}")
