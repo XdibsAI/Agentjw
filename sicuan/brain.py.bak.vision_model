@@ -1843,45 +1843,4 @@ USER REQUEST:
             return f"❌ Error processing image: {e}"
 
 
-    def process_image(self, image_path: str, user_message: str = "") -> str:
-        """Proses gambar dengan OCR + LLM (fallback jika vision tidak tersedia)"""
-        try:
-            from pathlib import Path
-            import base64
-            from PIL import Image
-            import pytesseract
-            from core.llm_client import llm
-            
-            # Cek file exists
-            img_path = Path(image_path)
-            if not img_path.exists():
-                return f"❌ Gambar tidak ditemukan: {image_path}"
-            
-            # Coba OCR dulu
-            try:
-                # Buka gambar dengan PIL
-                img = Image.open(img_path)
-                # Ekstrak teks dengan OCR
-                extracted_text = pytesseract.image_to_string(img, lang='ind+eng')
-                
-                if extracted_text.strip():
-                    # Kirim teks ke LLM untuk analisis
-                    prompt = user_message or "Analisis teks dari gambar ini"
-                    messages = [
-                        {"role": "system", "content": "Kamu adalah asisten AI yang menganalisis teks hasil OCR dari gambar."},
-                        {"role": "user", "content": f"{prompt}\n\nTeks hasil OCR:\n{extracted_text}"}
-                    ]
-                    response = llm.chat(messages, temperature=0.7, max_tokens=2000)
-                    return f"📸 **Analisis Gambar (OCR)**\n\n{response}"
-                else:
-                    return f"📸 **Gambar Diterima**\n\nTidak ada teks yang terdeteksi di gambar. Coba kirim gambar yang lebih jelas atau dengan teks yang lebih besar."
-            except ImportError:
-                return f"📸 **Gambar Diterima**\n\nOCR tidak tersedia. Install pytesseract: pip install pytesseract pillow"
-            except Exception as e:
-                # Fallback: beritahu user
-                return f"📸 **Gambar Diterima**\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e)[:100]}"
-                
-        except Exception as e:
-            return f"❌ Error processing image: {e}"
-
 sicuan_brain = SiCuanBrain()

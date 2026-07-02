@@ -1771,12 +1771,11 @@ USER REQUEST:
 
 
     def process_image(self, image_path: str, user_message: str = "") -> str:
-        """Proses gambar dengan vision model - OpenRouter format"""
+        """Proses gambar dengan vision model"""
         try:
             from pathlib import Path
             import base64
             import json
-            import requests
             
             # Cek file exists
             img_path = Path(image_path)
@@ -1790,98 +1789,32 @@ USER REQUEST:
             # Siapkan prompt
             prompt = user_message or "Analisis gambar ini secara detail. Berikan deskripsi, identifikasi objek, warna, teks, dan konteks visualnya."
             
-            # Format OpenRouter untuk vision
-            # https://openrouter.ai/docs/requests#multimodal-requests
+            # Siapkan messages dengan image dalam format yang benar untuk OpenRouter
             messages = [
                 {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": prompt
-                        },
-                        {
-                            "type": "image_url",
-                            "image_url": f"data:image/jpeg;base64,{img_base64}"
-                        }
-                    ]
+                    "content": f"{prompt}\n\n[Gambar dalam base64: data:image/jpeg;base64,{img_base64[:100]}...]"
                 }
             ]
             
-            # Panggil dengan vision model
-            from core.llm_client import llm
-            
-            # Override model untuk vision
-            original_model = llm.model
-            llm.model = "openai/gpt-4-vision-preview"
-            
+            # Pilih model - gunakan yang support vision
+            # Untuk OpenRouter, kita perlu format khusus
             try:
+                # Coba dengan format vision
+                from core.llm_client import llm
                 response = llm.chat(
                     messages=messages,
+                    model="openai/gpt-4-vision-preview",
                     temperature=0.7,
                     max_tokens=2000
                 )
-                llm.model = original_model
                 return f"📸 **Analisis Gambar**\n\n{response}"
-            except Exception as e:
-                llm.model = original_model
-                # Coba fallback dengan model lain
-                try:
-                    llm.model = "anthropic/claude-3-opus"
-                    response = llm.chat(
-                        messages=messages,
-                        temperature=0.7,
-                        max_tokens=2000
-                    )
-                    llm.model = original_model
-                    return f"📸 **Analisis Gambar (Claude)**\n\n{response}"
-                except Exception as e2:
-                    llm.model = original_model
-                    return f"📸 **Gambar Diterima**\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e2)[:100]}"
-                
-        except Exception as e:
-            return f"❌ Error processing image: {e}"
-
-
-    def process_image(self, image_path: str, user_message: str = "") -> str:
-        """Proses gambar dengan OCR + LLM (fallback jika vision tidak tersedia)"""
-        try:
-            from pathlib import Path
-            import base64
-            from PIL import Image
-            import pytesseract
-            from core.llm_client import llm
-            
-            # Cek file exists
-            img_path = Path(image_path)
-            if not img_path.exists():
-                return f"❌ Gambar tidak ditemukan: {image_path}"
-            
-            # Coba OCR dulu
-            try:
-                # Buka gambar dengan PIL
-                img = Image.open(img_path)
-                # Ekstrak teks dengan OCR
-                extracted_text = pytesseract.image_to_string(img, lang='ind+eng')
-                
-                if extracted_text.strip():
-                    # Kirim teks ke LLM untuk analisis
-                    prompt = user_message or "Analisis teks dari gambar ini"
-                    messages = [
-                        {"role": "system", "content": "Kamu adalah asisten AI yang menganalisis teks hasil OCR dari gambar."},
-                        {"role": "user", "content": f"{prompt}\n\nTeks hasil OCR:\n{extracted_text}"}
-                    ]
-                    response = llm.chat(messages, temperature=0.7, max_tokens=2000)
-                    return f"📸 **Analisis Gambar (OCR)**\n\n{response}"
-                else:
-                    return f"📸 **Gambar Diterima**\n\nTidak ada teks yang terdeteksi di gambar. Coba kirim gambar yang lebih jelas atau dengan teks yang lebih besar."
-            except ImportError:
-                return f"📸 **Gambar Diterima**\n\nOCR tidak tersedia. Install pytesseract: pip install pytesseract pillow"
             except Exception as e:
                 # Fallback: beritahu user
                 return f"📸 **Gambar Diterima**\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e)[:100]}"
                 
         except Exception as e:
             return f"❌ Error processing image: {e}"
+
 
 sicuan_brain = SiCuanBrain()

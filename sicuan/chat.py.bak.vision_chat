@@ -67,11 +67,7 @@ class SiCuanChat:
         self.provenance = ProvenanceEngine()
         self._load_context()
     
-    def chat(self, user_message: str, image_path: str = None) -> str:
-        """Main entry - dengan dukungan image"""
-        # Jika ada gambar, proses dulu
-        if image_path:
-            return self.brain.process_image(image_path, user_message)
+    def chat(self, user_message: str) -> str:
         """Main entry - semua pesan langsung ke brain (semantic routing).
         LLM yang decide intent dan action, bukan keyword matching."""
 
