@@ -243,3 +243,15 @@ def get_executive_brain_evolved():
     if _brain is None:
         _brain = ExecutiveBrainEvolved()
     return _brain
+
+    def _calculate_adaptive_confidence(self, action: str, user_request: str, 
+                                       similar_experiences: List) -> Dict:
+        """Hitung adaptive confidence untuk action"""
+        from sicuan.core.adaptive_confidence import get_adaptive_confidence
+        conf_engine = get_adaptive_confidence()
+        
+        return conf_engine.calculate_confidence(
+            action=action,
+            user_request=user_request,
+            similar_experiences=similar_experiences
+        )
