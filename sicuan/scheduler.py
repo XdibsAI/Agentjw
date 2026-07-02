@@ -119,12 +119,30 @@ def run_autonomous_cycle():
     except Exception as e:
         print(f"[autonomous] error: {e}")
 
+
+def run_auto_learning():
+    """Jalankan Auto Learning cycle — belajar dari data aktual."""
+    try:
+        from sicuan.core.continuous_learning import ContinuousLearning
+        cl = ContinuousLearning()
+        cl.load_datasets()
+        if cl.workflows or cl.reflections or cl.shadow_comparisons:
+            cl.analyze()
+            result = cl.apply_learnings()
+            applied = result.get("applied", [])
+            logger.info(f"[AUTO-LEARNING] {len(applied)} updates applied")
+        else:
+            logger.info("[AUTO-LEARNING] No data available yet, skip")
+    except Exception as e:
+        logger.error(f"[AUTO-LEARNING] Failed: {e}")
+
 def run_scheduler():
     """Jalankan scheduler — fully autonomous"""
     print("SiCuan Scheduler started — fully autonomous mode")
 
     # Autonomous LLM cycle setiap 15 menit
     schedule.every(15).minutes.do(run_autonomous_cycle)
+    schedule.every(6).hours.do(run_auto_learning)
 
     
     # Morning briefing jam 05:00 WIB = 22:00 UTC

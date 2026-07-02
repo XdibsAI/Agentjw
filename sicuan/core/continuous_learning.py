@@ -155,28 +155,85 @@ class ContinuousLearning:
         return learnings
     
     def apply_learnings(self):
-        """Terapkan pembelajaran ke sistem"""
+        """Terapkan pembelajaran ke sistem — implementasi nyata."""
+        import json
+        from pathlib import Path
+        from datetime import datetime
+
         logger.info("Applying learnings...")
-        
+
         if not self.learnings:
             self.analyze()
-        
+
         learnings = self.learnings
-        
-        # 1. Update Planner DAG templates based on best actions
-        # (diimplementasikan nanti)
-        
-        # 2. Update Reflection confidence thresholds
-        # (diimplementasikan nanti)
-        
-        # 3. Update Retry logic
-        # (diimplementasikan nanti)
-        
-        # 4. Update Token optimization
-        # (diimplementasikan nanti)
-        
-        return learnings
-    
+        mem = Path(__file__).resolve().parents[2] / "memory"
+        applied = []
+
+        # 1. Update ReflectionEngine confidence threshold
+        try:
+            avg_conf = learnings.get("avg_confidence", 0)
+            if avg_conf > 0:
+                new_threshold = 0.6 if avg_conf > 85 else 0.8 if avg_conf < 70 else 0.7
+                config = {"confidence_threshold": new_threshold,
+                          "updated_at": datetime.now().isoformat(),
+                          "based_on_avg_confidence": avg_conf}
+                (mem / "reflection_config.json").write_text(
+                    json.dumps(config, indent=2), encoding="utf-8")
+                applied.append(f"ReflectionEngine threshold={new_threshold} (conf={avg_conf:.1f}%)")
+        except Exception as e:
+            logger.warning(f"reflection config failed: {e}")
+
+        # 2. Update retry limit
+        try:
+            avg_retries = learnings.get("avg_retries", 0)
+            retry_limit = 2 if avg_retries < 0.5 else 3 if avg_retries < 1.5 else 4
+            (mem / "retry_config.json").write_text(
+                json.dumps({"retry_limit": retry_limit,
+                            "updated_at": datetime.now().isoformat(),
+                            "based_on_avg_retries": avg_retries}, indent=2),
+                encoding="utf-8")
+            applied.append(f"RetryLimit={retry_limit} (avg_retries={avg_retries:.2f})")
+        except Exception as e:
+            logger.warning(f"retry config failed: {e}")
+
+        # 3. Simpan learning insights
+        try:
+            insights = {
+                "generated_at": datetime.now().isoformat(),
+                "best_actions": learnings.get("best_actions", []),
+                "worst_actions": learnings.get("worst_actions", []),
+                "recommendations": learnings.get("recommendations", []),
+                "avg_confidence": learnings.get("avg_confidence", 0),
+                "avg_retries": learnings.get("avg_retries", 0),
+                "shadow_match_rate": learnings.get("shadow_match_rate", {}),
+                "applied_changes": applied,
+            }
+            (mem / "learning_insights.json").write_text(
+                json.dumps(insights, indent=2, ensure_ascii=False, default=str),
+                encoding="utf-8")
+            applied.append("Saved learning_insights.json")
+        except Exception as e:
+            logger.warning(f"insights save failed: {e}")
+
+        # 4. Inject ke memory store
+        try:
+            from memory.memory_store import memory_store
+            recs = learnings.get("recommendations", [])
+            worst = learnings.get("worst_actions", [])
+            if recs or worst:
+                text = f"Auto-learning {datetime.now().strftime('%Y-%m-%d')}: "
+                if worst:
+                    text += f"Perlu perbaikan: {', '.join([a[0] for a in worst[:3]])}. "
+                if recs:
+                    text += recs[0]
+                memory_store.store(type="sicuan_insight", content=text, importance=7.0)
+                applied.append("Insight injected to memory store")
+        except Exception as e:
+            logger.warning(f"memory store inject failed: {e}")
+
+        logger.info(f"Applied {len(applied)} learnings")
+        return {"applied": applied, "learnings": learnings}
+
     def report(self):
         """Generate laporan Continuous Learning"""
         if not self.learnings:
