@@ -683,12 +683,15 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                     result = json.loads(raw)
 
             # Simpan metadata planner terakhir untuk planner memory.
+            # Normalisasi final sebelum akses
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else {}
             self._last_intent = self._safe_get(result, "intent", "")
             self._last_complexity = self._safe_get(result, "complexity", "")
             self._last_confidence = int(self._safe_get(result, "confidence", 0) or 0)
 
             logger.info(
-                f"SiCuan decided: {self._safe_get(result, 'action','chat')} | "
+                f"SiCuan decided: {self._safe_get(result, 'action','null')} | "
                 f"intent={self._last_intent} "
                 f"confidence={self._last_confidence}"
             )
