@@ -47,19 +47,6 @@ ATURAN PENTING:
 
 
 class SiCuanBrain:
-
-    def _safe_get(self, data, key, default=None):
-        """Safe get - handle dict, list, atau None"""
-        if data is None:
-            return default
-        if isinstance(data, dict):
-            return data.get(key, default)
-        if isinstance(data, list):
-            if data and isinstance(data[0], dict):
-                return data[0].get(key, default)
-            return default
-        return default
-
     def __init__(self):
         self._llm = None
         self._fs = None
@@ -675,12 +662,12 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                     result = json.loads(raw)
 
             # Simpan metadata planner terakhir untuk planner memory.
-            self._last_intent = self._safe_get(result, "intent", "")
-            self._last_complexity = self._safe_get(result, "complexity", "")
-            self._last_confidence = int(self._safe_get(result, "confidence", 0) or 0)
+            self._last_intent = result.get("intent", "")
+            self._last_complexity = result.get("complexity", "")
+            self._last_confidence = int(result.get("confidence", 0) or 0)
 
             logger.info(
-                f"SiCuan decided: {self._safe_get(result, 'action','chat')} | "
+                f"SiCuan decided: {result.get('action','chat')} | "
                 f"intent={self._last_intent} "
                 f"confidence={self._last_confidence}"
             )
@@ -1028,7 +1015,7 @@ Buat jawaban final:
                     return req_check
                 from agents.orchestrator import orchestrator
                 result = orchestrator.execute(user_request, [], session_id)
-                return f"Project '{target}' sedang dibangun. Status: {self._safe_get(result, 'status','running')}"
+                return f"Project '{target}' sedang dibangun. Status: {result.get('status','running')}"
 
 
             elif action == "modify_project":
@@ -1338,7 +1325,7 @@ USER REQUEST:
                 projects = unified_projects.list_projects()
                 if projects:
                     result = filesystem_tool.run_and_capture(projects[0]["project_dir"], timeout=10)
-                    return f"Bot dijalankan. Output: {self._safe_get(result, 'stdout','')[:200]}"
+                    return f"Bot dijalankan. Output: {result.get('stdout','')[:200]}"
                 return "Tidak ada trading bot yang ditemukan."
 
             elif action == "scan_project":
