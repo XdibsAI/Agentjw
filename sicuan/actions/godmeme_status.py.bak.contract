@@ -3,8 +3,6 @@ godmeme_status - Status trading bot dengan Result Contract
 """
 
 from projects.godmeme_bot.status_sync_provider import get_godmeme_status
-from pathlib import Path
-from datetime import datetime
 from sicuan.core.result_contract import ResultContract
 
 
@@ -12,20 +10,7 @@ def execute(task: dict) -> dict:
     """Execute godmeme_status dengan Result Contract"""
     try:
         data = get_godmeme_status()
-
-        # Sync balance to workspace_state
-        try:
-            state_file = Path("memory/workspace_state.json")
-            if state_file.exists():
-                import json as _json
-                state_data = _json.loads(state_file.read_text())
-                state_data["godmeme_bot"] = state_data.get("godmeme_bot", {})
-                state_data["godmeme_bot"]["balance"] = str(data.get("balance", 0))
-                state_data["godmeme_bot"]["updated_at"] = str(datetime.now())
-                state_file.write_text(_json.dumps(state_data, indent=2))
-        except Exception as _e:
-            print(f"[SYNC] Failed to sync balance: {_e}")
-
+        
         process = data.get("process", {})
         database = data.get("database", {})
         positions = data.get("positions", [])

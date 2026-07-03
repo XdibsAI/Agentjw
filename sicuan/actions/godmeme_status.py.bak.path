@@ -3,8 +3,6 @@ godmeme_status - Status trading bot dengan Result Contract
 """
 
 from projects.godmeme_bot.status_sync_provider import get_godmeme_status
-from pathlib import Path
-from datetime import datetime
 from sicuan.core.result_contract import ResultContract
 
 
