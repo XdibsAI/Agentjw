@@ -243,24 +243,32 @@ class RiskManager:
         # Update in database 
         self._update_position_in_db(position) 
 
-        # Enhanced take profit logic with multiple profit levels
-        # Primary take profit level
-        take_profit_threshold = position.take_profit_price * Decimal('0.995')  # 0.5% buffer
+        # Optimized take profit logic to reduce small loss accumulation
+        # Dynamic take profit based on position size and market conditions
+        base_take_profit = position.entry_price * Decimal('1.015')  # Reduced from 2% to 1.5%
 
-        # Early profit taking for high momentum moves (2% gain)
-        early_take_profit = position.entry_price * Decimal('1.02')
+        # Adjust take profit based on volatility - tighter for volatile assets
+        volatility_adjustment = min(Decimal('1.005'), max(Decimal('0.995'), 
+                                    Decimal('1') - abs(position.price_change_24h) * Decimal('0.1')))
 
-        # Check for early take profit opportunity first
-        if current_price >= early_take_profit and position.pnl_percentage >= Decimal('1.5'):
-            logger.info(f"Early take profit triggered for {token_address} at price {current_price}")
-            self.notifier.send_alert(f"EARLY TAKE PROFIT: Sold {token_address} at {current_price}")
+        adjusted_take_profit = base_take_profit * volatility_adjustment
+
+        # Early exit for minimal gains to prevent slippage losses
+        minimal_gain_threshold = position.entry_price * Decimal('1.008')  # 0.8% minimum
+
+        # Check if we should take profit based on adjusted levels
+        if current_price >= adjusted_take_profit and position.pnl_percentage >= Decimal('0.8'):
+            logger.info(f"Take profit triggered for {token_address} at price {current_price}")
+            self.notifier.send_alert(f"TAKE PROFIT: Sold {token_address} at {current_price}")
             return True
 
-        # Check primary take profit with dynamic threshold based on market volatility
-        if current_price >= take_profit_threshold: 
-            logger.info(f"Take profit triggered for {token_address} at price {current_price}") 
-            self.notifier.send_alert(f"TAKE PROFIT: Sold {token_address} at {current_price}") 
-            return True 
+        # Emergency exit for minimal but positive gains to avoid turning profits into losses
+        if (current_price >= minimal_gain_threshold and 
+            position.pnl_percentage >= Decimal('0.5') and 
+            current_price < adjusted_take_profit * Decimal('0.99')):  # Near trailing stop
+            logger.info(f"Minimal gain take profit for {token_address} at price {current_price}")
+            self.notifier.send_alert(f"MINIMAL GAIN TAKE PROFIT: Sold {token_address} at {current_price}")
+            return True
 
         return False
         

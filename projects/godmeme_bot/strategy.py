@@ -168,6 +168,11 @@ class Strategy:
         logger.info("Token monitor started - scanning DexScreener + Pump.fun")
         while self.running:
             try:
+                # Check cooldown mode (daily loss protection)
+                if await self._check_cooldown():
+                    await asyncio.sleep(30)  # Check again in 30s
+                    continue
+                
                 tokens = await self._scan_new_tokens()
                 for token in tokens:
                     if await self._should_buy(token):
@@ -177,10 +182,13 @@ class Strategy:
                         else:
                             logger.warning("Risk manager blocked new position - max positions reached or insufficient balance")
                     # Add monitoring for existing positions
-                    await self._monitor_positions(token)
+                    await self._monitor_positions()
                 await asyncio.sleep(10)
             except Exception as e:
                 logger.error(f"Token monitor error: {e}")
+                # Check if it's 429 (rate limit)
+                if "429" in str(e) or "rate limit" in str(e).lower():
+                    await self._handle_429()
                 await asyncio.sleep(15)
 
 
@@ -387,7 +395,7 @@ class Strategy:
         # Brain learned:
         # Score 10 is too strict, Score 6 is too loose.
         # Optimal score threshold is 8 for better quality filters.
-        should = score >= 10
+        should = score >= 8
 
         if should:
             logger.info(f"BUY signal: {token['symbol']} | score={score} | liq=${liquidity:,.0f} | vol5m=${volume:,.0f} | +{price_change:.1f}%")
@@ -766,3 +774,81 @@ async def get_sol_usd_price():
                 return float(data["solana"]["usd"])
     except Exception:
         return 150.0
+    # ============================================================
+    # COOLDOWN MODE - Daily loss protection
+    # ============================================================
+    
+    async def _check_cooldown(self) -> bool:
+        """Check if bot is in cooldown mode"""
+        if not hasattr(self, '_cooldown_until'):
+            self._cooldown_until = 0
+            self._cooldown_mode = False
+        
+        if self._cooldown_until and time.time() < self._cooldown_until:
+            remaining = int(self._cooldown_until - time.time())
+            if remaining % 60 == 0:  # Log setiap menit
+                logger.info(f"COOLDOWN: {remaining//60}m remaining")
+            return True
+        return False
+
+    async def _enter_cooldown(self, duration: int = 300):
+        """Enter cooldown mode (default 5 minutes)"""
+        self._cooldown_mode = True
+        self._cooldown_until = time.time() + duration
+        logger.info(f"🛑 COOLDOWN: entered for {duration//60} minutes")
+        # Update status
+        update_status(last_event=f"COOLDOWN {duration//60}m")
+
+    async def _exit_cooldown(self):
+        """Exit cooldown mode"""
+        self._cooldown_mode = False
+        self._cooldown_until = 0
+        logger.info("✅ COOLDOWN: exited, resuming trading")
+        update_status(last_event="COOLDOWN EXIT")
+
+    # ============================================================
+    # TOKEN PROFILE CACHE
+    # ============================================================
+    
+    async def _get_cached_profile(self, mint: str) -> Optional[Dict]:
+        """Get cached token profile if valid"""
+        if not hasattr(self, '_profile_cache'):
+            self._profile_cache = {}
+        
+        if mint in self._profile_cache:
+            cached_time, data = self._profile_cache[mint]
+            if time.time() - cached_time < 300:  # 5 minutes cache
+                return data
+            else:
+                del self._profile_cache[mint]
+        return None
+
+    async def _cache_profile(self, mint: str, data: Dict):
+        """Cache token profile"""
+        if not hasattr(self, '_profile_cache'):
+            self._profile_cache = {}
+        self._profile_cache[mint] = (time.time(), data)
+
+    # ============================================================
+    # EXPONENTIAL BACKOFF untuk 429
+    # ============================================================
+    
+    async def _handle_429(self):
+        """Handle rate limit with exponential backoff"""
+        if not hasattr(self, '_backoff_delay'):
+            self._backoff_delay = 5
+            self._last_429 = 0
+        
+        self._last_429 = time.time()
+        delay = self._backoff_delay
+        logger.warning(f"⚠️ 429 rate limit: backing off {delay}s")
+        await asyncio.sleep(delay)
+        
+        # Exponential backoff: double delay up to 60s
+        self._backoff_delay = min(self._backoff_delay * 2, 60)
+        logger.info(f"New backoff delay: {self._backoff_delay}s")
+    
+    async def _reset_backoff(self):
+        """Reset backoff after successful request"""
+        if hasattr(self, '_backoff_delay'):
+            self._backoff_delay = max(5, self._backoff_delay // 2)

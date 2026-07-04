@@ -1081,23 +1081,6 @@ Buat jawaban final:
                        user_request: str, session_id: str) -> str:
         from pathlib import Path
         """Execute action yang LLM decide"""
-        # === SELF-HEALING: Root cause analysis ===
-        if action in ["repair_project", "modify_logic"]:
-            try:
-                from sicuan.core.root_cause_detector import RootCauseDetector
-                from pathlib import Path
-                log_file = Path("projects/godmeme_bot/trading_bot_live.log")
-                if log_file.exists():
-                    with open(log_file, "r") as f:
-                        last_errors = [l for l in f.readlines()[-100:] if "ERROR" in l]
-                        if last_errors:
-                            detector = RootCauseDetector()
-                            root_cause = detector.detect("\n".join(last_errors))
-                            if root_cause["type"] != "unknown":
-                                print(f"[HEALING] Root cause: {root_cause["type"]} -> {root_cause["target"]}")
-                                print(f"[HEALING] Suggestion: {root_cause["suggestion"]}")
-            except Exception as e:
-                print(f"[HEALING] Error: {e}")
         try:
             if action == "build_project":
                 # Check requirements dulu
