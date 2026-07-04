@@ -5,56 +5,7 @@ Response Composer - Mengubah data internal menjadi jawaban natural
 from typing import Dict, List, Optional, Any
 
 
-
-
 class ResponseComposer:
-    @staticmethod
-    def compose_analysis(project: str, stats: dict, recommendations: list, features: list) -> str:
-        """Compose analysis result menjadi response yang ramah user"""
-        
-        lines = []
-        
-        # 1. Intro
-        lines.append(f"📊 **Analisis {project}**")
-        lines.append("")
-        
-        # 2. Ringkasan
-        total = stats.get("total", 0)
-        winrate = stats.get("winrate", 0)
-        total_pnl = stats.get("total_pnl", 0)
-        
-        if total == 0:
-            lines.append("ℹ️ Belum ada data trading.")
-        else:
-            if total_pnl < 0:
-                status = "⚠️ **Sedang rugi**"
-            else:
-                status = "✅ **Profit**"
-            lines.append(f"{status} | PnL: {total_pnl:.4f} SOL | Win Rate: {winrate:.1f}%")
-            lines.append("")
-        
-        # 3. Masalah utama (maks 3)
-        problems = [r for r in recommendations if "⚠️" in r or "🔧" in r][:3]
-        if problems:
-            lines.append("**🔴 Masalah utama:**")
-            for p in problems:
-                lines.append(f"  - {p.replace('⚠️', '').replace('🔧', '').strip()}")
-            lines.append("")
-        
-        # 4. Rekomendasi (maks 3)
-        suggestions = [r for r in recommendations if "Saran" in r or "Periksa" in r][:3]
-        if suggestions:
-            lines.append("**💡 Rekomendasi saya:**")
-            for s in suggestions:
-                lines.append(f"  - {s.replace('🔧 Saran:', '').strip()}")
-            lines.append("")
-        
-        # 5. Call to action
-        lines.append("**Mau saya terapkan perbaikan ini?**")
-        lines.append("Balas **'perbaiki'** dan saya akan auto-fix semua.")
-        
-        return "\n".join(lines)
-
     """Mengubah data query menjadi jawaban natural"""
     
     @staticmethod
