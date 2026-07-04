@@ -247,17 +247,20 @@ class SiCuanBrain:
         # ── End Context Manager ───────────────────────────────────────────
 
 
-        # ── Data Awareness (trading data availability) ────────────────────
+        # ── Data Awareness ────────────────────────────────────────────────
         try:
-            da = self._get_data_awareness()
-            if da and da.status.has_trade_history:
-                ctx.append("
-DATA TRADING TERSEDIA:")
-                ctx.append(f"  Trades: {da.status.trade_count} | PnL: {da.status.has_pnl_per_trade} | Timestamps: {da.status.has_timestamps}")
-                ctx.append(f"  Fields: {', '.join(list(da.status.available_fields)[:8])}")
+            _da = self._get_data_awareness()
+            if _da and _da.status.has_trade_history:
+                _tc = _da.status.trade_count
+                _pnl = _da.status.has_pnl_per_trade
+                _ts = _da.status.has_timestamps
+                _fields = list(_da.status.available_fields)[:8]
+                ctx.append("\nDATA TRADING TERSEDIA:")
+                ctx.append("  Trades: " + str(_tc) + " | PnL: " + str(_pnl) + " | Timestamps: " + str(_ts))
+                ctx.append("  Fields: " + ", ".join(_fields))
         except Exception:
             pass
-        # ── End Data Awareness ────────────────────────────────────────────
+        # ── End Data Awareness ───────────────────────────────────────────
 
         # ── Goals SiCuan ──────────────────────────────────────────────
         try:
