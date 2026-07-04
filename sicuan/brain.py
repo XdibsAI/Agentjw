@@ -18,6 +18,7 @@ from core.logger import logger
 from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
+from sicuan.core.vault_manager import VaultManager
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -66,25 +67,13 @@ class SiCuanBrain:
 
     def __init__(self):
         self.conversation_context = []
-        
+        self._data_awareness = None
+
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
+        from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
-
-        # Data Awareness - inisialisasi lazy
-        self._data_awareness = None
-    
-    def _get_data_awareness(self):
-        """Lazy init DataAwarenessEngine"""
-        if self._data_awareness is None:
-            try:
-                from sicuan.core.data_awareness import DataAwarenessEngine
-                from pathlib import Path
-                self._data_awareness = DataAwarenessEngine(Path("/home/dibs/agentjw/projects/godmeme_bot"))
-            except Exception as e:
-                print(f"[DATA] Failed to init DataAwareness: {e}")
-                self._data_awareness = None
-        return self._data_awareness
+        self.vault = VaultManager("/home/dibs/agentjw/obsidian")
     
     def get_data_availability(self) -> dict:
         """Dapatkan informasi data apa yang tersedia"""
@@ -456,6 +445,7 @@ class SiCuanBrain:
         system = SICUAN_IDENTITY + f"""
 
         self.task_tracker = TaskTracker()
+        self.vault = VaultManager('/home/dibs/agentjw/obsidian')
 DATA NYATA SEKARANG:
 {real_context}
 
@@ -2189,5 +2179,19 @@ USER REQUEST:
     def get_task_status(self) -> str:
         """Dapatkan status task yang sedang dikerjakan"""
         return self.task_tracker.get_status()
+
+
+    def vault_search(self, query: str) -> str:
+        """Search Obsidian vault untuk topik tertentu"""
+        return self.vault.before_decision(query)
+    
+    def vault_daily_review(self) -> str:
+        """Daily review vault"""
+        return self.vault.daily_review()
+    
+    def vault_weekly_review(self) -> str:
+        """Weekly review vault - cari kontradiksi"""
+        return self.vault.weekly_review()
+
 
 sicuan_brain = SiCuanBrain()

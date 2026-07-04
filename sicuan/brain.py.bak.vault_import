@@ -67,12 +67,17 @@ class SiCuanBrain:
 
     def __init__(self):
         self.conversation_context = []
-
+        
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
-        from sicuan.core.vault_manager import VaultManager
+from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
-        self.vault = VaultManager("/home/dibs/agentjw/obsidian")
+        self.vault = VaultManager('/home/dibs/agentjw/obsidian')
+
+        # Data Awareness - inisialisasi lazy
+        self._data_awareness = None
+    
+    def _get_data_awareness(self):
         """Lazy init DataAwarenessEngine"""
         if self._data_awareness is None:
             try:
