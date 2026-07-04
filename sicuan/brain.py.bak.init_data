@@ -64,37 +64,6 @@ class SiCuanBrain:
         self._llm = None
         self._fs = None
         self.conversation_context = []
-        
-        # Data Awareness - inisialisasi lazy
-        self._data_awareness = None
-    
-    def _get_data_awareness(self):
-        """Lazy init DataAwarenessEngine"""
-        if self._data_awareness is None:
-            try:
-                from sicuan.core.data_awareness import DataAwarenessEngine
-                from pathlib import Path
-                self._data_awareness = DataAwarenessEngine(Path("/home/dibs/agentjw/projects/godmeme_bot"))
-            except Exception as e:
-                print(f"[DATA] Failed to init DataAwareness: {e}")
-                self._data_awareness = None
-        return self._data_awareness
-    
-    def get_data_availability(self) -> dict:
-        """Dapatkan informasi data apa yang tersedia"""
-        engine = self._get_data_awareness()
-        if engine is None:
-            return {"error": "DataAwarenessEngine not available"}
-        
-        try:
-            return {
-                "has_trade_history": engine.status.has_trade_history,
-                "trade_count": engine.status.trade_count,
-                "available_fields": list(engine.status.available_fields),
-                "missing_fields": list(engine.status.missing_fields),
-            }
-        except Exception as e:
-            return {"error": str(e)}
 
     @property
     def llm(self):
@@ -245,22 +214,6 @@ class SiCuanBrain:
         except Exception:
             pass
         # ── End Context Manager ───────────────────────────────────────────
-
-
-        # ── Data Awareness ────────────────────────────────────────────────
-        try:
-            _da = self._get_data_awareness()
-            if _da and _da.status.has_trade_history:
-                _tc = _da.status.trade_count
-                _pnl = _da.status.has_pnl_per_trade
-                _ts = _da.status.has_timestamps
-                _fields = list(_da.status.available_fields)[:8]
-                ctx.append("\nDATA TRADING TERSEDIA:")
-                ctx.append("  Trades: " + str(_tc) + " | PnL: " + str(_pnl) + " | Timestamps: " + str(_ts))
-                ctx.append("  Fields: " + ", ".join(_fields))
-        except Exception:
-            pass
-        # ── End Data Awareness ───────────────────────────────────────────
 
         # ── Goals SiCuan ──────────────────────────────────────────────
         try:
@@ -513,7 +466,7 @@ Format JSON WAJIB:
     }}
   ],
   "response": "pesan ke user (bahasa natural, bukan template)",
-  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue | shadow_mode_report | analyze_trading_data",
+  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue | shadow_mode_report",
   "action_target": "untuk repair_project/modify_logic/analyze_project: format wajib nama_project: instruksi. Untuk action lain: nama project atau file saja.",
   "needs_from_user": "null | api_key_name | konfirmasi | data_tambahan",
   "reasoning": "kenapa kamu decide ini (internal, tidak ditampilkan ke user)"
@@ -691,9 +644,6 @@ Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, atau laporan
 kemampuan — JANGAN pilih analyze_project. Gunakan action = null dan jawab
 dari data REFLECTION TERBARU, GOAL ENGINE, PROVENANCE, dan WORKSPACE yang
 sudah ada di context. Target analisa adalah SiCuan sendiri, bukan project lain.
-
-Kalau user minta analisis mendalam trading, kenapa rugi, breakdown trade, query database:
-action = analyze_trading_data
 
 Kalau user minta Shadow Mode report, shadow report, laporan shadow:
 action = shadow_mode_report
@@ -1747,10 +1697,6 @@ USER REQUEST:
 
                 return f"Log tidak ditemukan: {target}"
 
-
-            elif action == "analyze_trading_data":
-                from sicuan.actions.analyze_trading_data import execute as _atd
-                return _atd(brain=self)
 
             elif action == "shadow_mode_report":
                 from sicuan.actions.shadow_mode_report import execute as _smr

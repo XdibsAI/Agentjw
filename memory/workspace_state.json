@@ -87,6 +87,7 @@
     "/home/dibs/agentjw/logs/20260624_agentjw.log",
     "/home/dibs/agentjw/logs/20260610_agentjw.log",
     "/home/dibs/agentjw/logs/20260702_agentjw.log",
+    "/home/dibs/agentjw/logs/20260704_agentjw.log",
     "/home/dibs/agentjw/logs/20260607_agentjw.log",
     "/home/dibs/agentjw/logs/20260613_agentjw.log",
     "/home/dibs/agentjw/logs/20260703_agentjw.log",
@@ -109,12 +110,8 @@
     "/home/dibs/agentjw/memory/projects_db/project_registry.db"
   ],
   "python_files": 193,
-  "total_files": 19121,
-  "useful_files": 648,
+  "total_files": 19164,
+  "useful_files": 661,
   "projects_count": 2,
-  "systems_count": 8,
-  "godmeme_bot": {
-    "balance": "6.1297",
-    "updated_at": "2026-07-03 10:56:18.990664"
-  }
+  "systems_count": 8
 }
