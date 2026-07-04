@@ -246,6 +246,19 @@ class SiCuanBrain:
             pass
         # ── End Context Manager ───────────────────────────────────────────
 
+
+        # ── Data Awareness (trading data availability) ────────────────────
+        try:
+            da = self._get_data_awareness()
+            if da and da.status.has_trade_history:
+                ctx.append("
+DATA TRADING TERSEDIA:")
+                ctx.append(f"  Trades: {da.status.trade_count} | PnL: {da.status.has_pnl_per_trade} | Timestamps: {da.status.has_timestamps}")
+                ctx.append(f"  Fields: {', '.join(list(da.status.available_fields)[:8])}")
+        except Exception:
+            pass
+        # ── End Data Awareness ────────────────────────────────────────────
+
         # ── Goals SiCuan ──────────────────────────────────────────────
         try:
             from sicuan.core.goal_manager import GoalManager

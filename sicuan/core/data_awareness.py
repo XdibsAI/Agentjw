@@ -28,7 +28,14 @@ class DataAwarenessEngine:
     
     def __init__(self, project_dir: Path):
         self.project_dir = project_dir
-        self.db_path = project_dir / "trade_history.db"
+        # Cari database yang ada — prioritaskan trading.db karena punya data
+        for db_name in ['trading.db', 'godmeme.db', 'trade_history.db']:
+            candidate = project_dir / db_name
+            if candidate.exists():
+                self.db_path = candidate
+                break
+        else:
+            self.db_path = project_dir / 'trade_history.db'  # fallback
         self.status = DataAvailability()
         self._scan()
     
@@ -68,11 +75,11 @@ class DataAwarenessEngine:
                 self.status.available_fields.update(columns)
                 
                 # Cek data penting
-                if "pnl" in columns:
+                if "pnl" in columns or "realized_pnl" in columns:
                     self.status.has_pnl_per_trade = True
-                if "timestamp" in columns:
+                if "timestamp" in columns or "created_at" in columns:
                     self.status.has_timestamps = True
-                if "entry_price" in columns and "exit_price" in columns:
+                if ("entry_price" in columns and "exit_price" in columns) or ("price" in columns and "side" in columns):
                     self.status.has_entry_exit = True
                 if "exit_reason" in columns:
                     self.status.has_exit_reason = True
