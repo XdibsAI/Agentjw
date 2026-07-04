@@ -1,5 +1,8 @@
 """
 from sicuan.core.autonomous_controller import AutonomousController
+from sicuan.core.trade_analytics import TradeAnalytics
+from sicuan.core.hypothesis_engine import HypothesisEngine
+from sicuan.core.patch_validator import PatchValidator
 
 autonomous_controller = AutonomousController()
 SiCuan Brain - Bukan keyword/parsing/mapping
@@ -550,8 +553,22 @@ Jika user bertanya:
 - "peluang bisnis project"
 - "saran semua project"
 - "strategi monetisasi"
+- "strategi perbaikan godmeme"
+- "strategi memperbaiki bot"
+- "cara memperbaiki godmeme"
+- "solusi untuk godmeme"
+- "perbaiki godmeme"
+- "strategi trading"
+- "strategi bot"
 
-Gunakan action = project_summary.
+Gunakan action = analyze_project.
+
+Jika user minta strategi perbaikan untuk godmeme/bot:
+- Jangan langsung perbaiki
+- Berikan analisis + rekomendasi strategis
+- Akhiri dengan: "Balas 'perbaiki' untuk menerapkan"
+
+Gunakan action = analyze_project.
 
 Project_summary harus menjelaskan:
 - project yang ada
@@ -2101,6 +2118,67 @@ USER REQUEST:
                 return {"error": "DataAwarenessEngine not initialized"}
         except Exception as e:
             return {"error": str(e)}
+
+
+
+    def deep_analyze_trading(self) -> str:
+        """Deep analysis trading dengan Trade Analytics + Hypothesis"""
+        try:
+            from sicuan.core.trade_analytics import TradeAnalytics
+            from sicuan.core.hypothesis_engine import HypothesisEngine
+            from sicuan.core.patch_validator import PatchValidator
+            
+            analytics = TradeAnalytics()
+            data = analytics.analyze()
+            
+            # Generate hypothesis
+            engine = HypothesisEngine(data)
+            hypotheses = engine.generate()
+            
+            # Build response
+            lines = []
+            lines.append("📊 **DEEP TRADING ANALYSIS**")
+            lines.append("")
+            
+            # Summary
+            summary = data.get("summary", {})
+            total = summary.get("total", 0)
+            if total == 0:
+                return "Belum ada data trading."
+            
+            winrate = summary.get("wins", 0) / total * 100
+            lines.append(f"📈 **Summary:** {total} trades, Win Rate: {winrate:.1f}%")
+            lines.append(f"   PnL: {summary.get('total_pnl', 0):.4f} SOL")
+            lines.append("")
+            
+            # Score performance
+            score_perf = data.get("by_score", {})
+            if score_perf:
+                lines.append("**📊 Performance by Score:**")
+                for score, perf in sorted(score_perf.items()):
+                    lines.append(f"  Score {score}: {perf.get('count', 0)} trades, Win Rate: {perf.get('win_rate', 0):.1f}%")
+                lines.append("")
+            
+            # Hypotheses
+            if hypotheses:
+                lines.append("**🔍 Hypotheses:**")
+                for h in hypotheses[:3]:
+                    lines.append(f"  {h['id']}: {h['title']}")
+                    lines.append(f"    Evidence: {h['evidence']}")
+                    lines.append(f"    Confidence: {h['confidence']:.0%}")
+                    lines.append(f"    Action: {h['suggested_action']}")
+                lines.append("")
+            
+            # Recommendations
+            recs = data.get("recommendations", [])
+            if recs:
+                lines.append("**💡 Recommendations:**")
+                for rec in recs:
+                    lines.append(f"  {rec}")
+            
+            return "\n".join(lines)
+        except Exception as e:
+            return f"❌ Error: {e}"
 
 
 sicuan_brain = SiCuanBrain()

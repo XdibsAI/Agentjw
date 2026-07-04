@@ -550,22 +550,8 @@ Jika user bertanya:
 - "peluang bisnis project"
 - "saran semua project"
 - "strategi monetisasi"
-- "strategi perbaikan godmeme"
-- "strategi memperbaiki bot"
-- "cara memperbaiki godmeme"
-- "solusi untuk godmeme"
-- "perbaiki godmeme"
-- "strategi trading"
-- "strategi bot"
 
-Gunakan action = analyze_project.
-
-Jika user minta strategi perbaikan untuk godmeme/bot:
-- Jangan langsung perbaiki
-- Berikan analisis + rekomendasi strategis
-- Akhiri dengan: "Balas 'perbaiki' untuk menerapkan"
-
-Gunakan action = analyze_project.
+Gunakan action = project_summary.
 
 Project_summary harus menjelaskan:
 - project yang ada

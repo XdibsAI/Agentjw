@@ -229,45 +229,49 @@ class RiskManager:
             
         return False 
         
-    def check_take_profit(self, token_address: str, current_price: Decimal) -> bool: 
-        """Check if take profit should be triggered""" 
-        if token_address not in self.positions: 
-            return False 
+    def check_take_profit(self, token_address: str, current_price: Decimal) -> bool:
+        """Check if take profit should be triggered"""
+        if token_address not in self.positions:
+            return False
 
-        position = self.positions[token_address] 
-        position.current_price = current_price 
+        position = self.positions[token_address]
+        position.current_price = current_price
 
         # Update trailing stop if price increased by more than buffer
         self._update_trailing_stop(position, current_price)
 
-        # Update in database 
-        self._update_position_in_db(position) 
+        # Update in database
+        self._update_position_in_db(position)
 
-        # Optimized take profit logic to reduce small loss accumulation
-        # Dynamic take profit based on position size and market conditions
-        base_take_profit = position.entry_price * Decimal('1.015')  # Reduced from 2% to 1.5%
+        # Enhanced take profit logic with dynamic risk parameters
+        # Base take profit with volatility consideration
+        volatility_factor = min(Decimal('0.03'), max(Decimal('0.01'), abs(position.price_change_24h) * Decimal('0.5')))
+        base_take_profit = position.entry_price * (Decimal('1') + volatility_factor)
 
-        # Adjust take profit based on volatility - tighter for volatile assets
-        volatility_adjustment = min(Decimal('1.005'), max(Decimal('0.995'), 
-                                    Decimal('1') - abs(position.price_change_24h) * Decimal('0.1')))
+        # Dynamic trailing stop buffer based on position age and volatility
+        time_factor = min(Decimal('1.02'), Decimal('1') + (Decimal(time.time() - position.entry_time) / 3600) * Decimal('0.005'))
+        volatility_adjustment = min(Decimal('1.015'), max(Decimal('0.985'), 
+                                    Decimal('1') - abs(position.price_change_24h) * Decimal('0.2')))
 
-        adjusted_take_profit = base_take_profit * volatility_adjustment
+        adjusted_take_profit = base_take_profit * volatility_adjustment * time_factor
 
-        # Early exit for minimal gains to prevent slippage losses
-        minimal_gain_threshold = position.entry_price * Decimal('1.008')  # 0.8% minimum
+        # Dynamic minimal gain threshold based on market conditions
+        market_condition_factor = Decimal('1') + (self.market_volatility.get(token_address, Decimal('0')) * Decimal('0.3'))
+        minimal_gain_threshold = position.entry_price * Decimal('1.005') * market_condition_factor
 
         # Check if we should take profit based on adjusted levels
-        if current_price >= adjusted_take_profit and position.pnl_percentage >= Decimal('0.8'):
+        if current_price >= adjusted_take_profit and position.pnl_percentage >= Decimal('0.5'):
             logger.info(f"Take profit triggered for {token_address} at price {current_price}")
             self.notifier.send_alert(f"TAKE PROFIT: Sold {token_address} at {current_price}")
             return True
 
-        # Emergency exit for minimal but positive gains to avoid turning profits into losses
+        # Emergency exit logic with improved sensitivity
+        trailing_buffer = adjusted_take_profit * Decimal('0.995')
         if (current_price >= minimal_gain_threshold and 
-            position.pnl_percentage >= Decimal('0.5') and 
-            current_price < adjusted_take_profit * Decimal('0.99')):  # Near trailing stop
-            logger.info(f"Minimal gain take profit for {token_address} at price {current_price}")
-            self.notifier.send_alert(f"MINIMAL GAIN TAKE PROFIT: Sold {token_address} at {current_price}")
+            position.pnl_percentage >= Decimal('0.3') and 
+            current_price < trailing_buffer):
+            logger.info(f"Emergency take profit for {token_address} at price {current_price}")
+            self.notifier.send_alert(f"EMERGENCY TAKE PROFIT: Sold {token_address} at {current_price}")
             return True
 
         return False
