@@ -44,12 +44,6 @@ class ActionRegistry:
         """Daftar semua action - mulai dari tier-1"""
         
         # Tier 1 - Paling sering dipakai
-        self._actions["auto_fix_from_recommendations"] = {
-            "module": "sicuan.actions.auto_fix_from_recommendations",
-            "entry": "execute",
-            "category": "fix",
-            "description": "Auto-fix berdasarkan rekomendasi analisis",
-        }
         self._actions["scan_project"] = {
             "module": "sicuan.actions.scan_project",
             "entry": "execute",
