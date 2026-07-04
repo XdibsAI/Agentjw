@@ -64,6 +64,37 @@ class SiCuanBrain:
         self._llm = None
         self._fs = None
         self.conversation_context = []
+        
+        # Data Awareness - inisialisasi lazy
+        self._data_awareness = None
+    
+    def _get_data_awareness(self):
+        """Lazy init DataAwarenessEngine"""
+        if self._data_awareness is None:
+            try:
+                from sicuan.core.data_awareness import DataAwarenessEngine
+                from pathlib import Path
+                self._data_awareness = DataAwarenessEngine(Path("/home/dibs/agentjw/projects/godmeme_bot"))
+            except Exception as e:
+                print(f"[DATA] Failed to init DataAwareness: {e}")
+                self._data_awareness = None
+        return self._data_awareness
+    
+    def get_data_availability(self) -> dict:
+        """Dapatkan informasi data apa yang tersedia"""
+        engine = self._get_data_awareness()
+        if engine is None:
+            return {"error": "DataAwarenessEngine not available"}
+        
+        try:
+            return {
+                "has_trade_history": engine.status.has_trade_history,
+                "trade_count": engine.status.trade_count,
+                "available_fields": list(engine.status.available_fields),
+                "missing_fields": list(engine.status.missing_fields),
+            }
+        except Exception as e:
+            return {"error": str(e)}
 
     @property
     def llm(self):
@@ -1941,6 +1972,23 @@ USER REQUEST:
         from sicuan.core.action_ranker import get_action_ranker
         ranker = get_action_ranker()
         return [r.__dict__ for r in ranker.get_top_actions(limit)]
+
+
+
+    def get_data_availability(self) -> dict:
+        """Dapatkan informasi data apa yang tersedia"""
+        try:
+            if hasattr(self, 'data_awareness'):
+                return {
+                    "has_trade_history": self.data_awareness.status.has_trade_history,
+                    "trade_count": self.data_awareness.status.trade_count,
+                    "available_fields": list(self.data_awareness.status.available_fields),
+                    "missing_fields": list(self.data_awareness.status.missing_fields),
+                }
+            else:
+                return {"error": "DataAwarenessEngine not initialized"}
+        except Exception as e:
+            return {"error": str(e)}
 
 
 sicuan_brain = SiCuanBrain()
