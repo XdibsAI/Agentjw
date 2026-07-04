@@ -3,7 +3,6 @@ from sicuan.core.autonomous_controller import AutonomousController
 from sicuan.core.trade_analytics import TradeAnalytics
 from sicuan.core.hypothesis_engine import HypothesisEngine
 from sicuan.core.patch_validator import PatchValidator
-from sicuan.core.task_tracker import TaskTracker
 
 autonomous_controller = AutonomousController()
 SiCuan Brain - Bukan keyword/parsing/mapping
@@ -2128,7 +2127,6 @@ USER REQUEST:
             from sicuan.core.trade_analytics import TradeAnalytics
             from sicuan.core.hypothesis_engine import HypothesisEngine
             from sicuan.core.patch_validator import PatchValidator
-from sicuan.core.task_tracker import TaskTracker
             
             analytics = TradeAnalytics()
             data = analytics.analyze()
@@ -2181,12 +2179,6 @@ from sicuan.core.task_tracker import TaskTracker
             return "\n".join(lines)
         except Exception as e:
             return f"❌ Error: {e}"
-
-
-
-    def get_task_status(self) -> str:
-        """Dapatkan status task yang sedang dikerjakan"""
-        return self.task_tracker.get_status()
 
 
 sicuan_brain = SiCuanBrain()

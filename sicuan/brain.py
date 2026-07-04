@@ -17,6 +17,7 @@ from typing import Dict, List, Optional
 from core.logger import logger
 from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
+from sicuan.core.task_tracker import TaskTracker
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -64,10 +65,12 @@ class SiCuanBrain:
         return default
 
     def __init__(self):
-        self._llm = None
-        self._fs = None
         self.conversation_context = []
         
+        # Task Tracker - lacak task yang sedang dikerjakan
+        from sicuan.core.task_tracker import TaskTracker
+        self.task_tracker = TaskTracker()
+
         # Data Awareness - inisialisasi lazy
         self._data_awareness = None
     
@@ -452,6 +455,7 @@ class SiCuanBrain:
         # Build full system prompt dengan konteks nyata
         system = SICUAN_IDENTITY + f"""
 
+        self.task_tracker = TaskTracker()
 DATA NYATA SEKARANG:
 {real_context}
 
@@ -2181,6 +2185,9 @@ USER REQUEST:
             return f"❌ Error: {e}"
 
 
+
+    def get_task_status(self) -> str:
+        """Dapatkan status task yang sedang dikerjakan"""
+        return self.task_tracker.get_status()
+
 sicuan_brain = SiCuanBrain()
-
-
