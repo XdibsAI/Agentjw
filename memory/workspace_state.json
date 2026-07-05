@@ -75,6 +75,7 @@
     "/home/dibs/agentjw/logs/api_server.log",
     "/home/dibs/agentjw/logs/20260614_agentjw.log",
     "/home/dibs/agentjw/logs/20260604_agentjw.log",
+    "/home/dibs/agentjw/logs/20260705_agentjw.log",
     "/home/dibs/agentjw/logs/telegram_bot.log",
     "/home/dibs/agentjw/logs/20260629_agentjw.log",
     "/home/dibs/agentjw/logs/sicuan_telegram.log",
@@ -110,8 +111,8 @@
     "/home/dibs/agentjw/memory/projects_db/project_registry.db"
   ],
   "python_files": 202,
-  "total_files": 18593,
-  "useful_files": 711,
+  "total_files": 18456,
+  "useful_files": 723,
   "projects_count": 2,
   "systems_count": 8
 }

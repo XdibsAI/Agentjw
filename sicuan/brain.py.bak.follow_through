@@ -561,10 +561,6 @@ PENTING: Jika user mengirim URL (https://...) dan minta analisis/integrasi:
 - Target = URL yang dikirim
 - JANGAN pilih analyze_project
 - Berikan analisis spesifik tentang library/URL tersebut
-- SETELAH memberikan analisis URL, TETAP fokus pada topik yang sama
-- JANGAN tiba-tiba pindah ke project lain (flask_todo_api)
-- Jawab langsung dengan analisis + rekomendasi
-- Akhiri dengan call to action yang relevan
 
 Gunakan action = analyze_project.
 

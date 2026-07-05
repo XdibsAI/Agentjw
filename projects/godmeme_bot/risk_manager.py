@@ -200,6 +200,18 @@ class RiskManager:
             if max_position_value < min_position_value:
                 position_size = min_position_value / token_price
 
+            # Adjust position size based on current market conditions
+            if hasattr(self, 'market_data') and self.market_data:
+                # Reduce position size during high market volatility
+                market_volatility = self.market_data.get('market_volatility', Decimal('1.0'))
+                market_condition_factor = Decimal('1.0')
+                if market_volatility > Decimal('1.5'):
+                    market_condition_factor = Decimal('0.7')
+                elif market_volatility > Decimal('1.2'):
+                    market_condition_factor = Decimal('0.85')
+
+                position_size = position_size * market_condition_factor
+
             logger.info(f"Calculated position size: {position_size} tokens at price {token_price} with volatility factor {volatility_factor}")
             return position_size
 

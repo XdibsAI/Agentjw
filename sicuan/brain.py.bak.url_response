@@ -561,10 +561,6 @@ PENTING: Jika user mengirim URL (https://...) dan minta analisis/integrasi:
 - Target = URL yang dikirim
 - JANGAN pilih analyze_project
 - Berikan analisis spesifik tentang library/URL tersebut
-- SETELAH memberikan analisis URL, TETAP fokus pada topik yang sama
-- JANGAN tiba-tiba pindah ke project lain (flask_todo_api)
-- Jawab langsung dengan analisis + rekomendasi
-- Akhiri dengan call to action yang relevan
 
 Gunakan action = analyze_project.
 
@@ -2213,58 +2209,20 @@ USER REQUEST:
 
 
     def fetch_url_content(self, url: str) -> str:
-        """Fetch content from URL dan berikan analisis"""
+        """Fetch content from URL"""
         try:
             import requests
-            import re
             response = requests.get(url, timeout=10)
             if response.status_code == 200:
                 if "github.com" in url:
-                    # Extract repo info
+                    import re
+                    # Cari description dari meta tag
                     match = re.search(r'<meta name="description" content="([^"]+)"', response.text)
-                    description = match.group(1) if match else "No description"
-                    
-                    # Extract repo name
-                    repo_name = url.replace("https://github.com/", "").split("/")[0] + "/" + url.replace("https://github.com/", "").split("/")[1] if "/" in url.replace("https://github.com/", "") else url
-                    
-                    # Analisis untuk godmeme
-                    analysis = f"""
-📦 **Repository:** {repo_name}
-📝 **Description:** {description}
-
-🔍 **Analisis untuk Godmeme Bot:**
-
-Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canvas yang cepat.
-
-**Apa yang bisa diterapkan ke godmeme_bot:**
-
-1. **📊 Visualisasi PnL Real-time**
-   - Tampilkan equity curve dari trading.db
-   - Update otomatis setiap posisi baru
-
-2. **🎯 Entry/Exit Point Marker**
-   - Tandai posisi BUY/SELL di chart
-   - Warna berbeda untuk profit/loss
-
-3. **📈 Historical Price Chart**
-   - Plot harga token yang ditrading
-   - Candlestick atau line chart
-
-4. **📉 Dashboard Integration**
-   - Bisa diintegrasikan ke dashboard.py
-   - Web-based chart yang interaktif
-
-**💡 Rekomendasi Implementasi:**
-
-1. Buat endpoint API di SiCuan untuk data chart
-2. Tambahkan chart component di dashboard
-3. Data source: trading.db (trades table)
-4. Update real-time via WebSocket
-
-**Mau saya bantu implementasikan? Balas 'implementasi chart'**
-"""
-                    return analysis
-                return f"📄 Content: {response.text[:500]}"
+                    if match:
+                        description = match.group(1)
+                        return f"📦 Repository: {url}\nDescription: {description}"
+                    return f"📦 Repository: {url}\n(Description not found)"
+                return response.text[:500]
             return f"❌ Gagal fetch URL: {response.status_code}"
         except Exception as e:
             return f"❌ Error fetching URL: {e}"
