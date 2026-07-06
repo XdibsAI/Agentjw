@@ -44,6 +44,12 @@ class ActionRegistry:
         """Daftar semua action - mulai dari tier-1"""
         
         # Tier 1 - Paling sering dipakai
+        self._actions["attribution_dashboard"] = {
+            "module": "sicuan.core.attribution_dashboard",
+            "entry": "show_attribution_dashboard",
+            "category": "analysis",
+            "description": "Tampilkan dashboard trade attribution",
+        }
         self._actions["auto_fix_from_recommendations"] = {
             "module": "sicuan.actions.auto_fix_from_recommendations",
             "entry": "execute",

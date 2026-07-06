@@ -1865,10 +1865,6 @@ USER REQUEST:
                 from sicuan.actions.analyze_trading_data import execute as _atd
                 return _atd(brain=self)
 
-            elif action == "attribution_dashboard":
-                from sicuan.core.attribution_dashboard import show_attribution_dashboard
-                return show_attribution_dashboard()
-
             elif action == "shadow_mode_report":
                 from sicuan.actions.shadow_mode_report import execute as _smr
                 return _smr(brain=self)
@@ -1922,6 +1918,9 @@ USER REQUEST:
             pass
         # ── End Reflection ────────────────────────────────────────────────
 
+            elif action == "attribution_dashboard":
+                from sicuan.core.attribution_dashboard import show_attribution_dashboard
+                return show_attribution_dashboard()
         return "Action tidak dikenali."
 
 
