@@ -68,6 +68,10 @@ class Position:
 
 class Strategy:
 
+    async def _is_blacklisted(self, token_symbol: str) -> bool:
+        """Cek apakah token di blacklist"""
+        return token_symbol in self.TOKEN_BLACKLIST
+
     async def get_token_price_paper(self, mint: str):
         try:
             import aiohttp
@@ -112,6 +116,15 @@ class Strategy:
         self.notifier = notifier
         self.positions: Dict[str, Position] = {}
         self.daily_pnl_sol = 0.0
+        
+        # Token blacklist - berdasarkan data entry quality
+        self.TOKEN_BLACKLIST = [
+            "DAWN",      # 0% win rate from 9 trades
+            "gary",      # 0% win rate from 5 trades
+            "PIXEL",     # 0% win rate from 5 trades
+            "くまきち",   # 0% win rate from 5 trades
+            "VOYAGER",   # 16.7% win rate - marginal
+        ]
 
         # Persistent paper wallet balance
         self.paper_balance = load_paper_balance()
@@ -288,6 +301,12 @@ class Strategy:
 
 
     async def _should_buy(self, token: Dict, market_condition=None) -> bool:
+        # === BLACKLIST CHECK ===
+        symbol = token.get("symbol", "")
+        if await self._is_blacklisted(symbol):
+            logger.info(f"SKIP {symbol} - blacklisted (low win rate)")
+            return False
+        
         mint = token.get("mint", "")
         if not mint or len(mint) < 30:
             return False
