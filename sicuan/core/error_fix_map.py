@@ -78,6 +78,65 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             "fix": "Perbaiki import path di strategy.py",
             "file": "strategy.py"
         },
+        
+        # AttributeError: _check_cooldown missing
+        "AttributeError: 'Strategy' object has no attribute '_check_cooldown'": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Tambahkan method _check_cooldown di class Strategy",
+            "file": "strategy.py"
+        },
+        # Generic AttributeError
+        "AttributeError: '([^']+)' object has no attribute '([^']+)'": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Tambahkan method {2} di class {1} di strategy.py",
+            "file": "strategy.py"
+        },
+        
+        # IndentationError
+        "IndentationError: unexpected indent": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Perbaiki indentasi di file yang error",
+            "file": None
+        },
+        "IndentationError: expected an indented block": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Tambahkan indentasi yang hilang",
+            "file": None
+        },
+        
+        "IndentationError: unexpected indent": {
+            "action": "syntax_repair",
+            "target": None,
+            "fix": "Perbaiki indentasi otomatis",
+            "file": None
+        },
+        "IndentationError: expected an indented block": {
+            "action": "syntax_repair",
+            "target": None,
+            "fix": "Tambahkan indentasi yang hilang",
+            "file": None
+        },
+        
+        # AttributeError: _check_cooldown missing — deterministic fix
+        "AttributeError: 'Strategy' object has no attribute '_check_cooldown'": {
+            "action": "add_method",
+            "target": "strategy.py",
+            "fix": "Tambahkan method _check_cooldown di class Strategy",
+            "file": "strategy.py",
+            "method_name": "_check_cooldown",
+            "method_body": "async def _check_cooldown(self) -> bool:\n        if not hasattr(self, '_cooldown_until'):\n            self._cooldown_until = 0\n            self._cooldown_mode = False\n        if self._cooldown_until and time.time() < self._cooldown_until:\n            remaining = int(self._cooldown_until - time.time())\n            if remaining % 60 == 0:\n                logger.info(f'COOLDOWN: {remaining//60}m remaining')\n            return True\n        return False"
+        },
+        # Generic AttributeError (fallback)
+        "AttributeError: '([^']+)' object has no attribute '([^']+)'": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Tambahkan method {2} di class {1} di strategy.py",
+            "file": "strategy.py"
+        },
                 # General error fallback
         "default": {
             "action": "analyze_project",

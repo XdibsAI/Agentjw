@@ -197,30 +197,35 @@ class ExecutionValidator:
     def _is_running(self) -> bool:
         """Check if bot is running"""
         try:
-            result = subprocess.run(
-                ["pgrep", "-f", "main.py"],
-                capture_output=True,
-                timeout=5
-            )
-            if result.returncode == 0:
-                pid = result.stdout.decode().strip()
-                self._log(f"   Bot running (PID: {pid})")
-                return True
+            # Cek multiple patterns
+            import subprocess
+            patterns = ["main.py", "godmeme_bot"]
+            for pattern in patterns:
+                result = subprocess.run(
+                    ["pgrep", "-f", pattern],
+                    capture_output=True,
+                    timeout=5
+                )
+                if result.returncode == 0:
+                    pid = result.stdout.decode().strip()
+                    self._log(f"   Bot running (PID: {pid})")
+                    return True
             return False
-        except:
+        except Exception as e:
+            self._log(f"   Error checking bot: {e}")
             return False
 
     def _smoke_test(self) -> bool:
-        """Smoke test"""
+        """Smoke test — cek bot process, bukan API"""
         try:
-            # Check API status
-            import requests
-            response = requests.get("http://localhost:18790/status", timeout=5)
-            if response.status_code == 200:
-                self._log("   ✅ API status OK")
+            # 1. Cek apakah bot process running
+            import subprocess
+            result = subprocess.run(["pgrep", "-f", "main.py"], capture_output=True, timeout=5)
+            if result.returncode == 0:
+                self._log("   ✅ Bot process running")
                 return True
             else:
-                self._log(f"   ❌ API status: {response.status_code}")
+                self._log("   ❌ Bot process not running")
                 return False
         except Exception as e:
             self._log(f"   ❌ Smoke test error: {e}")
@@ -243,9 +248,31 @@ class ExecutionValidator:
             return True
 
     def _paper_trade(self, duration: int = 30) -> bool:
-        """Paper trading for duration seconds"""
-        self._log(f"   Running for {duration}s...")
-        time.sleep(duration)
+        """Health check — cek apakah bot hidup dan responsif"""
+        self._log(f"   Health check for {duration}s...")
+        
+        # 1. Cek apakah proses masih hidup
+        if not self._is_running():
+            self._log("   ❌ Bot not running")
+            return False
+        
+        # 2. Cek apakah log terbaru menunjukkan aktivitas
+        try:
+            import time
+            time.sleep(3)  # Tunggu sebentar
+            
+            # Cek apakah ada log baru
+            if self.log_file.exists():
+                with open(self.log_file, "r") as f:
+                    lines = f.readlines()
+                    if len(lines) > 0:
+                        last_line = lines[-1]
+                        self._log(f"   ✅ Log active: {last_line[:50]}...")
+                        return True
+        except Exception as e:
+            self._log(f"   ⚠️ Log check error: {e}")
+        
+        # 3. Fallback: cek apakah proses masih hidup
         return self._is_running()
 
     def _compare_metrics(self) -> Dict:

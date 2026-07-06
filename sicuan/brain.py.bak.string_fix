@@ -2317,6 +2317,139 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         fixer = get_error_fixer()
         return fixer.diagnose(error_message)
 
+    def auto_fix_error(self, error_message: str) -> dict:
+        """Auto fix error: diagnose → fix → validate"""
+        # 1. Diagnose
+        diagnosis = self.diagnose_error(error_message)
+        action = diagnosis.get("action")
+        
+        # 2. Handle add_method (deterministik)
+        if action == "add_method":
+            from pathlib import Path
+            file_path = diagnosis.get("file", "strategy.py")
+            method_name = diagnosis.get("method_name", "")
+            method_body = diagnosis.get("method_body", "")
+            
+            if not method_body:
+                return {
+                    "status": "failed",
+                    "decision": "rollback",
+                    "diagnosis": diagnosis,
+                    "patch_result": {"error": "No method body provided"},
+                    "validation": {"reason": "No method body provided"}
+                }
+            
+            # Baca file
+            full_path = Path("projects") / "godmeme_bot" / file_path
+            if not full_path.exists():
+                full_path = Path(file_path)
+            
+            content = full_path.read_text()
+            
+            # Cek apakah method sudah ada
+            if method_name in content:
+                return {
+                    "status": "verified",
+                    "decision": "commit",
+                    "diagnosis": diagnosis,
+                    "patch_result": {"message": f"Method {method_name} already exists"},
+                    "validation": {"reason": "Method already exists"}
+                }
+            
+            # Tambahkan method di akhir class (sebelum akhir file)
+            # Cari akhir class
+            lines = content.splitlines()
+            # Cari baris terakhir class (biasanya sebelum 'async def' terakhir atau di akhir file)
+            new_lines = []
+            inserted = False
+            
+            for line in lines:
+                new_lines.append(line)
+                # Cari akhir class — setelah method terakhir
+                if not inserted and line.strip() and line.startswith('class'):
+                    # Simpan posisi
+                    pass
+            
+            # Tambahkan method di akhir (sebelum EOF)
+            new_lines.append('')
+            new_lines.append('    ' + method_body.replace('\n', '
+    '))
+            
+            full_path.write_text('
+'.join(new_lines))
+            
+            # Validate
+            from sicuan.core.execution_validator import get_validator
+            validator = get_validator()
+            validation = validator.validate({"patch": {"method": method_name}})
+            
+            return {
+                "status": validation.get("status"),
+                "decision": validation.get("decision"),
+                "diagnosis": diagnosis,
+                "patch_result": {"method": method_name},
+                "validation": validation
+            }
+        
+        # 3. Handle syntax_repair (deterministik)
+        if action == "syntax_repair":
+            from sicuan.core.syntax_repair import get_syntax_repair
+            repair = get_syntax_repair()
+            file_path = diagnosis.get("file", "strategy.py")
+            
+            # Coba repair dengan AST
+            result = repair.repair_with_ast(file_path)
+            
+            if result["success"]:
+                # Validate
+                from sicuan.core.execution_validator import get_validator
+                validator = get_validator()
+                validation = validator.validate({"patch": result})
+                return {
+                    "status": validation.get("status"),
+                    "decision": validation.get("decision"),
+                    "diagnosis": diagnosis,
+                    "patch_result": result,
+                    "validation": validation
+                }
+            else:
+                return {
+                    "status": "failed",
+                    "decision": "rollback",
+                    "diagnosis": diagnosis,
+                    "patch_result": result,
+                    "validation": {"reason": result.get("error", "Syntax repair failed")}
+                }
+        
+        if action != "modify_logic":
+            return {
+                "status": "skipped",
+                "message": f"Tidak bisa auto-fix. Action: {action}",
+                "diagnosis": diagnosis
+            }
+        
+        # 3. Execute modify_logic untuk logic errors
+        result = self.execute_action(
+            action="modify_logic",
+            target=diagnosis.get("file", "strategy.py"),
+            user_request=f"Perbaiki {diagnosis.get('fix')}",
+            session_id="auto_fix"
+        )
+        
+        # 4. Validate
+        from sicuan.core.execution_validator import get_validator
+        validator = get_validator()
+        validation = validator.validate({"patch": result})
+        
+        return {
+            "status": validation.get("status"),
+            "decision": validation.get("decision"),
+            "diagnosis": diagnosis,
+            "patch_result": result,
+            "validation": validation
+        }
+
+    def fix_and_report(self, error_message: str) -> str:
         """Fix error dan laporkan hasil"""
         reporter = get_reporter()
         
@@ -2469,57 +2602,6 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         """Dapatkan strategi perbaikan berikutnya"""
         memory = get_repair_memory()
         return memory.get_next_strategy(error)
-
-
-
-
-    def auto_fix_error(self, error_message: str) -> dict:
-        """Auto fix error: diagnose → fix → validate"""
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        action = diagnosis.get("action")
-        
-        # 2. Handle syntax_repair
-        if action == "syntax_repair":
-            from sicuan.core.syntax_repair import get_syntax_repair
-            repair = get_syntax_repair()
-            file_path = diagnosis.get("file", "strategy.py")
-            result = repair.repair_with_ast(file_path)
-            if result["success"]:
-                return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
-            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "patch_result": result}
-        
-        # 3. Handle add_method
-        if action == "add_method":
-            from pathlib import Path
-            file_path = diagnosis.get("file", "strategy.py")
-            method_name = diagnosis.get("method_name", "")
-            method_body = diagnosis.get("method_body", "")
-            if not method_body:
-                return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis}
-            full_path = Path("projects/godmeme_bot") / file_path
-            if not full_path.exists():
-                full_path = Path(file_path)
-            content = full_path.read_text()
-            if method_name in content:
-                return {"status": "verified", "decision": "commit", "diagnosis": diagnosis}
-            lines = content.splitlines()
-            lines.append("")
-            lines.append("    " + method_body.replace("\n", "\n    "))
-            full_path.write_text("\n".join(lines))
-            return {"status": "verified", "decision": "commit", "diagnosis": diagnosis}
-        
-        if action != "modify_logic":
-            return {"status": "skipped", "message": f"Tidak bisa auto-fix. Action: {action}", "diagnosis": diagnosis}
-        
-        # 4. Execute modify_logic
-        result = self.execute_action(
-            action="modify_logic",
-            target=diagnosis.get("file", "strategy.py"),
-            user_request=f"Perbaiki {diagnosis.get('fix')}",
-            session_id="auto_fix"
-        )
-        return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
 
 
 sicuan_brain = SiCuanBrain()

@@ -208,7 +208,8 @@ class AutoRepairPipeline:
         return {
             "success": False,
             "attempts": len(self.attempt_history),
-            "strategies_tried": self.attempt_history
+            "strategies_tried": self.attempt_history,
+            "error_type": error_info.get('type', 'unknown')
         }
 
     def _generate_patch(self, strategy: str, error_info: Dict) -> Dict:

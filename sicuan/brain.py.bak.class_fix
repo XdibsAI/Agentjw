@@ -2471,8 +2471,7 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         return memory.get_next_strategy(error)
 
 
-
-
+sicuan_brain = SiCuanBrain()
     def auto_fix_error(self, error_message: str) -> dict:
         """Auto fix error: diagnose → fix → validate"""
         # 1. Diagnose
@@ -2486,8 +2485,18 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             file_path = diagnosis.get("file", "strategy.py")
             result = repair.repair_with_ast(file_path)
             if result["success"]:
-                return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
-            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "patch_result": result}
+                return {
+                    "status": "verified",
+                    "decision": "commit",
+                    "diagnosis": diagnosis,
+                    "patch_result": result
+                }
+            return {
+                "status": "failed",
+                "decision": "rollback",
+                "diagnosis": diagnosis,
+                "patch_result": result
+            }
         
         # 3. Handle add_method
         if action == "add_method":
@@ -2497,16 +2506,20 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             method_body = diagnosis.get("method_body", "")
             if not method_body:
                 return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis}
+            
             full_path = Path("projects/godmeme_bot") / file_path
             if not full_path.exists():
                 full_path = Path(file_path)
+            
             content = full_path.read_text()
             if method_name in content:
                 return {"status": "verified", "decision": "commit", "diagnosis": diagnosis}
+            
             lines = content.splitlines()
             lines.append("")
             lines.append("    " + method_body.replace("\n", "\n    "))
             full_path.write_text("\n".join(lines))
+            
             return {"status": "verified", "decision": "commit", "diagnosis": diagnosis}
         
         if action != "modify_logic":
@@ -2520,6 +2533,3 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             session_id="auto_fix"
         )
         return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
-
-
-sicuan_brain = SiCuanBrain()
