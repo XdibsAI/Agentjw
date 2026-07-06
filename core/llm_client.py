@@ -14,6 +14,21 @@ from core.cost_tracker import CostTracker
 
 class LLMClient:
 
+    def _get_api_key(self):
+        """Dapatkan API key berdasarkan provider"""
+        import os
+        if self.provider == "openai":
+            return os.getenv("OPENAI_API_KEY")
+        elif self.provider == "anthropic":
+            return os.getenv("ANTHROPIC_API_KEY")
+        elif self.provider == "groq":
+            return os.getenv("GROQ_API_KEY")
+        elif self.provider == "openrouter":
+            return os.getenv("OPENROUTER_API_KEY")
+        else:
+            return os.getenv("OPENROUTER_API_KEY")
+
+
     def groq_chat(self, messages: List[Dict], model: str = "llama-3.3-70b-versatile",
                   temperature: float = 0.7, max_tokens: int = 4096) -> str:
         """Chat khusus untuk Groq (tanpa retry)"""
@@ -62,15 +77,31 @@ class LLMClient:
     def _init_client(self):
 
         if self.provider == "openai":
-            return "https://api.openai.com/v1/chat/completions"
+            try:
+                from openai import OpenAI
+                self._client = OpenAI(api_key=config.OPENAI_API_KEY)
+                logger.info(f"LLM Client initialized: OpenAI ({self.model})")
+            except ImportError:
+                raise ImportError("openai package not installed. Run: pip install openai")
+
         elif self.provider == "anthropic":
-            return "https://api.anthropic.com/v1/messages"
-        elif self.provider == "groq":
-            return "https://api.groq.com/openai/v1/chat/completions"
+            try:
+                import anthropic
+                self._client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
+                logger.info(f"LLM Client initialized: Anthropic ({self.model})")
+            except ImportError:
+                raise ImportError("anthropic package not installed.")
+
         else:
-            raise ValueError(f"Unknown LLM provider: {self.provider}")(
-                f"Unknown LLM provider: {self.provider}"
-            )
+            # openrouter/groq/others — pakai OpenAI-compatible client
+            try:
+                from openai import OpenAI
+                base_url = "https://openrouter.ai/api/v1"
+                api_key = config.OPENROUTER_API_KEY
+                self._client = OpenAI(api_key=api_key, base_url=base_url)
+                logger.info(f"LLM Client initialized: OpenAI ({self.model})")
+            except ImportError:
+                raise ImportError("openai package not installed.")
 
     @retry(
         stop=stop_after_attempt(3),
