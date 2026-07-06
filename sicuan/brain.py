@@ -511,7 +511,7 @@ Format JSON WAJIB:
     }}
   ],
   "response": "pesan ke user (bahasa natural, bukan template)",
-  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue | shadow_mode_report | analyze_trading_data",
+  "action": "null | build_project | repair_project | modify_logic | modify_project | analyze_project | autonomous_project | run_bot | scan_project | get_file | show_log | trace_code | video_info | godmeme_status | list_projects | project_summary | business_analysis | gallery | build_task_queue | shadow_mode_report | analyze_trading_data | analyze_url",
   "action_target": "untuk repair_project/modify_logic/analyze_project: format wajib nama_project: instruksi. Untuk action lain: nama project atau file saja.",
   "needs_from_user": "null | api_key_name | konfirmasi | data_tambahan",
   "reasoning": "kenapa kamu decide ini (internal, tidak ditampilkan ke user)"
