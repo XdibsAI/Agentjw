@@ -19,9 +19,6 @@ from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
 from sicuan.core.vault_manager import VaultManager
-from sicuan.core.conversation_router import ConversationRouter
-from sicuan.core.error_fix_map import get_error_fixer
-from sicuan.core.fix_reporter import get_reporter
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -76,12 +73,8 @@ class SiCuanBrain:
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
         from sicuan.core.vault_manager import VaultManager
-from sicuan.core.conversation_router import ConversationRouter
-from sicuan.core.error_fix_map import get_error_fixer
-from sicuan.core.fix_reporter import get_reporter
         self.task_tracker = TaskTracker()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
-        self.router = ConversationRouter()
     
     def get_data_availability(self) -> dict:
         """Dapatkan informasi data apa yang tersedia"""
@@ -2277,74 +2270,9 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             return f"❌ Error fetching URL: {e}"
 
 
-
-    def route_message(self, user_message: str) -> dict:
-        """Route message menggunakan ConversationRouter"""
-        route, data = self.router.route(user_message)
-        return {
-            "route": route.value,
-            "data": data,
-            "action": data.get("action", "analyze_project")
-        }
-
+sicuan_brain = SiCuanBrain()
     def diagnose_error(self, error_message: str) -> dict:
         """Diagnose error dan dapatkan fix action"""
+        from sicuan.core.error_fix_map import get_error_fixer
         fixer = get_error_fixer()
         return fixer.diagnose(error_message)
-
-    def auto_fix_error(self, error_message: str) -> dict:
-        """Auto fix error: diagnose → fix → validate"""
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        
-        if diagnosis.get("action") != "modify_logic":
-            return {
-                "status": "skipped",
-                "message": f"Tidak bisa auto-fix. Action: {diagnosis.get('action')}",
-                "diagnosis": diagnosis
-            }
-        
-        # 2. Execute modify_logic
-        result = self.execute_action(
-            action="modify_logic",
-            target=diagnosis.get("file", "strategy.py"),
-            user_request=f"Perbaiki {diagnosis.get('fix')}",
-            session_id="auto_fix"
-        )
-        
-        # 3. Validate
-        from sicuan.core.execution_validator import get_validator
-        validator = get_validator()
-        validation = validator.validate({"patch": result})
-        
-        return {
-            "status": validation.get("status"),
-            "decision": validation.get("decision"),
-            "diagnosis": diagnosis,
-            "patch_result": result,
-            "validation": validation
-        }
-
-    def fix_and_report(self, error_message: str) -> str:
-        """Fix error dan laporkan hasil"""
-        reporter = get_reporter()
-        
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        
-        # 2. Auto-fix
-        fix_result = self.auto_fix_error(error_message)
-        
-        # 3. Create report
-        report = reporter.create_report(
-            error=error_message,
-            diagnosis=diagnosis,
-            fix_result=fix_result,
-            validation=fix_result.get("validation", {})
-        )
-        
-        reporter.save_report(report)
-        return report
-
-
-sicuan_brain = SiCuanBrain()

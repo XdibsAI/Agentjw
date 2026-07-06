@@ -22,6 +22,13 @@ from sicuan.core.vault_manager import VaultManager
 from sicuan.core.conversation_router import ConversationRouter
 from sicuan.core.error_fix_map import get_error_fixer
 from sicuan.core.fix_reporter import get_reporter
+from sicuan.core.auto_fix_loop import get_auto_fix_loop
+from sicuan.core.repair_planner import get_repair_memory
+from sicuan.core.conversation_router import ConversationRouter
+from sicuan.core.error_fix_map import get_error_fixer
+from sicuan.core.fix_reporter import get_reporter
+from sicuan.core.auto_fix_loop import get_auto_fix_loop
+from sicuan.core.repair_planner import get_repair_memory
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -75,10 +82,6 @@ class SiCuanBrain:
 
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
-        from sicuan.core.vault_manager import VaultManager
-from sicuan.core.conversation_router import ConversationRouter
-from sicuan.core.error_fix_map import get_error_fixer
-from sicuan.core.fix_reporter import get_reporter
         self.task_tracker = TaskTracker()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
         self.router = ConversationRouter()
@@ -1195,6 +1198,14 @@ Rules:
                 if not symbol:
                     return "Mas, fungsi/symbol apa yang mau aku trace? Contoh: trace function _should_buy"
                 result = trace_before_patch(symbol)
+                # === VALIDASI ===
+                validation = validator.validate({"patch": result})
+                if validation["status"] == "verified":
+                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                elif validation["status"] == "warning":
+                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                else:
+                    result += "\n\n❌ **Validation**: " + validation["reason"]
                 return result.to_report()
 
             
@@ -2345,6 +2356,124 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         
         reporter.save_report(report)
         return report
+
+
+
+    def auto_fix_until_success(self, error_message: str, max_attempts: int = 3) -> dict:
+        """Auto-fix sampai sukses atau max attempts"""
+        loop = get_auto_fix_loop(self)
+        loop.max_attempts = max_attempts
+        return loop.run(error_message)
+
+
+
+    def restart_bot(self) -> bool:
+        """Restart bot dan cek apakah berhasil"""
+        try:
+            import subprocess
+            import time
+            from pathlib import Path
+            
+            # Kill existing
+            subprocess.run(["pkill", "-f", "main.py"], capture_output=True, timeout=5)
+            time.sleep(2)
+            
+            # Start bot
+            bot_path = Path("projects/godmeme_bot/main.py")
+            if not bot_path.exists():
+                return False
+            
+            subprocess.Popen(
+                ["python3", str(bot_path)],
+                cwd=str(bot_path.parent),
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            time.sleep(5)
+            
+            # Check running
+            result = subprocess.run(["pgrep", "-f", "main.py"], capture_output=True, timeout=5)
+            return result.returncode == 0
+        except:
+            return False
+
+
+
+    def start_bot_with_error(self) -> dict:
+        """Start bot dan tangkap error jika gagal"""
+        import subprocess
+        import time
+        from pathlib import Path
+        
+        result = {
+            "success": False,
+            "error": None,
+            "output": ""
+        }
+        
+        try:
+            # Kill existing
+            subprocess.run(["pkill", "-f", "main.py"], capture_output=True, timeout=5)
+            time.sleep(2)
+            
+            # Start bot dan tangkap output
+            # Gunakan path absolut
+            bot_path = Path("/home/dibs/agentjw/projects/godmeme_bot/main.py")
+            if not bot_path.exists():
+                result["error"] = f"Bot not found: {bot_path}"
+                # === VALIDASI ===
+                validation = validator.validate({"patch": result})
+                if validation["status"] == "verified":
+                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                elif validation["status"] == "warning":
+                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                else:
+                    result += "\n\n❌ **Validation**: " + validation["reason"]
+                return result
+            
+            process = subprocess.Popen(
+                ["python3", str(bot_path)],
+                cwd="/home/dibs/agentjw/projects/godmeme_bot",
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE
+            )
+            
+            # Tunggu sebentar dan cek
+            time.sleep(3)
+            
+            # Cek apakah masih running
+            if process.poll() is not None:
+                # Bot exited with error
+                stdout, stderr = process.communicate(timeout=5)
+                output = stderr.decode() or stdout.decode()
+                result["success"] = False
+                result["error"] = output[:500] if output else "Unknown error"
+                result["output"] = output
+                # === VALIDASI ===
+                validation = validator.validate({"patch": result})
+                if validation["status"] == "verified":
+                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                elif validation["status"] == "warning":
+                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                else:
+                    result += "\n\n❌ **Validation**: " + validation["reason"]
+                return result
+            
+            # Bot running
+            result["success"] = True
+            result["error"] = None
+            return result
+            
+        except Exception as e:
+            result["error"] = str(e)
+            return result
+
+
+
+    def get_repair_strategy(self, error: dict) -> str:
+        """Dapatkan strategi perbaikan berikutnya"""
+        memory = get_repair_memory()
+        return memory.get_next_strategy(error)
 
 
 sicuan_brain = SiCuanBrain()

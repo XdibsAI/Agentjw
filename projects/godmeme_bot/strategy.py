@@ -1,3 +1,8 @@
+import sys
+import os
+# Add parent path for sicuan imports
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 import asyncio
 import logging
 from status_writer import update_status
@@ -311,6 +316,25 @@ class Strategy:
                 return False
         except Exception as e:
             logger.warning(f"Blacklist check failed: {e}")
+        
+        # === TOKEN SCORER ===
+        try:
+            from sicuan.core.token_scorer import TokenScorer, TokenFeatures
+            features = TokenFeatures(
+                liquidity=token.get("liquidity", 0),
+                volume=token.get("volume5m", 0),
+                momentum=token.get("price_change5m", 0),
+                age_min=token.get("age_min", 0),
+                entry_hour=0,
+                historical_wr=token.get("win_rate", 50)
+            )
+            scorer = TokenScorer()
+            score_result = scorer.score(features)
+            if score_result["action"] == "BLOCK":
+                logger.info(f"SKIP {symbol} - token scorer: {score_result['reason']}")
+                return False
+        except Exception as e:
+            logger.warning(f"Token scorer failed: {e}")
         
         # === ADAPTIVE ENTRY TIME CHECK ===
         try:
@@ -921,19 +945,3 @@ async def get_sol_usd_price():
 # === TOKEN SCORER INTEGRATION ===
 from sicuan.core.token_scorer import TokenScorer, TokenFeatures
 
-    async def _score_token(self, token: Dict) -> dict:
-        """Score token menggunakan TokenScorer"""
-        try:
-            features = TokenFeatures(
-                liquidity=token.get("liquidity", 0),
-                volume=token.get("volume5m", 0),
-                momentum=token.get("price_change5m", 0),
-                age_min=token.get("age_min", 0),
-                entry_hour=token.get("hour", 0),
-                historical_wr=token.get("win_rate", 50)
-            )
-            scorer = TokenScorer()
-            return scorer.score(features)
-        except Exception as e:
-            logger.warning(f"Token scoring failed: {e}")
-            return {"action": "BUY", "confidence": 0.5}

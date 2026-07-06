@@ -615,20 +615,6 @@ class LogicModifier:
             border_style="green" if status == "success" else "yellow"
         ))
 
-        # === EXECUTION VALIDATION ===
-        try:
-            from sicuan.core.execution_validator import get_validator
-            validator = get_validator()
-            validation = validator.validate({"patch": {"modified": modified, "failed": failed}})
-            if validation["status"] == "verified":
-                print(f"[VALIDATOR] ✅ {validation['reason']}")
-            elif validation["status"] == "warning":
-                print(f"[VALIDATOR] ⚠️ {validation['reason']}")
-            else:
-                print(f"[VALIDATOR] ❌ {validation['reason']}")
-        except Exception as e:
-            print(f"[VALIDATOR] Error: {e}")
-
         return {"modified": modified, "failed": failed, "status": status, "code_trace_used": bool(code_trace)}
 
 

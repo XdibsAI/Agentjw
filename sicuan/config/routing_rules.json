@@ -9,10 +9,26 @@
       "description": "Deteksi URL dan analisis"
     },
     {
+      "id": "fix_error",
+      "patterns": ["perbaiki error", "fix error", "error di", "bug di", "perbaiki bug", "module not found", "syntax error"],
+      "action": "modify_logic",
+      "priority": 10,
+      "requires_context": true,
+      "description": "Perbaiki error di project"
+    },
+    {
+      "id": "repair_project",
+      "patterns": ["perbaiki project", "repair project", "betulin project"],
+      "action": "repair_project",
+      "priority": 9,
+      "requires_context": true,
+      "description": "Perbaiki project secara umum"
+    },
+    {
       "id": "memory_query",
       "patterns": ["masih ingat", "ingat", "terakhir", "kemarin", "sebelumnya", "yang tadi", "obrolan kita"],
       "action": "memory_query",
-      "priority": 9,
+      "priority": 8,
       "requires_context": false,
       "description": "Query memory percakapan"
     },
@@ -20,7 +36,7 @@
       "id": "decision_query",
       "patterns": ["kenapa", "mengapa", "alasan", "kok"],
       "action": "decision_query",
-      "priority": 8,
+      "priority": 7,
       "requires_context": false,
       "description": "Query keputusan"
     },
@@ -28,7 +44,7 @@
       "id": "progress_query",
       "patterns": ["sampai mana", "progress", "pending", "sejauh mana", "status", "performa", "performa sistem"],
       "action": "progress_query",
-      "priority": 7,
+      "priority": 6,
       "requires_context": false,
       "description": "Query progress"
     },
@@ -36,13 +52,13 @@
       "id": "project_analysis",
       "patterns": ["analisa", "analyze", "cek", "analisis"],
       "action": "analyze_project",
-      "priority": 6,
+      "priority": 5,
       "requires_context": true,
       "description": "Analisis project"
     },
     {
       "id": "strategy_fix",
-      "patterns": ["perbaiki", "fix", "repair", "strategi"],
+      "patterns": ["perbaiki strategi", "optimasi strategi", "tuning parameter"],
       "action": "modify_logic",
       "priority": 9,
       "requires_context": true,
