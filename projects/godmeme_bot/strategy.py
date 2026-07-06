@@ -669,6 +669,35 @@ class Strategy:
 
     async def _close_position(self, mint: str, pos: Position, current_price: float, reason: str):
         logger.info(f"Closing {pos.token_symbol} | {reason}")
+        
+        # === TRADE ATTRIBUTION ===
+        try:
+            from sicuan.core.trade_attribution import TradeAttributionEngine
+            import time
+            engine = TradeAttributionEngine()
+            
+            # Kumpulkan data trade
+            trade_data = {
+                "token": pos.token_symbol,
+                "entry_price": pos.entry_price,
+                "exit_price": current_price,
+                "pnl": pos.pnl_percent(current_price) * pos.entry_sol / 100,
+                "entry_delay": (time.time() - pos.entry_time) / 60,  # minutes
+                "market_condition": "neutral",  # akan diisi dari market check
+                "momentum": 0,  # akan diisi
+                "slippage": 0,  # akan diisi
+            }
+            
+            # Analyze attribution
+            attribution = engine.analyze_trade(trade_data)
+            
+            # Simpan ke database atau memory
+            # TODO: Simpan ke file attribution_log.json
+            
+            logger.info(f"[ATTRIBUTION] {pos.token_symbol}: {attribution.reasons}")
+            
+        except Exception as e:
+            logger.warning(f"Attribution failed: {e}")
 
         try:
             ratio = current_price / pos.entry_price
