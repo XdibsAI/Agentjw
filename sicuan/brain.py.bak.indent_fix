@@ -18,6 +18,9 @@ from core.logger import logger
 from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
+from sicuan.core.conversation_router import ConversationRouter
+from sicuan.core.executive_brain_complete import ExecutiveBrainComplete
+from sicuan.core.context_router import ContextRouter
 from sicuan.core.vault_manager import VaultManager
 
 BASE = Path(__file__).parent
@@ -72,8 +75,14 @@ class SiCuanBrain:
 
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
+from sicuan.core.conversation_router import ConversationRouter
+from sicuan.core.executive_brain_complete import ExecutiveBrainComplete
+        from sicuan.core.context_router import ContextRouter
+        from sicuan.core.vault_manager import VaultManager
         from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
+        self.router = ConversationRouter()
+        self.executive_brain = ExecutiveBrainComplete()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
     
     def get_data_availability(self) -> dict:
@@ -446,6 +455,8 @@ class SiCuanBrain:
         system = SICUAN_IDENTITY + f"""
 
         self.task_tracker = TaskTracker()
+        self.router = ConversationRouter()
+        self.executive_brain = ExecutiveBrainComplete()
         self.vault = VaultManager('/home/dibs/agentjw/obsidian')
 DATA NYATA SEKARANG:
 {real_context}
@@ -1865,6 +1876,10 @@ USER REQUEST:
                 from sicuan.actions.analyze_trading_data import execute as _atd
                 return _atd(brain=self)
 
+            elif action == "attribution_dashboard":
+                from sicuan.core.attribution_dashboard import show_attribution_dashboard
+                return show_attribution_dashboard()
+
             elif action == "shadow_mode_report":
                 from sicuan.actions.shadow_mode_report import execute as _smr
                 return _smr(brain=self)
@@ -2270,4 +2285,26 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             return f"❌ Error fetching URL: {e}"
 
 
+
+    def context_route(self, user_message: str, history: list = None) -> dict:
+        """Route berdasarkan konteks, bukan keyword"""
+        if history is None:
+            history = []
+        from sicuan.core.context_router import ContextRouter
+        router = ContextRouter(self)
+        return router.route(user_message, history, getattr(self, '_state', {}))
+
+
 sicuan_brain = SiCuanBrain()
+    def route_message(self, user_message: str) -> dict:
+        """Route message menggunakan ConversationRouter"""
+        route, data = self.router.route(user_message)
+        return {
+            "route": route.value,
+            "data": data,
+            "action": data.get("action", "analyze_project")
+        }
+
+    def executive_decision(self, user_message: str, context: dict = None) -> dict:
+        """Gunakan Executive Brain Complete untuk decision"""
+        return self.executive_brain.decide(user_message, context)

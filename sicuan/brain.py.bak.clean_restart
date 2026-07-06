@@ -18,6 +18,7 @@ from core.logger import logger
 from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
+from sicuan.core.conversation_router import ConversationRouter
 from sicuan.core.vault_manager import VaultManager
 
 BASE = Path(__file__).parent
@@ -72,9 +73,11 @@ class SiCuanBrain:
 
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
-        from sicuan.core.vault_manager import VaultManager
+        from sicuan.core.conversation_router import ConversationRouter
+                from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
+        self.router = ConversationRouter()
     
     def get_data_availability(self) -> dict:
         """Dapatkan informasi data apa yang tersedia"""
@@ -447,6 +450,7 @@ class SiCuanBrain:
 
         self.task_tracker = TaskTracker()
         self.vault = VaultManager('/home/dibs/agentjw/obsidian')
+        self.router = ConversationRouter()
 DATA NYATA SEKARANG:
 {real_context}
 
@@ -2268,6 +2272,17 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             return f"❌ Gagal fetch URL: {response.status_code}"
         except Exception as e:
             return f"❌ Error fetching URL: {e}"
+
+
+
+    def route_message(self, user_message: str) -> dict:
+        """Route message menggunakan ConversationRouter"""
+        route, data = self.router.route(user_message)
+        return {
+            "route": route.value,
+            "data": data,
+            "action": data.get("action", "analyze_project")
+        }
 
 
 sicuan_brain = SiCuanBrain()

@@ -12,7 +12,6 @@ from rich.panel import Panel
 from rich.text import Text
 
 from sicuan.brain import SiCuanBrain
-from sicuan.core.routing_integration import get_routing
 from sicuan.core.personality import Personality
 from sicuan.core.conversation_memory import ConversationMemory
 from sicuan.core.conversation_state import ConversationState
@@ -549,8 +548,3 @@ class SiCuanChat:
         """Handle self-review request"""
         from sicuan.core.self_review import get_self_review_report
         return get_self_review_report()
-
-    def route_message(self, user_message: str) -> dict:
-        """Route message menggunakan ConversationRouter"""
-        routing = get_routing()
-        return routing.route_message(user_message)

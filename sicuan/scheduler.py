@@ -181,6 +181,8 @@ if __name__ == "__main__":
 def check_drift():
     """Check drift secara periodik"""
     from sicuan.core.drift_monitor import get_drift_monitor
+from sicuan.core.self_healing_loop import SelfHealingLoop
+from sicuan.core.entry_tester import EntryTester
     from sicuan.core.self_review_data import get_self_review
     
     # Get current metrics dari self-review
@@ -359,3 +361,19 @@ def auto_heal():
                     print("[AUTO-HEAL] ✅ Bot restarted")
     except Exception as e:
         print(f"[AUTO-HEAL] Error: {e}")
+
+def run_self_healing():
+    """Jalankan self-healing loop"""
+    healer = SelfHealingLoop()
+    return healer.report()
+
+# Tambahkan ke schedule setiap 5 menit
+schedule.every(5).minutes.do(run_self_healing)
+
+def run_entry_test():
+    """Jalankan entry time test"""
+    tester = EntryTester()
+    return tester.get_recommendation()
+
+# Tambahkan ke schedule setiap 6 jam
+schedule.every(6).hours.do(run_entry_test)

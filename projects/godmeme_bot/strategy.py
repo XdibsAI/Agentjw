@@ -917,3 +917,23 @@ async def get_sol_usd_price():
         """Reset backoff after successful request"""
         if hasattr(self, '_backoff_delay'):
             self._backoff_delay = max(5, self._backoff_delay // 2)
+
+# === TOKEN SCORER INTEGRATION ===
+from sicuan.core.token_scorer import TokenScorer, TokenFeatures
+
+    async def _score_token(self, token: Dict) -> dict:
+        """Score token menggunakan TokenScorer"""
+        try:
+            features = TokenFeatures(
+                liquidity=token.get("liquidity", 0),
+                volume=token.get("volume5m", 0),
+                momentum=token.get("price_change5m", 0),
+                age_min=token.get("age_min", 0),
+                entry_hour=token.get("hour", 0),
+                historical_wr=token.get("win_rate", 50)
+            )
+            scorer = TokenScorer()
+            return scorer.score(features)
+        except Exception as e:
+            logger.warning(f"Token scoring failed: {e}")
+            return {"action": "BUY", "confidence": 0.5}
