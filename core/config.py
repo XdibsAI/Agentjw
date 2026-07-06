@@ -32,7 +32,6 @@ class Config:
     API_PORT: int = int(os.getenv("API_PORT", "8000"))
 
     # ── OpenRouter (Video Studio) ──────────────────────────────────────────
-    OPENROUTER_API_KEY: str = os.getenv("OPENROUTER_API_KEY", "")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
 
     # ── Video Studio ───────────────────────────────────────────────────────
@@ -109,3 +108,8 @@ config = Config()
 
 # Groq API
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+
+
+
+# ===== ALIAS =====
+OPENAI_API_KEY = Config.OPENROUTER_API_KEY

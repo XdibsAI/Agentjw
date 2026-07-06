@@ -25,18 +25,10 @@
       "description": "Query keputusan"
     },
     {
-      "id": "knowledge_query",
-      "patterns": ["berapa", "jumlah", "total", "ada berapa", "sebanyak"],
-      "action": "knowledge_query",
-      "priority": 7,
-      "requires_context": false,
-      "description": "Query pengetahuan"
-    },
-    {
       "id": "progress_query",
-      "patterns": ["sampai mana", "progress", "pending", "sejauh mana", "status"],
+      "patterns": ["sampai mana", "progress", "pending", "sejauh mana", "status", "performa", "performa sistem"],
       "action": "progress_query",
-      "priority": 6,
+      "priority": 7,
       "requires_context": false,
       "description": "Query progress"
     },
@@ -44,7 +36,7 @@
       "id": "project_analysis",
       "patterns": ["analisa", "analyze", "cek", "analisis"],
       "action": "analyze_project",
-      "priority": 5,
+      "priority": 6,
       "requires_context": true,
       "description": "Analisis project"
     },
@@ -63,6 +55,14 @@
       "priority": 4,
       "requires_context": false,
       "description": "Daftar project"
+    },
+    {
+      "id": "attribution_dashboard",
+      "patterns": ["attribution", "dashboard", "trade attribution"],
+      "action": "attribution_dashboard",
+      "priority": 5,
+      "requires_context": false,
+      "description": "Tampilkan attribution dashboard"
     }
   ],
   "default_action": "analyze_project",

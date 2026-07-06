@@ -18,6 +18,7 @@ from core.logger import logger
 from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
+from sicuan.core.context_router import ContextRouter
 from sicuan.core.vault_manager import VaultManager
 
 BASE = Path(__file__).parent
@@ -72,6 +73,8 @@ class SiCuanBrain:
 
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
+        from sicuan.core.context_router import ContextRouter
+        from sicuan.core.vault_manager import VaultManager
         from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
@@ -2272,6 +2275,16 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
             return f"❌ Gagal fetch URL: {response.status_code}"
         except Exception as e:
             return f"❌ Error fetching URL: {e}"
+
+
+
+    def context_route(self, user_message: str, history: list = None) -> dict:
+        """Route berdasarkan konteks, bukan keyword"""
+        if history is None:
+            history = []
+        from sicuan.core.context_router import ContextRouter
+        router = ContextRouter(self)
+        return router.route(user_message, history, getattr(self, '_state', {}))
 
 
 sicuan_brain = SiCuanBrain()
