@@ -312,6 +312,18 @@ class Strategy:
         except Exception as e:
             logger.warning(f"Blacklist check failed: {e}")
         
+        # === ADAPTIVE ENTRY TIME CHECK ===
+        try:
+            from sicuan.core.adaptive_entry_time import get_entry_time
+            import time
+            current_hour = int(time.strftime("%H"))
+            entry_time = get_entry_time()
+            if not entry_time.should_entry(current_hour):
+                logger.info(f"SKIP {symbol} - bad entry time (hour {current_hour:02d}:00)")
+                return False
+        except Exception as e:
+            logger.warning(f"Entry time check failed: {e}")
+        
         mint = token.get("mint", "")
         if not mint or len(mint) < 30:
             return False
