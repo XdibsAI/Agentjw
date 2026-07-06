@@ -301,11 +301,16 @@ class Strategy:
 
 
     async def _should_buy(self, token: Dict, market_condition=None) -> bool:
-        # === BLACKLIST CHECK ===
+        # === DYNAMIC BLACKLIST CHECK ===
         symbol = token.get("symbol", "")
-        if await self._is_blacklisted(symbol):
-            logger.info(f"SKIP {symbol} - blacklisted (low win rate)")
-            return False
+        try:
+            from sicuan.core.dynamic_blacklist import get_blacklist
+            blacklist = get_blacklist()
+            if blacklist.is_blacklisted(symbol):
+                logger.info(f"SKIP {symbol} - dynamic blacklist (low win rate)")
+                return False
+        except Exception as e:
+            logger.warning(f"Blacklist check failed: {e}")
         
         mint = token.get("mint", "")
         if not mint or len(mint) < 30:
