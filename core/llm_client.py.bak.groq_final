@@ -14,40 +14,6 @@ from core.cost_tracker import CostTracker
 
 class LLMClient:
 
-    def groq_chat(self, messages: List[Dict], model: str = "llama-3.3-70b-versatile",
-                  temperature: float = 0.7, max_tokens: int = 4096) -> str:
-        """Chat khusus untuk Groq (tanpa retry)"""
-        import requests
-        import json
-        
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json"
-        }
-        data = {
-            "model": model,
-            "messages": messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens
-        }
-        
-        try:
-            response = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result["choices"][0]["message"]["content"]
-            else:
-                return f"❌ Groq API error: {response.status_code} - {response.text[:200]}"
-        except Exception as e:
-            return f"❌ Groq request failed: {e}"
-
-
     def __init__(self):
         self.provider = config.LLM_PROVIDER
         self.model = config.get_model()

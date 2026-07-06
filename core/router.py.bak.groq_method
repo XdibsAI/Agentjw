@@ -96,12 +96,6 @@ class ModelRouter:
                             return True
         return False
 
-    def select_groq_model(self, task_type: str = "chat") -> str:
-        """Pilih Groq model berdasarkan task type"""
-        if task_type == "coding":
-            return self.groq_models.get("coding", "groq/llama-3.3-70b-versatile")
-        return self.groq_models.get("chat", "groq/llama-3.3-70b-versatile")
-
     def select_vision_model(self) -> str:
         """Pilih vision model yang tersedia"""
         return self.vision_models[0]
