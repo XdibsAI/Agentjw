@@ -629,6 +629,28 @@ class LogicModifier:
         except Exception as e:
             print(f"[VALIDATOR] Error: {e}")
 
+                # === WRITE MODIFIED FILES ===
+        for file_path in modified:
+            try:
+                # Baca file asli
+                                # Fix path: jika file_path hanya nama file, tambahkan project_dir
+                if not Path(file_path).exists():
+                    full_path = Path("projects/godmeme_bot") / file_path
+                    if not full_path.exists():
+                        full_path = Path("projects/godmeme_bot") / Path(file_path).name
+                else:
+                    full_path = Path(file_path)
+                if not full_path.exists():
+                    print(f"[MODIFY] ❌ File not found: {file_path}")
+                    continue
+                
+                # Baca new_code dari memory (harusnya sudah disimpan sebelumnya)
+                # Jika tidak ada, skip
+                print(f"[MODIFY] ✅ Would write: {file_path}")
+                # TODO: Implement actual write
+            except Exception as e:
+                print(f"[MODIFY] ❌ Error writing {file_path}: {e}")
+        
         return {"modified": modified, "failed": failed, "status": status, "code_trace_used": bool(code_trace)}
 
 

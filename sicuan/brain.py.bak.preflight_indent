@@ -2317,40 +2317,6 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         fixer = get_error_fixer()
         return fixer.diagnose(error_message)
 
-    def auto_fix_error(self, error_message: str) -> dict:
-        """Auto fix error: diagnose → fix → validate"""
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        
-        if diagnosis.get("action") != "modify_logic":
-            return {
-                "status": "skipped",
-                "message": f"Tidak bisa auto-fix. Action: {diagnosis.get('action')}",
-                "diagnosis": diagnosis
-            }
-        
-        # 2. Execute modify_logic
-        result = self.execute_action(
-            action="modify_logic",
-            target=diagnosis.get("file", "strategy.py"),
-            user_request=f"Perbaiki {diagnosis.get('fix')}",
-            session_id="auto_fix"
-        )
-        
-        # 3. Validate
-        from sicuan.core.execution_validator import get_validator
-        validator = get_validator()
-        validation = validator.validate({"patch": result})
-        
-        return {
-            "status": validation.get("status"),
-            "decision": validation.get("decision"),
-            "diagnosis": diagnosis,
-            "patch_result": result,
-            "validation": validation
-        }
-
-    def fix_and_report(self, error_message: str) -> str:
         """Fix error dan laporkan hasil"""
         reporter = get_reporter()
         
@@ -2414,17 +2380,20 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
 
 
     def start_bot_with_error(self) -> dict:
-        """Start bot dan tangkap error jika gagal"""
+        """Start bot dan tangkap error jika gagal — dengan worker health check"""
         import subprocess
         import time
         from pathlib import Path
         from sicuan.core.error_capture import get_error_capturer
+        from sicuan.core.runtime_verifier import get_runtime_verifier
+        from sicuan.core.preflight import get_preflight
         
         result = {
             "success": False,
             "error": None,
             "output": "",
-            "traceback": ""
+            "traceback": "",
+            "worker_health": {}
         }
         
         # Gunakan error_capture untuk traceback lengkap
@@ -2432,8 +2401,20 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         capture_result = capturer.capture()
         
         if capture_result["success"]:
-            result["success"] = True
-            return result
+            # Bot running — cek worker health
+            verifier = get_runtime_verifier()
+            health = verifier._check_worker_health()
+            
+            if health["workers_alive"] >= 2:
+                result["success"] = True
+                result["worker_health"] = health
+                return result
+            else:
+                # Worker mati — ini dianggap error
+                result["success"] = False
+                result["error"] = f"Worker health check failed: {health['message']}"
+                result["worker_health"] = health
+                return result
         else:
             result["error"] = capture_result.get("traceback", capture_result.get("error_message", "Unknown error"))
             result["traceback"] = capture_result.get("traceback", "")
@@ -2503,6 +2484,152 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
         """Dapatkan strategi perbaikan berikutnya"""
         memory = get_repair_memory()
         return memory.get_next_strategy(error)
+
+
+
+
+    
+    def _verify_runtime(self, diagnosis: dict) -> dict:
+        """Verify runtime: compile + import + restart"""
+        import subprocess
+        from pathlib import Path
+        
+        file_path = diagnosis.get("file", "strategy.py")
+        full_path = Path("projects/godmeme_bot") / file_path
+        if not full_path.exists():
+            full_path = Path(file_path)
+        
+        # 1. Compile check
+        result = subprocess.run(
+            ["python3", "-m", "py_compile", str(full_path)],
+            capture_output=True,
+            text=True,
+            timeout=10
+        )
+        if result.returncode != 0:
+            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "error": result.stderr[:200]}
+        
+        # 2. Import check
+        import_name = file_path.replace(".py", "").replace("/", ".")
+        try:
+            __import__(import_name)
+        except Exception as e:
+            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "error": str(e)[:200]}
+        
+        # 3. Restart and health check
+        from sicuan.core.runtime_verifier import get_runtime_verifier
+from sicuan.core.preflight import get_preflight
+        verifier = get_runtime_verifier()
+        health = verifier._check_worker_health()
+        
+        if health.get("workers_alive", 0) >= 2:
+            return {"status": "verified", "decision": "commit", "diagnosis": diagnosis}
+        else:
+            return {"status": "warning", "decision": "commit", "diagnosis": diagnosis, "warning": "Workers not healthy"}
+
+    
+    def preflight_check(self, file_path: str) -> dict:
+        """Run preflight validation"""
+        preflight = get_preflight()
+        return preflight.check(file_path)
+
+    def auto_fix_error(self, error_message: str) -> dict:
+        """Auto fix error: diagnose → fix → validate"""
+        # 1. Diagnose
+        diagnosis = self.diagnose_error(error_message)
+        action = diagnosis.get("action")
+        
+        # 2. Handle syntax_repair
+        if action == "syntax_repair":
+            from sicuan.core.syntax_repair import get_syntax_repair
+            repair = get_syntax_repair()
+            # Gunakan file dari diagnosis, jangan default
+            file_path = diagnosis.get("file")
+            if not file_path:
+                return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "patch_result": {"error": "No file in diagnosis"}}
+            result = repair.repair_with_ast(file_path)
+            if result["success"]:
+                return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
+            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "patch_result": result}
+        
+        # 3. Handle runtime_fix
+        if action == "runtime_fix":
+            from sicuan.core.runtime_fixer import get_runtime_fixer
+            fixer = get_runtime_fixer()
+            error = diagnosis.get("fix", "")
+            file_path = diagnosis.get("file", "strategy.py")
+            
+            # Fix runtime error
+            result = fixer.fix_attribute_error(error, file_path)
+            
+            if result["success"]:
+                # Validate
+                from sicuan.core.execution_validator import get_validator
+                validator = get_validator()
+                validation = validator.validate({"patch": result})
+                return {
+                    "status": validation.get("status"),
+                    "decision": validation.get("decision"),
+                    "diagnosis": diagnosis,
+                    "patch_result": result,
+                    "validation": validation
+                }
+            else:
+                return {
+                    "status": "failed",
+                    "decision": "rollback",
+                    "diagnosis": diagnosis,
+                    "patch_result": result,
+                    "validation": {"reason": result.get("error", "Runtime fix failed")}
+                }
+        
+        # 4. Handle add_method
+        if action == "add_method":
+            from pathlib import Path
+            import subprocess
+            file_path = diagnosis.get("file", "strategy.py")
+            method_name = diagnosis.get("method_name", "")
+            method_body = diagnosis.get("method_body", "")
+            if not method_body:
+                return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis}
+            full_path = Path("projects/godmeme_bot") / file_path
+            if not full_path.exists():
+                full_path = Path(file_path)
+            content = full_path.read_text()
+            if method_name in content:
+                # Method already exists — verify runtime
+                return self._verify_runtime(diagnosis)
+            lines = content.splitlines()
+            lines.append("")
+            lines.append("    " + method_body.replace("\n", "\n    "))
+            full_path.write_text("\n".join(lines))
+            # VERIFY: compile + import + restart
+            return self._verify_runtime(diagnosis)
+        
+        if action != "modify_logic":
+            return {"status": "skipped", "message": f"Tidak bisa auto-fix. Action: {action}", "diagnosis": diagnosis}
+        
+        # 4. Execute modify_logic
+        result = self.execute_action(
+            action="modify_logic",
+            target=diagnosis.get("file", "strategy.py"),
+            user_request=f"Perbaiki {diagnosis.get('fix')}",
+            session_id="auto_fix"
+        )
+        
+        # === RUNTIME VERIFICATION ===
+        from sicuan.core.runtime_verifier import get_runtime_verifier
+from sicuan.core.preflight import get_preflight
+        verifier = get_runtime_verifier()
+        
+        # Coba verifikasi (dengan worker health check)
+        verify_result = verifier.verify(diagnosis.get("fix", ""), wait_time=30)
+        
+        if verify_result["success"]:
+            return {"status": "verified", "decision": "commit", "diagnosis": diagnosis, "patch_result": result}
+        else:
+            # Rollback jika masih error
+            return {"status": "failed", "decision": "rollback", "diagnosis": diagnosis, "patch_result": result, "errors": verify_result.get("errors", [])}
 
 
 sicuan_brain = SiCuanBrain()

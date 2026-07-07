@@ -19,16 +19,6 @@ from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
 from sicuan.core.vault_manager import VaultManager
-from sicuan.core.conversation_router import ConversationRouter
-from sicuan.core.error_fix_map import get_error_fixer
-from sicuan.core.fix_reporter import get_reporter
-from sicuan.core.auto_fix_loop import get_auto_fix_loop
-from sicuan.core.repair_planner import get_repair_memory
-from sicuan.core.conversation_router import ConversationRouter
-from sicuan.core.error_fix_map import get_error_fixer
-from sicuan.core.fix_reporter import get_reporter
-from sicuan.core.auto_fix_loop import get_auto_fix_loop
-from sicuan.core.repair_planner import get_repair_memory
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -82,9 +72,9 @@ class SiCuanBrain:
 
         # Task Tracker - lacak task yang sedang dikerjakan
         from sicuan.core.task_tracker import TaskTracker
+        from sicuan.core.vault_manager import VaultManager
         self.task_tracker = TaskTracker()
         self.vault = VaultManager("/home/dibs/agentjw/obsidian")
-        self.router = ConversationRouter()
     
     def get_data_availability(self) -> dict:
         """Dapatkan informasi data apa yang tersedia"""
@@ -1198,14 +1188,6 @@ Rules:
                 if not symbol:
                     return "Mas, fungsi/symbol apa yang mau aku trace? Contoh: trace function _should_buy"
                 result = trace_before_patch(symbol)
-                # === VALIDASI ===
-                validation = validator.validate({"patch": result})
-                if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
-                elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
-                else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
                 return result.to_report()
 
             
@@ -1493,20 +1475,6 @@ USER REQUEST:
                     before_snapshot=before_snapshot,
                     repair_result=result
                 )
-
-                # === EXECUTION VALIDATION ===
-                try:
-                    from sicuan.core.execution_validator import get_validator
-                    validator = get_validator()
-                    validation = validator.validate({"patch": result})
-                    if validation["status"] == "verified":
-                        verdict += "\n\n✅ **Validation**: " + validation["reason"]
-                    elif validation["status"] == "warning":
-                        verdict += "\n\n⚠️ **Validation**: " + validation["reason"]
-                    else:
-                        verdict += "\n\n❌ **Validation**: " + validation["reason"]
-                except Exception as e:
-                    verdict += "\n\n⚠️ Validation error: " + str(e)
 
                 return auditor_agent.format_response(verdict)
 
@@ -1896,6 +1864,10 @@ USER REQUEST:
             elif action == "analyze_trading_data":
                 from sicuan.actions.analyze_trading_data import execute as _atd
                 return _atd(brain=self)
+
+            elif action == "attribution_dashboard":
+                from sicuan.core.attribution_dashboard import show_attribution_dashboard
+                return show_attribution_dashboard()
 
             elif action == "shadow_mode_report":
                 from sicuan.actions.shadow_mode_report import execute as _smr
@@ -2303,206 +2275,19 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
 
 
 
-    def route_message(self, user_message: str) -> dict:
-        """Route message menggunakan ConversationRouter"""
-        route, data = self.router.route(user_message)
-        return {
-            "route": route.value,
-            "data": data,
-            "action": data.get("action", "analyze_project")
-        }
+    
+    def resolve_target(self, user_request: str, candidates: list) -> dict:
+        """Resolve target dengan TargetResolver"""
+        from sicuan.core.target_resolver import get_target_resolver
+        resolver = get_target_resolver()
+        return resolver.resolve(user_request, candidates)
 
-    def diagnose_error(self, error_message: str) -> dict:
-        """Diagnose error dan dapatkan fix action"""
-        fixer = get_error_fixer()
-        return fixer.diagnose(error_message)
-
-    def auto_fix_error(self, error_message: str) -> dict:
-        """Auto fix error: diagnose → fix → validate"""
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        
-        if diagnosis.get("action") != "modify_logic":
-            return {
-                "status": "skipped",
-                "message": f"Tidak bisa auto-fix. Action: {diagnosis.get('action')}",
-                "diagnosis": diagnosis
-            }
-        
-        # 2. Execute modify_logic
-        result = self.execute_action(
-            action="modify_logic",
-            target=diagnosis.get("file", "strategy.py"),
-            user_request=f"Perbaiki {diagnosis.get('fix')}",
-            session_id="auto_fix"
-        )
-        
-        # 3. Validate
-        from sicuan.core.execution_validator import get_validator
-        validator = get_validator()
-        validation = validator.validate({"patch": result})
-        
-        return {
-            "status": validation.get("status"),
-            "decision": validation.get("decision"),
-            "diagnosis": diagnosis,
-            "patch_result": result,
-            "validation": validation
-        }
-
-    def fix_and_report(self, error_message: str) -> str:
-        """Fix error dan laporkan hasil"""
-        reporter = get_reporter()
-        
-        # 1. Diagnose
-        diagnosis = self.diagnose_error(error_message)
-        
-        # 2. Auto-fix
-        fix_result = self.auto_fix_error(error_message)
-        
-        # 3. Create report
-        report = reporter.create_report(
-            error=error_message,
-            diagnosis=diagnosis,
-            fix_result=fix_result,
-            validation=fix_result.get("validation", {})
-        )
-        
-        reporter.save_report(report)
-        return report
-
-
-
-    def auto_fix_until_success(self, error_message: str, max_attempts: int = 3) -> dict:
-        """Auto-fix sampai sukses atau max attempts"""
-        loop = get_auto_fix_loop(self)
-        loop.max_attempts = max_attempts
-        return loop.run(error_message)
-
-
-
-    def restart_bot(self) -> bool:
-        """Restart bot dan cek apakah berhasil"""
-        try:
-            import subprocess
-            import time
-            from pathlib import Path
-            
-            # Kill existing
-            subprocess.run(["pkill", "-f", "main.py"], capture_output=True, timeout=5)
-            time.sleep(2)
-            
-            # Start bot
-            bot_path = Path("projects/godmeme_bot/main.py")
-            if not bot_path.exists():
-                return False
-            
-            subprocess.Popen(
-                ["python3", str(bot_path)],
-                cwd=str(bot_path.parent),
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
-            time.sleep(5)
-            
-            # Check running
-            result = subprocess.run(["pgrep", "-f", "main.py"], capture_output=True, timeout=5)
-            return result.returncode == 0
-        except:
-            return False
-
-
-
-    def start_bot_with_error(self) -> dict:
-        """Start bot dan tangkap error jika gagal"""
-        import subprocess
-        import time
-        from pathlib import Path
-        from sicuan.core.error_capture import get_error_capturer
-        
-        result = {
-            "success": False,
-            "error": None,
-            "output": "",
-            "traceback": ""
-        }
-        
-        # Gunakan error_capture untuk traceback lengkap
-        capturer = get_error_capturer()
-        capture_result = capturer.capture()
-        
-        if capture_result["success"]:
-            result["success"] = True
-            return result
-        else:
-            result["error"] = capture_result.get("traceback", capture_result.get("error_message", "Unknown error"))
-            result["traceback"] = capture_result.get("traceback", "")
-            result["output"] = capture_result.get("stderr", "")
-            return result
-        
-        try:
-            # Kill existing
-            subprocess.run(["pkill", "-f", "main.py"], capture_output=True, timeout=5)
-            time.sleep(2)
-            
-            # Start bot dan tangkap output
-            # Gunakan path absolut
-            bot_path = Path("/home/dibs/agentjw/projects/godmeme_bot/main.py")
-            if not bot_path.exists():
-                result["error"] = f"Bot not found: {bot_path}"
-                # === VALIDASI ===
-                validation = validator.validate({"patch": result})
-                if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
-                elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
-                else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
-                return result
-            
-            process = subprocess.Popen(
-                ["python3", str(bot_path)],
-                cwd="/home/dibs/agentjw/projects/godmeme_bot",
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE
-            )
-            
-            # Tunggu sebentar dan cek
-            time.sleep(3)
-            
-            # Cek apakah masih running
-            if process.poll() is not None:
-                # Bot exited with error
-                stdout, stderr = process.communicate(timeout=5)
-                output = stderr.decode() or stdout.decode()
-                result["success"] = False
-                result["error"] = output[:500] if output else "Unknown error"
-                result["output"] = output
-                # === VALIDASI ===
-                validation = validator.validate({"patch": result})
-                if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
-                elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
-                else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
-                return result
-            
-            # Bot running
-            result["success"] = True
-            result["error"] = None
-            return result
-            
-        except Exception as e:
-            result["error"] = str(e)
-            return result
-
-
-
-    def get_repair_strategy(self, error: dict) -> str:
-        """Dapatkan strategi perbaikan berikutnya"""
-        memory = get_repair_memory()
-        return memory.get_next_strategy(error)
+    def preflight_check(self, file_path: str) -> dict:
+        """Run preflight validation"""
+        from sicuan.core.preflight import get_preflight
+from sicuan.core.target_resolver import get_target_resolver
+        preflight = get_preflight()
+        return preflight.check(file_path)
 
 
 sicuan_brain = SiCuanBrain()

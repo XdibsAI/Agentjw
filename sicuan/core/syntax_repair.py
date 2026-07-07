@@ -3,6 +3,7 @@ Syntax Repair — Perbaiki error sintaks secara deterministik tanpa LLM
 """
 
 import ast
+from sicuan.core.safe_patcher import get_safe_patcher
 import subprocess
 from pathlib import Path
 from typing import Dict, Optional

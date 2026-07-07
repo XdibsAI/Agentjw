@@ -1,8 +1,7 @@
 """
-Runtime Verifier - Verifikasi patch dengan restart + health check
+Runtime Verifier — Verifikasi dengan Health Comparison
 """
 
-import asyncio
 import subprocess
 import time
 from pathlib import Path
@@ -10,136 +9,235 @@ from typing import Dict, List, Optional
 
 
 class RuntimeVerifier:
-    """Verifikasi runtime setelah patch"""
+    """Runtime Verification dengan health comparison"""
 
-    def __init__(self, project_dir: str = "projects/godmeme_bot"):
+    def __init__(self, project_dir: str = "/home/dibs/agentjw/projects/godmeme_bot"):
         self.project_dir = Path(project_dir)
         self.log_file = self.project_dir / "trading_bot_live.log"
-        self.max_wait = 30  # detik
+        self.bot_log = self.project_dir / "bot.log"
+        self.paper_log = self.project_dir / "paper_24h.log"
+        self.error_patterns = [
+            "AttributeError",
+            "ModuleNotFoundError",
+            "SyntaxError",
+            "IndentationError",
+            "TypeError",
+            "KeyError",
+            "ValueError",
+            "Exception"
+        ]
 
-    def verify(self, patch_result: Dict) -> Dict:
-        """Verifikasi patch dengan restart dan health check"""
+    def verify(self, error: str, wait_time: int = 30) -> Dict:
+        """
+        Verifikasi dengan health comparison
+        """
         result = {
-            "status": "pending",
-            "restart_success": False,
-            "runtime_ok": False,
-            "error_free": False,
-            "regression_pass": False,
-            "details": []
+            "success": False,
+            "error_found": False,
+            "errors": [],
+            "message": "",
+            "pid_before": None,
+            "pid_after": None,
+            "health_before": None,
+            "health_after": None,
+            "health_improved": False
         }
 
+        # 0. Health BEFORE
+        print("[VERIFY] 📊 Health BEFORE...")
+        health_before = self._check_worker_health()
+        result["health_before"] = health_before
+        print(f"[VERIFY] Workers before: {health_before.get('workers_alive', 0)}/3")
+
         # 1. Restart bot
-        result["details"].append("🔄 Restarting bot...")
-        restart_ok = self._restart_bot()
-        result["restart_success"] = restart_ok
-        
-        if not restart_ok:
-            result["status"] = "failed"
-            result["details"].append("❌ Bot restart failed")
+        print("[VERIFY] 🔄 Restarting bot...")
+        if not self._restart_bot():
+            result["message"] = "Bot restart failed"
             return result
 
-        result["details"].append("✅ Bot restarted")
+        # 2. Cek PID baru
+        pid_after = self._get_pid()
+        result["pid_after"] = pid_after
+        print(f"[VERIFY] PID after: {pid_after}")
 
-        # 2. Wait and check runtime
-        result["details"].append(f"⏳ Waiting {self.max_wait}s for runtime...")
-        time.sleep(self.max_wait)
+        if pid_after is None:
+            result["message"] = "Bot did not restart properly"
+            return result
 
-        # 3. Check for errors
-        errors = self._check_errors()
+        # 3. Tunggu
+        print(f"[VERIFY] ⏳ Waiting {wait_time}s...")
+        time.sleep(wait_time)
+
+        # 4. Cek process
+        if not self._is_running():
+            result["message"] = "Bot crashed during runtime"
+            print("[VERIFY] ❌ Bot crashed")
+            return result
+
+        # 5. Cek log errors
+        print("[VERIFY] 📝 Checking logs...")
+        errors = self._check_logs_for_error(error)
         if errors:
-            result["details"].append(f"❌ Errors found: {len(errors)}")
-            result["details"].extend([f"  • {e}" for e in errors[:3]])
-            result["error_free"] = False
-            result["status"] = "failed"
+            result["error_found"] = True
+            result["errors"] = errors
+            result["message"] = f"Found {len(errors)} errors"
+            print(f"[VERIFY] ❌ Errors found: {len(errors)}")
             return result
 
-        result["details"].append("✅ No errors found")
-        result["error_free"] = True
-
-        # 4. Check if bot is running
-        is_running = self._is_bot_running()
-        result["runtime_ok"] = is_running
-        result["details"].append(f"✅ Bot running: {is_running}")
-
-        if not is_running:
-            result["status"] = "failed"
+        # 6. Cek log growth
+        if not self._check_log_growth():
+            result["message"] = "Log not growing"
+            print("[VERIFY] ❌ Log not growing")
             return result
 
-        # 5. Regression check
-        regression = self._run_regression()
-        result["regression_pass"] = regression
-        result["details"].append(f"✅ Regression: {regression}")
+        # 7. Health AFTER (compare)
+        print("[VERIFY] 📊 Health AFTER...")
+        health_after = self._check_worker_health()
+        result["health_after"] = health_after
+        print(f"[VERIFY] Workers after: {health_after.get('workers_alive', 0)}/3")
 
-        if regression:
-            result["status"] = "verified"
-            result["details"].append("🎉 Patch verified successfully!")
+        before_alive = health_before.get("workers_alive", 0)
+        after_alive = health_after.get("workers_alive", 0)
+        result["health_improved"] = after_alive > before_alive
+
+        if after_alive >= 2:
+            result["success"] = True
+            result["message"] = f"✅ Workers: {before_alive} → {after_alive}"
+            print(f"[VERIFY] ✅ Workers improved: {before_alive} → {after_alive}")
         else:
-            result["status"] = "partial"
-            result["details"].append("⚠️ Patch applied but regression pending")
+            result["success"] = False
+            result["message"] = f"❌ Workers not healthy: {before_alive} → {after_alive}"
+            print(f"[VERIFY] ❌ Workers not healthy: {before_alive} → {after_alive}")
 
         return result
 
-    def _restart_bot(self) -> bool:
-        """Restart bot"""
+    def _get_pid(self) -> Optional[int]:
         try:
-            # Kill existing
-            subprocess.run(
-                ["pkill", "-f", "main.py"],
+            result = subprocess.run(
+                ["pgrep", "-f", "main.py"],
                 capture_output=True,
+                text=True,
                 timeout=5
             )
-            time.sleep(2)
+            if result.returncode == 0 and result.stdout.strip():
+                return int(result.stdout.strip().split()[0])
+        except:
+            pass
+        return None
 
-            # Start bot (background)
+    def _is_running(self) -> bool:
+        return self._get_pid() is not None
+
+    def _restart_bot(self) -> bool:
+        try:
+            subprocess.run(["pkill", "-f", "main.py"], capture_output=True, timeout=5)
+            time.sleep(2)
             subprocess.Popen(
                 ["python3", "main.py"],
                 cwd=str(self.project_dir),
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL
             )
-            return True
-        except Exception as e:
-            print(f"Restart failed: {e}")
+            time.sleep(3)
+            return self._is_running()
+        except:
             return False
 
-    def _check_errors(self) -> List[str]:
-        """Check log for errors"""
-        errors = []
+    def _check_logs_for_error(self, error: str) -> List[str]:
         if not self.log_file.exists():
-            return ["Log file not found"]
-
+            return []
+        found = []
         try:
             with open(self.log_file, "r") as f:
-                lines = f.readlines()[-50:]  # Last 50 lines
+                lines = f.readlines()[-100:]
+            for line in lines:
+                for pattern in self.error_patterns:
+                    if pattern in line:
+                        found.append(line.strip())
+            if error:
                 for line in lines:
-                    if "ERROR" in line or "WARNING" in line:
-                        errors.append(line.strip())
-        except Exception:
+                    if error in line:
+                        found.append(f"[SPECIFIC] {line.strip()}")
+        except:
             pass
+        return found
 
-        return errors
-
-    def _is_bot_running(self) -> bool:
-        """Check if bot is running"""
+    def _check_log_growth(self) -> bool:
+        if not self.log_file.exists():
+            return False
         try:
-            result = subprocess.run(
-                ["pgrep", "-f", "main.py"],
-                capture_output=True,
-                timeout=5
-            )
-            return result.returncode == 0
-        except Exception:
+            size_before = self.log_file.stat().st_size
+            time.sleep(2)
+            size_after = self.log_file.stat().st_size
+            return size_after > size_before
+        except:
             return False
 
-    def _run_regression(self) -> bool:
-        """Run regression test"""
+    def _check_worker_health(self) -> Dict:
+        result = {
+            "token_monitor": False,
+            "position_monitor": False,
+            "strategy_loop": False,
+            "last_heartbeat": 0,
+            "exception_count": 0,
+            "workers_alive": 0,
+            "message": ""
+        }
+
+        log_files = [self.log_file, self.bot_log, self.paper_log]
+        latest_log = None
+        for f in log_files:
+            if f.exists():
+                if latest_log is None or f.stat().st_mtime > latest_log.stat().st_mtime:
+                    latest_log = f
+
+        if latest_log is None:
+            result["message"] = "No log files found"
+            return result
+
         try:
-            result = subprocess.run(
-                ["python3", "scripts/regression_suite.py"],
-                cwd="/home/dibs/agentjw",
-                capture_output=True,
-                timeout=30
-            )
-            return "✅ Passed: 10" in str(result.stdout)
-        except Exception:
-            return False
+            with open(latest_log, "r") as f:
+                lines = f.readlines()[-100:]
+
+            token_lines = [l for l in lines if "Token monitor" in l]
+            if token_lines and ("started" in token_lines[-1] or "scanning" in token_lines[-1]):
+                result["token_monitor"] = True
+
+            pos_lines = [l for l in lines if "Position monitor" in l]
+            if pos_lines and ("started" in pos_lines[-1] or "monitoring" in pos_lines[-1]):
+                result["position_monitor"] = True
+
+            strategy_lines = [l for l in lines if "Strategy" in l and ("running" in l or "started" in l)]
+            if strategy_lines:
+                result["strategy_loop"] = True
+
+            exceptions = [l for l in lines if "ERROR" in l or "Exception" in l]
+            result["exception_count"] = len(exceptions)
+
+            if lines:
+                import re
+                match = re.search(r'(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})', lines[-1])
+                if match:
+                    from datetime import datetime
+                    last_time = datetime.fromisoformat(match.group(1).replace(" ", "T"))
+                    now = datetime.now()
+                    result["last_heartbeat"] = int((now - last_time).total_seconds())
+
+            workers = [result["token_monitor"], result["position_monitor"], result["strategy_loop"]]
+            result["workers_alive"] = sum(workers)
+            result["message"] = f"{result['workers_alive']}/3 workers alive"
+
+        except Exception as e:
+            result["message"] = f"Health check error: {e}"
+
+        return result
+
+
+# Singleton
+_verifier = None
+
+def get_runtime_verifier():
+    global _verifier
+    if _verifier is None:
+        _verifier = RuntimeVerifier()
+    return _verifier

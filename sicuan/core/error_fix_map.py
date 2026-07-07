@@ -137,6 +137,40 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             "fix": "Tambahkan method {2} di class {1} di strategy.py",
             "file": "strategy.py"
         },
+        
+        # Runtime AttributeError — method missing
+        "AttributeError: '([^']+)' object has no attribute '([^']+)'": {
+            "action": "runtime_fix",
+            "target": None,
+            "fix": "Restore atau generate method {2} di class {1}",
+            "file": None,
+            "method_name": "{2}",
+            "class_name": "{1}"
+        },
+        
+        # AttributeError: _check_cooldown — specific fix
+        "AttributeError: 'Strategy' object has no attribute '_check_cooldown'": {
+            "action": "add_method",
+            "target": "strategy.py",
+            "fix": "Tambahkan method _check_cooldown di class Strategy",
+            "file": "strategy.py",
+            "method_name": "_check_cooldown",
+            "method_body": "async def _check_cooldown(self) -> bool:\n        if not hasattr(self, '_cooldown_until'):\n            self._cooldown_until = 0\n            self._cooldown_mode = False\n        if self._cooldown_until and time.time() < self._cooldown_until:\n            remaining = int(self._cooldown_until - time.time())\n            if remaining % 60 == 0:\n                logger.info(f'COOLDOWN: {remaining//60}m remaining')\n            return True\n        return False"
+        },
+        
+        # Worker health check failed
+        "Worker health check failed: Only 0/3 workers alive": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Perbaiki worker health: tambahkan method yang hilang atau perbaiki error runtime",
+            "file": "strategy.py"
+        },
+        "Worker health check failed": {
+            "action": "modify_logic",
+            "target": "strategy.py",
+            "fix": "Perbaiki worker health: cek error runtime di log",
+            "file": "strategy.py"
+        },
                 # General error fallback
         "default": {
             "action": "analyze_project",

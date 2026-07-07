@@ -79,7 +79,18 @@ class RiskManager:
         
     def can_open_position(self) -> bool:
         return (self.current_daily_loss < self.max_daily_loss * self.portfolio_value and 
-                self.position_count < self.max_positions)
+                self.position_count < self.max_positions and
+                self._check_cooldown())
+
+    def _check_cooldown(self) -> bool:
+        # Check if enough time has passed since last position opening
+        current_time = time.time()
+        if hasattr(self, '_last_position_open_time'):
+            time_since_last = current_time - self._last_position_open_time
+            return time_since_last >= self.position_cooldown
+        else:
+            # If no position has been opened yet, allow opening
+            return True
     
     def calculate_position_size(self, price: Decimal, stop_loss_price: Decimal) -> Decimal:
         # Calculate risk per position (2% of portfolio)
