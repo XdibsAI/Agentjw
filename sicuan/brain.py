@@ -750,24 +750,40 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 max_tokens=16000,
                 json_mode=True,
             )
+            # Log raw response for debugging
+            logger.info(f"RAW LLM RESPONSE (first 500 chars):\n{str(raw)[:500]}...")
+            
             # Normalisasi: llm.chat() kadang return list atau dict langsung
-            if isinstance(raw, list):
-                raw = raw[0] if raw else "{}"
-            if isinstance(raw, dict):
-                result = raw
+            parsed = raw
+            if isinstance(parsed, list):
+                parsed = parsed[0] if parsed else "{}"
+            
+            # Try to extract JSON from markdown code block
+            if isinstance(parsed, str):
+                json_match = re.search(r'```json\s*([\s\S]*?)\s*```', parsed)
+                if json_match:
+                    parsed = json_match.group(1)
+                    logger.info(f"Extracted JSON from markdown: {parsed[:200]}...")
+            
+            if isinstance(parsed, dict):
+                result = parsed
+            elif isinstance(parsed, str):
+                try:
+                    result = json.loads(parsed)
+                except json.JSONDecodeError as e:
+                    logger.warning(f"JSON parse failed: {e}")
+                    logger.warning(f"Raw text: {parsed[:200]}...")
+                    # Fallback: treat as plain chat
+                    result = {
+                        "action": "chat",
+                        "intent": "conversation",
+                        "confidence": 0.8,
+                        "response": parsed
+                    }
             else:
-                # Normalisasi: LLM kadang return list atau dict langsung
-                if isinstance(raw, list):
-                    raw = raw[0] if raw else "{}"
-                if isinstance(raw, dict):
-                    result = raw
-                else:
-                    result = json.loads(raw)
+                result = {}
 
-            # Simpan metadata planner terakhir untuk planner memory.
-            # Normalisasi final sebelum akses
-            if isinstance(result, list):
-                result = result[0] if result and isinstance(result[0], dict) else {}
+            # Simpan metadata
             self._last_intent = self._safe_get(result, "intent", "")
             self._last_complexity = self._safe_get(result, "complexity", "")
             self._last_confidence = int(self._safe_get(result, "confidence", 0) or 0)
