@@ -1,0 +1,79 @@
+{
+  "timestamp": "2026-07-07T07:06:33.757798",
+  "repository": "fastapi",
+  "total": 10,
+  "healthy": 9,
+  "repaired": 1,
+  "failed": 0,
+  "success_rate": 100.0,
+  "total_time": 2.6063482761383057,
+  "avg_time": 0.26063482761383056,
+  "results": [
+    {
+      "file": "gzip.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "websockets.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "__init__.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "templating.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "sse.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "models.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "open_id_connect_url.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "v2.py",
+      "status": "repaired",
+      "success": true,
+      "pipeline_success": true,
+      "preflight_after": true,
+      "attempts": 2,
+      "time": 1.2843966484069824,
+      "errors": [
+        "Missing methods: update_with_validations"
+      ]
+    },
+    {
+      "file": "httpsredirect.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    },
+    {
+      "file": "types.py",
+      "status": "healthy",
+      "time": 0,
+      "success": true
+    }
+  ]
+}

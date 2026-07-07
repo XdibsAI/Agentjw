@@ -1,0 +1,209 @@
+{
+  "timestamp": "2026-07-07T08:16:22.956796",
+  "total": 20,
+  "passed": 20,
+  "failed": 0,
+  "pass_rate": 100.0,
+  "results": [
+    {
+      "name": "01_nested_class",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.5153543949127197,
+      "errors": []
+    },
+    {
+      "name": "02_decorator",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.5039582252502441,
+      "errors": []
+    },
+    {
+      "name": "03_async_function",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.5130693912506104,
+      "errors": []
+    },
+    {
+      "name": "04_inheritance",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.5999672412872314,
+      "errors": []
+    },
+    {
+      "name": "05_abstract_class",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.33037686347961426,
+      "errors": []
+    },
+    {
+      "name": "06_dataclass",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.29601359367370605,
+      "errors": []
+    },
+    {
+      "name": "07_enum",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.3343379497528076,
+      "errors": []
+    },
+    {
+      "name": "08_property",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.33802008628845215,
+      "errors": []
+    },
+    {
+      "name": "09_import_alias",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.3247692584991455,
+      "errors": []
+    },
+    {
+      "name": "10_circular_import",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.3865852355957031,
+      "errors": []
+    },
+    {
+      "name": "11_multiple_syntax_error",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 2,
+      "hash_changed": true,
+      "time": 0.4735860824584961,
+      "errors": []
+    },
+    {
+      "name": "11_single_syntax_error",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 2,
+      "hash_changed": true,
+      "time": 0.4210171699523926,
+      "errors": []
+    },
+    {
+      "name": "12_broken_docstring",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 2,
+      "hash_changed": true,
+      "time": 0.49986863136291504,
+      "errors": []
+    },
+    {
+      "name": "13_mixed_tabs_spaces",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.8609919548034668,
+      "errors": []
+    },
+    {
+      "name": "14_generic_typing",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.35828137397766113,
+      "errors": []
+    },
+    {
+      "name": "15_overload",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.24780821800231934,
+      "errors": []
+    },
+    {
+      "name": "16_large_file",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.30386853218078613,
+      "errors": []
+    },
+    {
+      "name": "17_multi_file",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.340939998626709,
+      "errors": []
+    },
+    {
+      "name": "18_runtime_exception",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "time": 0.3039565086364746,
+      "errors": []
+    },
+    {
+      "name": "19_multiple_independent_syntax_errors",
+      "passed": true,
+      "pipeline_success": true,
+      "preflight_success": true,
+      "attempts": 2,
+      "hash_changed": true,
+      "time": 0.4136648178100586,
+      "errors": []
+    }
+  ]
+}

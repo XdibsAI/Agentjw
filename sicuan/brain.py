@@ -2375,6 +2375,54 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
 
     def auto_fix_until_success(self, error_message: str, max_attempts: int = 3) -> dict:
         """Auto-fix sampai sukses atau max attempts"""
+        import re
+        
+        # Check if this is a runtime AttributeError from bot
+        if "AttributeError" in error_message and "object has no attribute" in error_message:
+            match = re.search(r"'(\w+)' object has no attribute '(\w+)'", error_message)
+            if match:
+                class_name = match.group(1)
+                method_name = match.group(2)
+                print(f"[BRAIN] Detected missing method: {method_name} in {class_name}")
+                
+                # Find which file contains this class
+                import subprocess
+                result = subprocess.run(
+                    ["grep", "-rn", f"class {class_name}", "/home/dibs/agentjw/projects"],
+                    capture_output=True,
+                    text=True
+                )
+                lines = result.stdout.strip().split('\n')
+                if lines and lines[0]:
+                    file_info = lines[0].split(':')
+                    if len(file_info) >= 2:
+                        file_path = file_info[0]
+                        print(f"[BRAIN] Found class in: {file_path}")
+                        
+                        # Use RepairPipeline to add the missing method
+                        from sicuan.core.repair_pipeline import RepairPipeline
+                        from sicuan.core.error_classifier import get_error_classifier
+                        pipeline = RepairPipeline()
+                        pipeline_result = pipeline.run(file_path)
+                        
+                        if pipeline_result.get("success"):
+                            print(f"[BRAIN] ✅ Added missing method: {method_name}")
+                            return {
+                                "success": True,
+                                "action": "add_method",
+                                "method": method_name,
+                                "file": file_path,
+                                "attempts": pipeline_result.get("attempts", 0)
+                            }
+                        else:
+                            return {
+                                "success": False,
+                                "action": "add_method_failed",
+                                "method": method_name,
+                                "error": pipeline_result.get("error", "Unknown error")
+                            }
+        
+        # Fallback to existing auto_fix_loop
         loop = get_auto_fix_loop(self)
         loop.max_attempts = max_attempts
         return loop.run(error_message)

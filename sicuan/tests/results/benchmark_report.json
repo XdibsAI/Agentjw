@@ -1,0 +1,138 @@
+{
+  "timestamp": "2026-07-07T05:42:52.574109",
+  "total": 18,
+  "success": 18,
+  "success_rate": 100.0,
+  "total_time": 7.988213539123535,
+  "avg_time": 0.44378964106241864,
+  "max_time": 0.721449613571167,
+  "min_time": 0.29795408248901367,
+  "results": [
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/01_nested_class.py",
+      "time": 0.721449613571167,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/02_decorator.py",
+      "time": 0.3924112319946289,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/03_async_function.py",
+      "time": 0.3764381408691406,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/04_inheritance.py",
+      "time": 0.632936954498291,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/05_abstract_class.py",
+      "time": 0.5408570766448975,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/06_dataclass.py",
+      "time": 0.30991482734680176,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/07_enum.py",
+      "time": 0.3951079845428467,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/08_property.py",
+      "time": 0.33782076835632324,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/09_import_alias.py",
+      "time": 0.5516529083251953,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/10_circular_import.py",
+      "time": 0.3648254871368408,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/11_multiple_syntax_error.py",
+      "time": 0.2998058795928955,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/12_broken_docstring.py",
+      "time": 0.36516761779785156,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/13_mixed_tabs_spaces.py",
+      "time": 0.5239639282226562,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/14_generic_typing.py",
+      "time": 0.3609766960144043,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/15_overload.py",
+      "time": 0.29795408248901367,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/16_large_file.py",
+      "time": 0.3504445552825928,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/17_multi_file.py",
+      "time": 0.4819371700286865,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp_stress/18_runtime_exception.py",
+      "time": 0.6845486164093018,
+      "attempts": 1,
+      "success": true,
+      "stages": 2
+    }
+  ]
+}

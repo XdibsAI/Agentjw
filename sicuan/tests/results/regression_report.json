@@ -1,0 +1,64 @@
+{
+  "timestamp": "2026-07-07T07:36:01.571496",
+  "results": [
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/missing_method.py",
+      "description": "Missing method _check_cooldown",
+      "pipeline_success": true,
+      "attempts": 2,
+      "hash_changed": true,
+      "preflight_success": true,
+      "errors": []
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/syntax_error.py",
+      "description": "Indentation error",
+      "pipeline_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "preflight_success": true,
+      "errors": []
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/missing_import.py",
+      "description": "Missing import List",
+      "pipeline_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "preflight_success": true,
+      "errors": []
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/duplicate_method.py",
+      "description": "Duplicate method",
+      "pipeline_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "preflight_success": true,
+      "errors": []
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/broken_class.py",
+      "description": "Wrong class name",
+      "pipeline_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "preflight_success": true,
+      "errors": []
+    },
+    {
+      "file": "/home/dibs/agentjw/sicuan/tests/temp/healthy.py",
+      "description": "Already healthy file",
+      "pipeline_success": true,
+      "attempts": 1,
+      "hash_changed": false,
+      "preflight_success": true,
+      "errors": []
+    }
+  ],
+  "summary": {
+    "total": 6,
+    "passed": 6,
+    "failed": 0
+  }
+}
