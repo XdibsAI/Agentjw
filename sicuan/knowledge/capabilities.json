@@ -122,5 +122,96 @@
     "MAX_MCAP_USD": 5000000,
     "PAPER_TRADING": true,
     "source": "dibaca dari projects/godmeme_bot/config.py"
+  },
+  "arsitektur_aktif": {
+    "context_engine": {
+      "status": "AKTIF",
+      "komponen": [
+        "WorkspaceScanner",
+        "GoalManager",
+        "ContextManager",
+        "TaskQueue"
+      ],
+      "fungsi": "Inject konteks nyata ke setiap prompt LLM sebelum menjawab"
+    },
+    "persistent_memory": {
+      "status": "AKTIF",
+      "file": "memory/conversation_context.json",
+      "fungsi": "Ingat percakapan lintas sesi, 20 topik terakhir tersimpan"
+    },
+    "goal_engine": {
+      "status": "AKTIF",
+      "file": "memory/goals_engine.json",
+      "goals": [
+        "Build SiCuan into fully autonomous business partner"
+      ],
+      "fungsi": "Track progress dan prioritas jangka panjang"
+    },
+    "shadow_mode": {
+      "status": "AKTIF",
+      "match_rate": "80.6%",
+      "comparisons": 19277,
+      "fungsi": "Bandingkan Executive vs Legacy decision untuk validasi"
+    },
+    "provenance_engine": {
+      "status": "AKTIF",
+      "file": "memory/provenance_records.json",
+      "records": 86,
+      "fungsi": "Audit trail setiap keputusan dengan source tracking"
+    },
+    "reflection_engine": {
+      "status": "AKTIF",
+      "file": "memory/reflection_log.json",
+      "fungsi": "Evaluasi hasil setiap action, update confidence threshold otomatis"
+    },
+    "auto_learning": {
+      "status": "AKTIF",
+      "jadwal": "setiap 6 jam via scheduler",
+      "file": "memory/learning_insights.json",
+      "fungsi": "Belajar dari execution_history dan reflection, update retry limit"
+    },
+    "data_awareness": {
+      "status": "AKTIF",
+      "database": "projects/godmeme_bot/trading.db",
+      "trades": 569,
+      "fungsi": "Deteksi ketersediaan data trading untuk analisis"
+    }
+  },
+  "sistem_aktif": {
+    "telegram_bot": "sicuan/telegram_bot.py — interface utama chat",
+    "api_server": "api_server.py — port 18790, FastAPI",
+    "scheduler": "sicuan/scheduler.py — morning briefing + auto learning",
+    "brain": "sicuan/brain.py — routing semantic + context engine",
+    "agents": [
+      "OrchestratorAgent",
+      "CoderAgent",
+      "RepairAgent",
+      "AuditorAgent",
+      "PlannerAgent"
+    ],
+    "core_modules": [
+      "ReflectionEngine",
+      "ProvenanceEngine",
+      "GoalManager",
+      "ContextManager",
+      "WorkspaceScanner",
+      "ContinuousLearning",
+      "DataAwarenessEngine"
+    ],
+    "actions": [
+      "scan_project",
+      "analyze_project",
+      "repair_project",
+      "modify_logic",
+      "build_project",
+      "godmeme_status",
+      "analyze_trading_data",
+      "build_task_queue",
+      "shadow_mode_report",
+      "list_projects",
+      "show_log",
+      "get_file",
+      "trace_code"
+    ]
   }
 }

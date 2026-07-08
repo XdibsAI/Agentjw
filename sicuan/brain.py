@@ -719,10 +719,20 @@ JAWAB LANGSUNG dari data itu — action = null. JANGAN pilih scan_project kecual
 user minta scan project SPESIFIK (sebutkan nama projectnya).
 
 PENTING SOAL EVALUASI DIRI SICUAN:
-Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, atau laporan
-kemampuan — JANGAN pilih analyze_project. Gunakan action = null dan jawab
-dari data REFLECTION TERBARU, GOAL ENGINE, PROVENANCE, dan WORKSPACE yang
-sudah ada di context. Target analisa adalah SiCuan sendiri, bukan project lain.
+Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, laporan
+kemampuan, ATAU minta lihat struktur/komponen/sistem SiCuan — JANGAN pilih
+analyze_project atau scan_project. Gunakan action = null dan jawab dari
+KNOWLEDGE capabilities.json + arsitektur_aktif + sistem_aktif yang ada di
+context. SiCuan punya: Context Engine, Persistent Memory, Goal Engine,
+ShadowMode, Provenance Engine, Reflection Engine, Auto Learning, DataAwareness.
+
+LARANGAN KERAS: JANGAN modify sicuan/ atau brain.py atau chat.py — itu
+kode inti SiCuan sendiri. Kalau ada request yang mengarah ke sana, tolak
+dengan sopan dan jelaskan risikonya.
+
+Kalau user minta cek memory/knowledge/struktur diri: gunakan action = null,
+jawab dari capabilities.json dan context yang tersedia. JANGAN pakai
+scan_project atau analyze_project untuk request tentang diri SiCuan sendiri.
 
 Kalau user minta analisis mendalam trading, kenapa rugi, breakdown trade, query database:
 action = analyze_trading_data
@@ -750,40 +760,24 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 max_tokens=16000,
                 json_mode=True,
             )
-            # Log raw response for debugging
-            logger.info(f"RAW LLM RESPONSE (first 500 chars):\n{str(raw)[:500]}...")
-            
             # Normalisasi: llm.chat() kadang return list atau dict langsung
-            parsed = raw
-            if isinstance(parsed, list):
-                parsed = parsed[0] if parsed else "{}"
-            
-            # Try to extract JSON from markdown code block
-            if isinstance(parsed, str):
-                json_match = re.search(r'```json\s*([\s\S]*?)\s*```', parsed)
-                if json_match:
-                    parsed = json_match.group(1)
-                    logger.info(f"Extracted JSON from markdown: {parsed[:200]}...")
-            
-            if isinstance(parsed, dict):
-                result = parsed
-            elif isinstance(parsed, str):
-                try:
-                    result = json.loads(parsed)
-                except json.JSONDecodeError as e:
-                    logger.warning(f"JSON parse failed: {e}")
-                    logger.warning(f"Raw text: {parsed[:200]}...")
-                    # Fallback: treat as plain chat
-                    result = {
-                        "action": "chat",
-                        "intent": "conversation",
-                        "confidence": 0.8,
-                        "response": parsed
-                    }
+            if isinstance(raw, list):
+                raw = raw[0] if raw else "{}"
+            if isinstance(raw, dict):
+                result = raw
             else:
-                result = {}
+                # Normalisasi: LLM kadang return list atau dict langsung
+                if isinstance(raw, list):
+                    raw = raw[0] if raw else "{}"
+                if isinstance(raw, dict):
+                    result = raw
+                else:
+                    result = json.loads(raw)
 
-            # Simpan metadata
+            # Simpan metadata planner terakhir untuk planner memory.
+            # Normalisasi final sebelum akses
+            if isinstance(result, list):
+                result = result[0] if result and isinstance(result[0], dict) else {}
             self._last_intent = self._safe_get(result, "intent", "")
             self._last_complexity = self._safe_get(result, "complexity", "")
             self._last_confidence = int(self._safe_get(result, "confidence", 0) or 0)
