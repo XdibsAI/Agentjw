@@ -1,0 +1,18 @@
+{
+  "id": "afa9757d",
+  "workspace_id": "bbdfd66e59df45cc",
+  "type": "stress",
+  "data": {
+    "msg": "Job 803"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.991212",
+  "started_at": "2026-07-09T14:22:01.579462",
+  "completed_at": "2026-07-09T14:22:01.679990",
+  "result": {
+    "result": "Job 803"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

@@ -1,0 +1,18 @@
+{
+  "id": "8b72158b",
+  "workspace_id": "1ccb00f9dc73467f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 490"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.885428",
+  "started_at": "2026-07-09T14:21:29.034434",
+  "completed_at": "2026-07-09T14:21:29.134942",
+  "result": {
+    "result": "Job 490"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

@@ -1,0 +1,18 @@
+{
+  "id": "00d64606",
+  "workspace_id": "53dcde2f89c746bb",
+  "type": "stress",
+  "data": {
+    "msg": "Job 944"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.057617",
+  "started_at": "2026-07-09T14:22:16.084839",
+  "completed_at": "2026-07-09T14:22:16.185393",
+  "result": {
+    "result": "Job 944"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

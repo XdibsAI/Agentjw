@@ -1,0 +1,18 @@
+{
+  "id": "bcda8816",
+  "workspace_id": "05bc8907f51b4841",
+  "type": "stress",
+  "data": {
+    "msg": "Job 412"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.854326",
+  "started_at": "2026-07-09T14:21:20.984590",
+  "completed_at": "2026-07-09T14:21:21.085062",
+  "result": {
+    "result": "Job 412"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

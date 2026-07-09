@@ -1,0 +1,18 @@
+{
+  "id": "4e099b38",
+  "workspace_id": "b90296b00127452c",
+  "type": "stress",
+  "data": {
+    "msg": "Job 729"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.973700",
+  "started_at": "2026-07-09T14:21:53.949234",
+  "completed_at": "2026-07-09T14:21:54.049797",
+  "result": {
+    "result": "Job 729"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

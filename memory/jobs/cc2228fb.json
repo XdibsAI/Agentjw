@@ -1,0 +1,18 @@
+{
+  "id": "cc2228fb",
+  "workspace_id": "7cc8b4f2d5174f58",
+  "type": "stress",
+  "data": {
+    "msg": "Job 927"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.053682",
+  "started_at": "2026-07-09T14:22:14.338533",
+  "completed_at": "2026-07-09T14:22:14.439030",
+  "result": {
+    "result": "Job 927"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

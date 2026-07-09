@@ -1,0 +1,18 @@
+{
+  "id": "01a5c0b3",
+  "workspace_id": "fd79d2f5c3484fa0",
+  "type": "stress",
+  "data": {
+    "msg": "Job 742"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.976630",
+  "started_at": "2026-07-09T14:21:55.283723",
+  "completed_at": "2026-07-09T14:21:55.385065",
+  "result": {
+    "result": "Job 742"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

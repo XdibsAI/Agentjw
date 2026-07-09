@@ -1,0 +1,18 @@
+{
+  "id": "08950281",
+  "workspace_id": "4799704bf8534312",
+  "type": "stress",
+  "data": {
+    "msg": "Job 275"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.798692",
+  "started_at": "2026-07-09T14:21:06.567683",
+  "completed_at": "2026-07-09T14:21:06.680531",
+  "result": {
+    "result": "Job 275"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

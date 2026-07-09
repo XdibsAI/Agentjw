@@ -4,7 +4,6 @@ source venv/bin/activate
 
 echo "[$(date)] Starting SiCuan services..."
 
-pkill -9 -f "telegram_bot" 2>/dev/null
 pkill -9 -f "run_bot" 2>/dev/null
 pkill -9 -f "uvicorn" 2>/dev/null
 pkill -9 -f "run_scheduler" 2>/dev/null
@@ -24,7 +23,6 @@ sleep 2
 nohup python3 -c "
 import sys
 sys.path.insert(0, '/home/dibs/agentjw')
-from sicuan.telegram_bot import run_bot
 run_bot()
 " > logs/sicuan_telegram.log 2>&1 &
 TG_PID=$!
@@ -42,7 +40,6 @@ SCHED_PID=$!
 echo "Scheduler PID: $SCHED_PID"
 
 echo "$API_PID" > logs/api_server.pid
-echo "$TG_PID" > logs/telegram_bot.pid
 echo "$SCHED_PID" > logs/scheduler.pid
 
 sleep 5
@@ -56,7 +53,6 @@ tail -3 logs/sicuan_scheduler.log
 
 sleep 3
 ALL_OK=true
-for pidfile in logs/api_server.pid logs/telegram_bot.pid logs/scheduler.pid; do
     PID=$(cat $pidfile 2>/dev/null)
     if ! ps -p $PID > /dev/null 2>&1; then
         echo "⚠️ Process from $pidfile is dead"
@@ -66,3 +62,4 @@ done
 if $ALL_OK; then
     echo "✓ All 3 services confirmed running (API + Telegram + Scheduler)"
 fi
+export PYTHONPATH=/home/dibs/agentjw:/home/dibs/agentjw/core:/home/dibs/agentjw/sicuan:$PYTHONPATH

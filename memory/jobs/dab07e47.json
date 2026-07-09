@@ -1,0 +1,18 @@
+{
+  "id": "dab07e47",
+  "workspace_id": "ec32824d310e43e0",
+  "type": "stress",
+  "data": {
+    "msg": "Job 907"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.049063",
+  "started_at": "2026-07-09T14:22:12.280695",
+  "completed_at": "2026-07-09T14:22:12.387286",
+  "result": {
+    "result": "Job 907"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

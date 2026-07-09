@@ -1,0 +1,42 @@
+{
+  "id": "142fa6abe3e54f71",
+  "name": "Workspace B",
+  "owner_id": 222,
+  "members": [
+    {
+      "id": 222,
+      "role": "owner"
+    }
+  ],
+  "created_at": "2026-07-09T14:19:54.091791",
+  "updated_at": "2026-07-09T14:19:54.091813",
+  "config": {},
+  "billing": {
+    "plan": "free",
+    "quota": {
+      "monthly_tokens": 10000,
+      "used_tokens": 0,
+      "reset_date": "2026-07-01T14:19:54.091816"
+    }
+  },
+  "providers": {
+    "openai": {
+      "enabled": false
+    },
+    "anthropic": {
+      "enabled": false
+    },
+    "groq": {
+      "enabled": false
+    },
+    "openrouter": {
+      "enabled": true
+    }
+  },
+  "agents": [],
+  "plugins": [],
+  "settings": {
+    "default_language": "id",
+    "default_model": "deepseek/deepseek-chat"
+  }
+}

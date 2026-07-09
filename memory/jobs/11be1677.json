@@ -1,0 +1,18 @@
+{
+  "id": "11be1677",
+  "workspace_id": "ca6e03fdec284397",
+  "type": "stress",
+  "data": {
+    "msg": "Job 393"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.848505",
+  "started_at": "2026-07-09T14:21:19.023522",
+  "completed_at": "2026-07-09T14:21:19.124596",
+  "result": {
+    "result": "Job 393"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

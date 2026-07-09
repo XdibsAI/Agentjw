@@ -1,0 +1,18 @@
+{
+  "id": "51a233e8",
+  "workspace_id": "f26b673b33b14d84",
+  "type": "task_c",
+  "data": {
+    "msg": "C"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:19:54.147352",
+  "started_at": "2026-07-09T14:19:55.650349",
+  "completed_at": "2026-07-09T14:19:57.650905",
+  "result": {
+    "result": "C done"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

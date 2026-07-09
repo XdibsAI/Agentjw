@@ -1,0 +1,18 @@
+{
+  "id": "bbc6e3ae",
+  "workspace_id": "c0ba767cd76a4f5f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 335"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.815857",
+  "started_at": "2026-07-09T14:21:12.865584",
+  "completed_at": "2026-07-09T14:21:12.966527",
+  "result": {
+    "result": "Job 335"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

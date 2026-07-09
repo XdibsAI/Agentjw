@@ -15,7 +15,7 @@ from pathlib import Path
 from pathlib import Path
 from typing import Dict, List, Optional
 from core.logger import logger
-from memory.unified_projects import unified_projects
+# from memory.unified_projects import unified_projects
 from sicuan.core.long_term_memory import get_long_term_memory
 from sicuan.core.task_tracker import TaskTracker
 from sicuan.core.vault_manager import VaultManager
@@ -147,7 +147,7 @@ class SiCuanBrain:
 
         # Projects di memory
         try:
-            projects = unified_projects.list_projects()
+            projects = []
             if projects:
                 ctx.append("PROJECTS YANG ADA:")
                 for p in projects[:5]:
@@ -338,7 +338,7 @@ class SiCuanBrain:
         try:
             from memory.memory_store import memory_store
             from pathlib import Path as _Path
-            vids = [pr for pr in unified_projects.list_projects() if pr["name"].startswith("video_")]
+            vids = []
             if vids:
                 ctx.append("\nSTATUS RENDER VIDEO (DATA NYATA - jangan karang selain ini):")
                 for v in vids:
@@ -382,7 +382,7 @@ class SiCuanBrain:
         # projects (e.g. trading bots) aren't pushed out by recent video projects
         try:
             from memory.memory_store import memory_store
-            all_projects = unified_projects.list_projects()
+            all_projects = []
             if len(all_projects) > 5:
                 ctx.append("\nSEMUA PROJECT LAIN:")
                 for p in all_projects[5:15]:
@@ -442,7 +442,8 @@ class SiCuanBrain:
         return "\n".join(ctx)
 
     def think_and_respond(self, user_message: str,
-                          chat_history: List[Dict] = None) -> Dict:
+                          chat_history: List[Dict] = None,
+                          force_model: str = None) -> Dict:
         """
         Core brain — LLM membaca semua konteks dan decide:
         - Apa yang harus direspons
@@ -719,20 +720,10 @@ JAWAB LANGSUNG dari data itu — action = null. JANGAN pilih scan_project kecual
 user minta scan project SPESIFIK (sebutkan nama projectnya).
 
 PENTING SOAL EVALUASI DIRI SICUAN:
-Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, laporan
-kemampuan, ATAU minta lihat struktur/komponen/sistem SiCuan — JANGAN pilih
-analyze_project atau scan_project. Gunakan action = null dan jawab dari
-KNOWLEDGE capabilities.json + arsitektur_aktif + sistem_aktif yang ada di
-context. SiCuan punya: Context Engine, Persistent Memory, Goal Engine,
-ShadowMode, Provenance Engine, Reflection Engine, Auto Learning, DataAwareness.
-
-LARANGAN KERAS: JANGAN modify sicuan/ atau brain.py atau chat.py — itu
-kode inti SiCuan sendiri. Kalau ada request yang mengarah ke sana, tolak
-dengan sopan dan jelaskan risikonya.
-
-Kalau user minta cek memory/knowledge/struktur diri: gunakan action = null,
-jawab dari capabilities.json dan context yang tersedia. JANGAN pakai
-scan_project atau analyze_project untuk request tentang diri SiCuan sendiri.
+Kalau user minta SiCuan evaluasi dirinya sendiri, introspeksi, atau laporan
+kemampuan — JANGAN pilih analyze_project. Gunakan action = null dan jawab
+dari data REFLECTION TERBARU, GOAL ENGINE, PROVENANCE, dan WORKSPACE yang
+sudah ada di context. Target analisa adalah SiCuan sendiri, bukan project lain.
 
 Kalau user minta analisis mendalam trading, kenapa rugi, breakdown trade, query database:
 action = analyze_trading_data
@@ -1158,7 +1149,7 @@ Buat jawaban final:
 
                 from agents.orchestrator import orchestrator
 
-                projects = unified_projects.list_projects()
+                projects = []
 
                 p = self._find_project(target, projects)
 
@@ -1225,7 +1216,7 @@ Rules:
 
                 from sicuan.project_trace import audit_project
 
-                projects = unified_projects.list_projects()
+                projects = []
 
                 p = self._find_project(target, projects)
 
@@ -1348,7 +1339,7 @@ Rules:
                     proj_name = proj_name.strip()
 
                 # Cari project dir untuk snapshot SEBELUM repair
-                projects = unified_projects.list_projects()
+                projects = []
                 proj = None
                 for p in projects:
                     if proj_name and proj_name.lower() in p["name"].lower():
@@ -1424,7 +1415,7 @@ Rules:
                     if instruction_part.strip():
                         instruction = instruction_part.strip()
 
-                projects = unified_projects.list_projects()
+                projects = []
                 proj = None
                 for p in projects:
                     if proj_name and proj_name.lower() in p["name"].lower():
@@ -1551,7 +1542,7 @@ USER REQUEST:
             elif action == "run_bot":
                 from mcp.tools.filesystem_tool import filesystem_tool
                 from memory.memory_store import memory_store
-                projects = unified_projects.list_projects()
+                projects = []
                 if projects:
                     result = filesystem_tool.run_and_capture(projects[0]["project_dir"], timeout=10)
                     return f"Bot dijalankan. Output: {self._safe_get(result, 'stdout','')[:200]}"
@@ -1559,7 +1550,7 @@ USER REQUEST:
 
             elif action == "scan_project":
                 from mcp.tools.filesystem_tool import filesystem_tool
-                projects = unified_projects.list_projects()
+                projects = []
                 p = self._find_project(target, projects)
                 if p:
                     data = filesystem_tool.scan_project(p["project_dir"])
@@ -1611,7 +1602,7 @@ USER REQUEST:
                     if m2:
                         filename = m2.group(1)
 
-                projects = unified_projects.list_projects()
+                projects = []
                 p = self._find_project(proj_name, projects)
                 if not p:
                     return f"Project '{proj_name}' tidak ditemukan."
@@ -1664,7 +1655,7 @@ USER REQUEST:
                 import subprocess, json as _json
                 from pathlib import Path as _Path
                 from memory.memory_store import memory_store
-                projects = [pr for pr in unified_projects.list_projects() if pr["name"].startswith("video_")]
+                projects = []
                 p = self._find_project(target, projects)
                 if not p:
                     return f"Project video '{target}' tidak ditemukan."
@@ -1720,7 +1711,7 @@ USER REQUEST:
 
             elif action == "business_analysis":
 
-                projects = unified_projects.list_projects()
+                projects = []
                 if not projects:
                     return "Belum ada project untuk dianalisa."
 

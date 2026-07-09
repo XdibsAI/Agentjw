@@ -1,0 +1,18 @@
+{
+  "id": "bd400609",
+  "workspace_id": "4799704bf8534312",
+  "type": "stress",
+  "data": {
+    "msg": "Job 375"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.825575",
+  "started_at": "2026-07-09T14:21:17.141258",
+  "completed_at": "2026-07-09T14:21:17.241889",
+  "result": {
+    "result": "Job 375"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

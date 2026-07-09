@@ -1,0 +1,18 @@
+{
+  "id": "4148757e",
+  "workspace_id": "f19fc9cb45104ac6",
+  "type": "stress",
+  "data": {
+    "msg": "Job 114"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.758131",
+  "started_at": "2026-07-09T14:20:49.878716",
+  "completed_at": "2026-07-09T14:20:49.981087",
+  "result": {
+    "result": "Job 114"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

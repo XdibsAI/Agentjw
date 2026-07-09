@@ -1,0 +1,18 @@
+{
+  "id": "c0277cb5",
+  "workspace_id": "0106d8304d834bfd",
+  "type": "stress",
+  "data": {
+    "msg": "Job 413"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.854915",
+  "started_at": "2026-07-09T14:21:21.085897",
+  "completed_at": "2026-07-09T14:21:21.186749",
+  "result": {
+    "result": "Job 413"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

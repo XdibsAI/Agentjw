@@ -1,0 +1,20 @@
+{
+  "user_id": "7056521084",
+  "username": "",
+  "created_at": "2026-07-09T13:08:09.614609",
+  "projects": {},
+  "preferences": {
+    "private_mode": true,
+    "language": "id",
+    "notifications": true
+  },
+  "memory": {
+    "last_topic": "",
+    "context": []
+  },
+  "state": {
+    "current_project": null,
+    "last_action": null,
+    "task_queue": []
+  }
+}

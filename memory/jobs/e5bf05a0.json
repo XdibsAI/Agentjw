@@ -1,0 +1,18 @@
+{
+  "id": "e5bf05a0",
+  "workspace_id": "f63771fd72bd4878",
+  "type": "test",
+  "data": {
+    "message": "Hello World"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:05:14.540199",
+  "started_at": "2026-07-09T14:05:14.540548",
+  "completed_at": "2026-07-09T14:05:14.548047",
+  "result": {
+    "result": "Processed: Hello World"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

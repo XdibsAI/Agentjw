@@ -1,0 +1,18 @@
+{
+  "id": "2d3c5d2b",
+  "workspace_id": "5e8a975da7e941c3",
+  "type": "stress",
+  "data": {
+    "msg": "Job 361"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.822405",
+  "started_at": "2026-07-09T14:21:15.675382",
+  "completed_at": "2026-07-09T14:21:15.777632",
+  "result": {
+    "result": "Job 361"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

@@ -1,3 +1,4 @@
+import sys
 """
 SiCuan Chat Interface - Wajah & Kepribadian SiCuan
 """
@@ -7,6 +8,8 @@ import re
 from pathlib import Path
 from typing import List, Dict, Optional
 
+import sys
+sys.path.insert(0, '/home/dibs/agentjw/core')
 from core.logger import logger, console
 from rich.panel import Panel
 from rich.text import Text
@@ -18,6 +21,8 @@ from sicuan.core.conversation_memory import ConversationMemory
 from sicuan.core.conversation_state import ConversationState
 from sicuan.core.intent_classifier import IntentClassifier
 from sicuan.core.semantic_query import SemanticQuery
+from sicuan.core.multimodel_orchestrator import get_multimodel_orchestrator
+from sicuan.core.context_memory import get_context_memory
 from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.goal_engine import GoalEngine
 from sicuan.core.shadow_mode import ShadowMode
@@ -68,7 +73,15 @@ class SiCuanChat:
         self.provenance = ProvenanceEngine()
         self._load_context()
     
-    def chat(self, user_message: str, image_path: str = None) -> str:
+    def chat(self, user_message: str, image_path: str = None, user_id: int = None, workspace_id: str = None) -> str:
+        # Set user context jika ada
+        if user_id:
+            from sicuan.core.user_manager import get_user_manager
+            self._user_manager = get_user_manager()
+            self._user_data = self._user_manager.get_user_data(user_id)
+        else:
+            self._user_manager = None
+            self._user_data = None
         """Main entry - semua pesan langsung ke brain (semantic routing).
         LLM yang decide intent dan action, bukan keyword matching.
         Jika ada image_path, proses gambar dulu."""
@@ -89,7 +102,73 @@ class SiCuanChat:
 
         # Semua pesan → brain (LLM decide intent + action)
         try:
-            result = self.brain.think_and_respond(user_message, self.history)
+            # Route to appropriate model via orchestrator
+            orchestrator = get_multimodel_orchestrator()
+            
+            # Check context for continuation keywords
+            continuation_keywords = ["perbaiki", "lanjutkan", "ringkas", "hasilnya", "sekarang", "terus"]
+            if any(kw in user_message.lower() for kw in continuation_keywords) and len(self.history) > 2:
+                # Use last action to determine role
+                last_action = self.brain._last_action if hasattr(self.brain, '_last_action') else None
+                if last_action in ["analyze_project", "analyzer"]:
+                    role = "analyzer"
+                elif last_action in ["modify_logic", "repair_project", "coder"]:
+                    role = "coder"
+                elif last_action in ["review", "reviewer"]:
+                    role = "reviewer"
+                else:
+                    role = orchestrator.route_task(user_message)
+                logger.info(f"[CHAT] Context-aware routing: {role} (last_action: {last_action})")
+            else:
+                role = orchestrator.route_task(user_message)
+                logger.info(f"[CHAT] Orchestrator selected: {role}")
+        
+            # === INTERCEPT: List project ===
+            if "list project" in user_message.lower() or "daftar project" in user_message.lower():
+                if not workspace_id and hasattr(self, 'brain') and hasattr(self.brain, '_current_workspace_id'):
+                    workspace_id = self.brain._current_workspace_id
+                if workspace_id:
+                    from sicuan.platform.project_manager import get_project_manager
+                    pm = get_project_manager()
+                    projects = pm.list_projects(workspace_id)
+                    if projects:
+                        lines = ["📂 **PROJECTS IN YOUR WORKSPACE:**"]
+                        for p in projects[:10]:
+                            lines.append(f"• **{p['name']}**")
+                            lines.append(f"  Status: {p.get('status', 'active')}")
+                        return "\n".join(lines)
+                    else:
+                        return "📂 Belum ada project di workspace ini.\n\nKetik 'buat project <nama>' untuk memulai."
+                else:
+                    return "📂 Workspace tidak ditemukan. Kirim pesan ke bot terlebih dahulu."
+            
+            # === INTERCEPT: Create project ===
+            if "buat project" in user_message.lower() or "create project" in user_message.lower():
+                if not workspace_id and hasattr(self, 'brain') and hasattr(self.brain, '_current_workspace_id'):
+                    workspace_id = self.brain._current_workspace_id
+                if workspace_id:
+                    from sicuan.platform.project_manager import get_project_manager
+                    import re
+                    pm = get_project_manager()
+                    match = re.search(r'(?:buat|create)\s+project\s+(\w+)', user_message.lower())
+                    if match:
+                        project_name = match.group(1).capitalize()
+                        projects = pm.list_projects(workspace_id)
+                        for p in projects:
+                            if p["name"].lower() == project_name.lower():
+                                return f"❌ Project '{project_name}' sudah ada."
+                        project = pm.create_project(workspace_id, project_name)
+                        return f"✅ Project '{project_name}' berhasil dibuat!\n\n📂 ID: {project['id']}"
+                    else:
+                        return "❌ Format salah.\n\nGunakan: buat project <nama>"
+                else:
+                    return "📂 Workspace tidak ditemukan."
+            
+            # Pass selected model to brain directly
+            selected_model = None
+            if hasattr(self, '_selected_model'):
+                selected_model = self._selected_model
+            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model)
             # Normalisasi result
             if isinstance(result, list):
                 result = result[0] if result else {}
@@ -196,7 +275,73 @@ class SiCuanChat:
     def _handle_knowledge_query(self, user_message: str) -> str:
         """Forward ke brain — LLM jawab dari context nyata."""
         try:
-            result = self.brain.think_and_respond(user_message, self.history)
+            # Route to appropriate model via orchestrator
+            orchestrator = get_multimodel_orchestrator()
+            
+            # Check context for continuation keywords
+            continuation_keywords = ["perbaiki", "lanjutkan", "ringkas", "hasilnya", "sekarang", "terus"]
+            if any(kw in user_message.lower() for kw in continuation_keywords) and len(self.history) > 2:
+                # Use last action to determine role
+                last_action = self.brain._last_action if hasattr(self.brain, '_last_action') else None
+                if last_action in ["analyze_project", "analyzer"]:
+                    role = "analyzer"
+                elif last_action in ["modify_logic", "repair_project", "coder"]:
+                    role = "coder"
+                elif last_action in ["review", "reviewer"]:
+                    role = "reviewer"
+                else:
+                    role = orchestrator.route_task(user_message)
+                logger.info(f"[CHAT] Context-aware routing: {role} (last_action: {last_action})")
+            else:
+                role = orchestrator.route_task(user_message)
+                logger.info(f"[CHAT] Orchestrator selected: {role}")
+        
+            # === INTERCEPT: List project ===
+            if "list project" in user_message.lower() or "daftar project" in user_message.lower():
+                if not workspace_id and hasattr(self, 'brain') and hasattr(self.brain, '_current_workspace_id'):
+                    workspace_id = self.brain._current_workspace_id
+                if workspace_id:
+                    from sicuan.platform.project_manager import get_project_manager
+                    pm = get_project_manager()
+                    projects = pm.list_projects(workspace_id)
+                    if projects:
+                        lines = ["📂 **PROJECTS IN YOUR WORKSPACE:**"]
+                        for p in projects[:10]:
+                            lines.append(f"• **{p['name']}**")
+                            lines.append(f"  Status: {p.get('status', 'active')}")
+                        return "\n".join(lines)
+                    else:
+                        return "📂 Belum ada project di workspace ini.\n\nKetik 'buat project <nama>' untuk memulai."
+                else:
+                    return "📂 Workspace tidak ditemukan. Kirim pesan ke bot terlebih dahulu."
+            
+            # === INTERCEPT: Create project ===
+            if "buat project" in user_message.lower() or "create project" in user_message.lower():
+                if not workspace_id and hasattr(self, 'brain') and hasattr(self.brain, '_current_workspace_id'):
+                    workspace_id = self.brain._current_workspace_id
+                if workspace_id:
+                    from sicuan.platform.project_manager import get_project_manager
+                    import re
+                    pm = get_project_manager()
+                    match = re.search(r'(?:buat|create)\s+project\s+(\w+)', user_message.lower())
+                    if match:
+                        project_name = match.group(1).capitalize()
+                        projects = pm.list_projects(workspace_id)
+                        for p in projects:
+                            if p["name"].lower() == project_name.lower():
+                                return f"❌ Project '{project_name}' sudah ada."
+                        project = pm.create_project(workspace_id, project_name)
+                        return f"✅ Project '{project_name}' berhasil dibuat!\n\n📂 ID: {project['id']}"
+                    else:
+                        return "❌ Format salah.\n\nGunakan: buat project <nama>"
+                else:
+                    return "📂 Workspace tidak ditemukan."
+            
+            # Pass selected model to brain directly
+            selected_model = None
+            if hasattr(self, '_selected_model'):
+                selected_model = self._selected_model
+            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model)
             response = self._execute_and_format(result, user_message)
             self.memory.add_interaction(user_message, response)
             self._save_context()

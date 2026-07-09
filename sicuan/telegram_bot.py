@@ -1,355 +1,351 @@
 """
-SiCuan Telegram Bot
-Cuan bisa terima dan proses pesan langsung dari Telegram
-Bukan cuma kirim — tapi benar-benar 2-way conversation
+Telegram Bot - Group Mode with Mention Detection
 """
-import asyncio
+
+import os
+import sys
 import logging
 import json
-import re
+import time
 from pathlib import Path
-from datetime import datetime
-from telegram import Update
-from telegram.ext import MessageHandler, filters
-from PIL import Image
-from telegram import Message
-import io
-from telegram.ext import (
-    Application, CommandHandler, MessageHandler,
-    filters, ContextTypes
-)
+from typing import Dict, Optional
 
-BASE = Path(__file__).parent
-LOG = logging.getLogger("sicuan.telegram")
+sys.path.insert(0, '/home/dibs/agentjw')
+sys.path.insert(0, '/home/dibs/agentjw/core')
+sys.path.insert(0, '/home/dibs/agentjw/sicuan')
 
-# Owner config — Mas Gen adalah yang custom Cuan
-OWNER_IDS = [5090639343]  # Telegram user ID Mas Gen
-OWNER_NAME = "Mas Gen"
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.constants import ParseMode
+
+from sicuan.chat import SiCuanChat
+from sicuan.platform.workspace_resolver import get_workspace_resolver
+from sicuan.platform.runtime import get_runtime_manager
+from core.logger import logger
 
 
-def is_owner(user_id: int) -> bool:
-    return user_id in OWNER_IDS
+class TelegramBot:
+    """Telegram bot dengan group mode"""
 
+    def __init__(self):
+        self.token = os.getenv("TELEGRAM_BOT_TOKEN")
+        self.chat_id = os.getenv("TELEGRAM_CHAT_ID")
+        self.bot_name = "SiCuan"
+        
+        # Group mode settings
+        self.group_mode = True
+        self.mention_only = False  # Respond to all messages in group for testing
+        self.bot_username = "godmemeku_bot"
+        
+        # Permission levels
+        self.owners = [int(os.getenv("TELEGRAM_CHAT_ID", 0))]
+        self.admins = self.owners.copy()
+        self.allowed_users = self.owners.copy()
+        
+        # Metrics
+        self.metrics = {
+            "total_messages": 0,
+            "total_responses": 0,
+            "errors": 0,
+            "response_times": [],
+            "tokens_used": 0,
+        }
+        
+        self.sicuan = None
 
-def get_user_name(update: Update) -> str:
-    user = update.effective_user
-    if is_owner(user.id):
-        return OWNER_NAME
-    return user.first_name or user.username or f"user_{user.id}"
+    def init_sicuan(self):
+        """Initialize SiCuan brain"""
+        if self.sicuan is None:
+            self.sicuan = SiCuanChat()
+            logger.info("🤖 SiCuan initialized for Telegram")
 
+    def is_mentioned(self, text: str) -> bool:
+        """Check if bot is mentioned in message"""
+        if not text:
+            return False
+        mention_patterns = [
+            f"@{self.bot_username}",
+            f"@{self.bot_username.lower()}",
+            "cu",
+            "cuan",
+            "cucu",
+            "Cuan",
+            "SiCuan",
+            "sicuan",
+            "SICUAN",
+        ]
+        return any(pattern in text for pattern in mention_patterns)
 
-async def cmd_start(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-    name = get_user_name(update)
+    def is_owner(self, user_id: int) -> bool:
+        """Check if user is owner"""
+        return user_id in self.owners
 
-    if is_owner(user_id):
-        msg = (
-            f"Halo Mas Gen! SiCuan siap.\n\n"
-            f"Kamu bisa:\n"
-            f"• Ngobrol langsung\n"
-            f"• Kirim data/teks panjang untuk aku pelajari\n"
-            f"• Minta aku buat project\n"
-            f"• Tanya apapun tentang project kita\n\n"
-            f"Ketik aja langsung — aku paham konteks."
-        )
-    else:
-        msg = (
-            f"Halo {name}! Saya SiCuan, AI partner bisnis.\n"
-            f"Ada yang bisa saya bantu?"
-        )
-    await update.message.reply_text(msg)
+    def is_allowed(self, user_id: int) -> bool:
+        """Check if user is allowed to use bot"""
+        # Check user memory
+        from sicuan.core.user_memory import get_user_memory
+        user_mem = get_user_memory()
+        if user_mem.get_user_preference(user_id, "allowed", False):
+            return True
+        return user_id in self.allowed_users or self.is_owner(user_id)
 
+    def get_permission_level(self, user_id: int) -> str:
+        """Get user permission level"""
+        if self.is_owner(user_id):
+            return "owner"
+        if user_id in self.admins:
+            return "admin"
+        if user_id in self.allowed_users:
+            return "user"
+        return "guest"
 
-async def cmd_status(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    from sicuan.memory_engine import memory_engine
-    summary = memory_engine.summarize_period(7)
-    await update.message.reply_text(summary[:4000])
+    def should_respond(self, update: Update) -> bool:
+        """Determine if bot should respond to message"""
+        if not update.message:
+            return False
+        
+        text = update.message.text or ""
+        user_id = update.message.from_user.id
+        
+        # Always respond to owners
+        if self.is_owner(user_id):
+            return True
+        
+        # In group mode, only respond when mentioned
+        if self.mention_only:
+            return self.is_mentioned(text)
+        
+        # Otherwise, respond to allowed users
+        return self.is_allowed(user_id)
 
+    def record_metrics(self, response_time: float, tokens: int = 0, error: bool = False):
+        """Record metrics"""
+        self.metrics["total_messages"] += 1
+        if not error:
+            self.metrics["total_responses"] += 1
+            self.metrics["response_times"].append(response_time)
+            self.metrics["tokens_used"] += tokens
+        else:
+            self.metrics["errors"] += 1
+        
+        # Keep last 1000 response times
+        if len(self.metrics["response_times"]) > 1000:
+            self.metrics["response_times"] = self.metrics["response_times"][-1000:]
 
-async def cmd_memory(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    if not is_owner(update.effective_user.id):
-        return
-    from sicuan.memory_engine import memory_engine
-    insights = memory_engine.recall_insights(limit=5)
-    if not insights:
-        await update.message.reply_text("Memory kosong.")
-        return
-    txt = "🧠 MEMORY TERAKHIR:\n\n"
-    for ins in insights:
-        txt += f"[{ins['created_at'][:10]}] {ins['content'][:150]}\n\n"
-    await update.message.reply_text(txt[:4000])
+    def get_metrics_summary(self) -> str:
+        """Get metrics summary"""
+        times = self.metrics["response_times"]
+        avg_time = sum(times) / len(times) if times else 0
+        
+        return f"""
+📊 **SiCuan Metrics**
 
+- Messages: {self.metrics["total_messages"]}
+- Responses: {self.metrics["total_responses"]}
+- Errors: {self.metrics["errors"]}
+- Avg Response: {avg_time:.2f}s
+- Tokens Used: {self.metrics["tokens_used"]}
+"""
 
-async def cmd_projects(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    from memory.unified_projects import unified_projects
-    projects = unified_projects.list_projects()
-    txt = f"📁 PROJECTS ({len(projects)}):\n\n"
-    for p in projects[:15]:
-        status_icon = "✅" if p["status"] == "success" else "⚠️" if p["status"] == "partial" else "🔄"
-        txt += f"{status_icon} {p['name']} ({p['tool_type']}) — {p['created_at'][:10]}\n"
-    await update.message.reply_text(txt)
-
-
-async def handle_message(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    """Handler utama — semua pesan masuk diproses SiCuan"""
-    if not update.message or not update.message.text:
-        return
-
-    user_id = update.effective_user.id
-    name = get_user_name(update)
-    text = update.message.text
-    chat_id = update.effective_chat.id
-
-    # Typing indicator
-    await ctx.bot.send_chat_action(chat_id=chat_id, action="typing")
-
-    # Classify dan proses
-    await _process_and_reply(update, ctx, name, user_id, text)
-
-
-async def handle_document(update: Update, ctx: ContextTypes.DEFAULT_TYPE):
-    """Terima file/dokumen — pelajari isinya"""
-    if not is_owner(update.effective_user.id):
-        await update.message.reply_text("Maaf, fitur upload file hanya untuk owner.")
-        return
-
-    doc = update.message.document
-    if not doc:
-        return
-
-    await update.message.reply_text(
-        f"Menerima file: {doc.file_name}\n"
-        f"Ukuran: {doc.file_size // 1024}KB\n\n"
-        f"Sedang aku pelajari..."
-    )
-
-    try:
-        file = await ctx.bot.get_file(doc.file_id)
-        file_bytes = await file.download_as_bytearray()
-        content = file_bytes.decode("utf-8", errors="replace")
-
-        # Classify dan simpan ke memory
-        result = await _learn_from_content(content, doc.file_name)
-        await update.message.reply_text(result)
-    except Exception as e:
-        await update.message.reply_text(f"Gagal proses file: {e}")
-
-
-async def _process_and_reply(update: Update, ctx: ContextTypes.DEFAULT_TYPE, name: str,
-                              user_id: int, text: str):
-    """Core: SiCuan baca pesan, decide, respond"""
-    try:
-        # Kalau pesan panjang dari owner → cek dulu apakah itu log/output atau memang mau dipelajari
-        if is_owner(user_id) and len(text) > 1000:
-            # Jangan pelajari kalau itu output log/sistem
-            skip_keywords = [
-                "INFO", "ERROR", "WARNING", "Traceback", "starting", "initialized",
-                "✓", "✗", "---", "===", "tail -", "grep", "python3",
-                "2026-", "2025-", ".log", ".py:", "venv", "agentjw"
-            ]
-            is_log = sum(1 for k in skip_keywords if k in text) >= 3
-            
-            if is_log:
-                # Ini log/output — proses sebagai chat biasa
-                pass
+    async def handle_message(self, update: Update, context: CallbackContext):
+        """Handle incoming message"""
+        if not update.message:
+            return
+        
+        user_id = update.message.from_user.id
+        username = update.message.from_user.username or "unknown"
+        text = update.message.text or ""
+        from_user_id = user_id
+        
+        # AUTO-REGISTER: Simpan user ke memory saat pertama kali chat
+        from sicuan.core.user_memory import get_user_memory
+        user_mem = get_user_memory()
+        if not user_mem.get_user_preference(user_id, "registered", False):
+            user_mem.set_user_preference(user_id, "registered", True)
+            user_mem.set_user_preference(user_id, "username", username)
+            user_mem.set_user_preference(user_id, "private_mode", True)
+            user_mem.set_user_preference(user_id, "allowed", True)
+            print(f"📝 Auto-registered user: {username} (ID: {user_id})")
+        
+        # WORKSPACE RESOLVER: Map chat ke workspace
+        chat_id = update.message.chat.id
+        chat_type = update.message.chat.type
+        resolver = get_workspace_resolver()
+        workspace_id = resolver.resolve(chat_id)
+        
+        if not workspace_id:
+            # Auto-create workspace for new chat
+            from sicuan.platform.workspace import get_workspace
+            ws = get_workspace()
+            workspace_name = f"Workspace_{chat_id}"
+            workspace = ws.create(user_id, workspace_name)
+            workspace_id = workspace["id"]
+            resolver.register_chat(chat_id, workspace_id, chat_type)
+            print(f"🏢 Created workspace {workspace_id} for chat {chat_id}")
+        
+        # Start runtime untuk workspace
+        runtime = get_runtime_manager()
+        if not runtime.get_status(workspace_id)["is_running"]:
+            runtime.start(workspace_id)
+            print(f"🚀 Started runtime for workspace {workspace_id}")
+        
+        # Check if should respond
+        # DEBUG: Log all messages
+        print(f"[DEBUG] Message from {update.message.from_user.username}: {text[:50]}")
+        
+        # DEBUG: Log all messages
+        print(f"[DEBUG] Message from {update.message.from_user.username}: {text[:50]}")
+        
+        if not self.should_respond(update):
+            return
+        
+        # Check permission - auto allow for registered users
+        permission = self.get_permission_level(user_id)
+        if permission == "guest":
+            # Auto-allow registered users
+            if user_mem.get_user_preference(user_id, "allowed", False):
+                permission = "user"
             else:
                 await update.message.reply_text(
-                    "Teks panjang terdeteksi — aku pelajari dulu ya Mas Gen..."
+                    "❌ Maaf, Anda belum memiliki akses ke SiCuan. "
+                    "Kirim /start untuk mendaftar."
                 )
-                result = await _learn_from_content(text, "telegram_message")
-                await update.message.reply_text(result)
                 return
-
-        # Image request → langsung generate, tidak perlu brain
-        from core.image_service import ImageService
-        if ImageService.is_image_request(text):
-            await update.message.reply_text("Bentar ya, lagi aku generate gambarnya... 🎨")
-            try:
-                await ctx.bot.send_chat_action(chat_id=update.effective_chat.id, action="upload_photo")
-            except Exception:
-                pass
-            result = ImageService.generate(prompt=text)
-            if result["success"]:
-                with open(result["path"], "rb") as img_file:
-                    await ctx.bot.send_photo(
-                        chat_id=update.effective_chat.id,
-                        photo=img_file,
-                        caption="✅ Done! (" + str(result.get("size_kb",0)) + "KB)"
+        
+        # Check for commands
+        if text.startswith("/"):
+            await self.handle_command(update, context)
+            return
+        
+        # Process message
+        start_time = time.time()
+        
+        try:
+            # Initialize SiCuan if needed
+            self.init_sicuan()
+            
+            # Process with SiCuan
+            response = self.sicuan.chat(text)
+            response_time = time.time() - start_time
+            
+            # Record metrics
+            self.record_metrics(response_time)
+            
+            # Send response
+            if response:
+                # Split long messages
+                if len(response) > 4000:
+                    for i in range(0, len(response), 4000):
+                        await update.message.reply_text(
+                            response[i:i+4000],
+                            parse_mode=ParseMode.MARKDOWN
+                        )
+                else:
+                    await update.message.reply_text(
+                        response,
+                        parse_mode=ParseMode.MARKDOWN
                     )
             else:
-                await update.message.reply_text("Gagal generate: " + result["error"])
+                await update.message.reply_text("Maaf, saya tidak bisa memproses permintaan saat ini.")
+                
+        except Exception as e:
+            logger.error(f"Error processing message: {e}")
+            self.record_metrics(time.time() - start_time, error=True)
+            await update.message.reply_text(
+                f"❌ Error: {str(e)[:200]}\n\nCoba lagi nanti."
+            )
+
+    async def handle_command(self, update: Update, context: CallbackContext):
+        """Handle commands"""
+        if not update.message:
             return
+        
+        text = update.message.text
+        user_id = update.message.from_user.id
+        
+        if text == "/start":
+            user_id = update.message.from_user.id
+            username = update.message.from_user.username or "unknown"
+            
+            # Cek apakah user adalah owner
+            from sicuan.core.user_manager import get_user_manager
+            user_mgr = get_user_manager()
+            is_owner = user_mgr.is_owner(user_id)
+            
+            if is_owner:
+                welcome_msg = f"👋 Halo Mas Gen! **{self.bot_name}** siap membantu.\n\n"
+                welcome_msg += f"**User ID:** `{user_id}`\n"
+                welcome_msg += f"**Username:** @{username}\n\n"
+                welcome_msg += f"**Fitur Owner:**\n"
+                welcome_msg += f"- 📂 Kelola Project\n"
+                welcome_msg += f"- 🔧 Review & Repair Code\n"
+                welcome_msg += f"- 📊 Trading Analysis\n"
+                welcome_msg += f"- 📚 Context Memory\n\n"
+                welcome_msg += f"Gunakan @{self.bot_username} di grup untuk memanggil saya.\n\n"
+                welcome_msg += f"*Powered by SiCuan v2.0*"
+            else:
+                welcome_msg = f"👋 Hello! I'm **{self.bot_name}** - Your AI Business Partner.\n\n"
+                welcome_msg += f"I'm here to help you with:\n"
+                welcome_msg += f"- 💬 Chat & Consultation\n"
+                welcome_msg += f"- 📊 Data Analysis\n"
+                welcome_msg += f"- 🔧 Code Review\n"
+                welcome_msg += f"- 📚 Context Memory\n\n"
+                welcome_msg += f"Just send me your questions or commands!\n\n"
+                welcome_msg += f"*Powered by SiCuan v2.0*"
+            
+            await update.message.reply_text(
+                welcome_msg,
+                parse_mode=ParseMode.MARKDOWN
+            )
+            return
+        
+        elif text == "/metrics" and self.is_owner(user_id):
+            await update.message.reply_text(
+                self.get_metrics_summary(),
+                parse_mode=ParseMode.MARKDOWN
+            )
+        
+        elif text == "/status":
+            status = """
+🤖 **SiCuan Status**
 
-        # Normal chat → SiCuan brain
-        session_id = f"telegram_{user_id}"
-        from sicuan.chat import SiCuanChat
-        chat = _get_session(session_id, name, is_owner(user_id))
-        loop = asyncio.get_running_loop()
+✅ Active
+✅ Memory Loaded
+✅ Database Connected
+✅ LLM Ready
 
-        response = await loop.run_in_executor(
-            None,
-            chat.chat,
-            text
-        )
-
-        # Split kalau terlalu panjang
-        if len(response) <= 4096:
-            await update.message.reply_text(response)
-        else:
-            parts = [response[i:i+4000] for i in range(0, len(response), 4000)]
-            for part in parts:
-                await update.message.reply_text(part)
-
-    except Exception as e:
-        LOG.error(f"Process error: {e}")
-        await update.message.reply_text(f"Ada error Mas: {str(e)[:200]}")
-
-
-async def _learn_from_content(content: str, source: str) -> str:
-    """
-    Smart memory classifier — LLM decide apa yang perlu disimpan
-    Bukan semua disimpan, tapi yang penting saja
-    """
-    import sys
-    sys.path.insert(0, str(BASE.parent))
-    from core.llm_client import llm
-    from sicuan.memory_engine import memory_engine
-
-    # LLM classify konten
-    prompt = f"""Kamu SiCuan, AI yang sedang belajar dari konten berikut.
-
-KONTEN (dari: {source}):
-{content[:3000]}
-
-Analisa dan extract:
-1. PENTING (importance 0.9-1.0): protokol, prosedur, data bisnis, keputusan strategis
-2. BERGUNA (importance 0.6-0.8): preferensi, cara kerja, konteks project
-3. OBROLAN (importance 0.3-0.5): percakapan umum, tidak perlu disimpan detail
-
-Respond JSON:
-{{
-  "summary": "ringkasan singkat konten ini",
-  "items": [
-    {{"topic": "nama topik", "content": "isi penting", "importance": 0.9}},
-    ...
-  ],
-  "skip_count": 0,
-  "recommendation": "apa yang kamu pelajari dari ini"
-}}"""
-
-    try:
-        raw = llm.chat(
-            messages=[{"role": "user", "content": prompt}],
-            system="Kamu SiCuan yang sedang mengklasifikasi memory. JSON only.",
-            temperature=0.3,
-            max_tokens=16000,
-            json_mode=True,
-        )
-        data = json.loads(raw)
-
-        # Simpan yang penting
-        saved = 0
-        for item in data.get("items", []):
-            if item.get("importance", 0) >= 0.5:
-                memory_engine.save_insight(
-                    topic=item["topic"],
-                    content=item["content"],
-                    importance=item["importance"]
-                )
-                saved += 1
-
-        return (
-            f"✅ Selesai pelajari: {source}\n\n"
-            f"📝 Summary: {data.get('summary', '')}\n\n"
-            f"💾 Disimpan: {saved} item penting\n"
-            f"⏭ Dilewati: {data.get('skip_count', 0)} item obrolan umum\n\n"
-            f"💡 Yang aku pelajari:\n{data.get('recommendation', '')}"
-        )
-    except Exception as e:
-        return f"Gagal classify: {e}"
-
-
-# Session management
-_sessions = {}
-
-def _get_session(session_id: str, user_name: str, is_owner_user: bool):
-    from sicuan.chat import SiCuanChat
-    if session_id not in _sessions:
-        chat = SiCuanChat()
-        chat.session_id = session_id
-        # Inject user context ke history awal
-        if is_owner_user:
-            chat.history = [{
-                "role": "system",
-                "content": f"User ini adalah {user_name} — owner dan creator SiCuan. Treat dengan sangat familiar dan hormat."
-            }]
-        else:
-            chat.history = [{
-                "role": "system",
-                "content": f"User ini adalah {user_name}. Treat profesional dan helpful."
-            }]
-        _sessions[session_id] = chat
-    return _sessions[session_id]
+Mode: Group
+Mention-only: Yes
+"""
+            await update.message.reply_text(status, parse_mode=ParseMode.MARKDOWN)
 
 
 def run_bot():
-    """Start Telegram bot"""
-    import os
-    from dotenv import load_dotenv
-    load_dotenv("/home/dibs/agentjw/.env")
-
+    """Run the bot"""
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     if not token:
-        print("ERROR: TELEGRAM_BOT_TOKEN tidak ada di .env")
+        print("❌ TELEGRAM_BOT_TOKEN not set")
         return
-
-    print(f"Starting SiCuan Telegram Bot...")
-    print(f"Owner: {OWNER_NAME} (ID: {OWNER_IDS[0]})")
-
-    app = Application.builder().token(token).build()
-
-    # Commands
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("status", cmd_status))
-    app.add_handler(CommandHandler("memory", cmd_memory))
-    app.add_handler(CommandHandler("projects", cmd_projects))
-
-    # Messages
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_handler(MessageHandler(filters.PHOTO, handle_photo))
-    app.add_handler(MessageHandler(filters.Document.IMAGE, handle_photo))
-    app.add_handler(MessageHandler(filters.Document.ALL, handle_document))
-
-    print("✓ Bot running — waiting for messages...")
-    app.run_polling(drop_pending_updates=True)
+    
+    bot = TelegramBot()
+    
+    # Create application
+    application = Application.builder().token(token).build()
+    
+    # Add handlers
+    application.add_handler(CommandHandler("start", bot.handle_command))
+    application.add_handler(CommandHandler("metrics", bot.handle_command))
+    application.add_handler(CommandHandler("status", bot.handle_command))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, bot.handle_message))
+    
+    # Start bot
+    print("🤖 SiCuan Telegram Bot started")
+    print(f"   Group Mode: {bot.group_mode}")
+    print(f"   Mention-only: {bot.mention_only}")
+    print(f"   Bot Username: @{bot.bot_username}")
+    
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 
 if __name__ == "__main__":
     run_bot()
-
-async def handle_photo(update: Update, context):
-    """Handle foto/gambar yang dikirim user"""
-    try:
-        # Download foto
-        photo_file = await update.message.photo[-1].get_file()
-        photo_bytes = await photo_file.download_as_bytearray()
-        
-        # Simpan sementara
-        from pathlib import Path
-        import uuid
-        temp_dir = Path("memory/images")
-        temp_dir.mkdir(parents=True, exist_ok=True)
-        image_path = temp_dir / f"img_{uuid.uuid4().hex[:8]}.jpg"
-        image_path.write_bytes(photo_bytes)
-        
-        # Ambil caption jika ada
-        caption = update.message.caption or "Analisis gambar ini"
-        
-        # Proses dengan SiCuan
-        from sicuan.chat import SiCuanChat
-        chat = SiCuanChat()
-        response = chat.chat(caption, image_path=str(image_path))
-        
-        await update.message.reply_text(response)
-    except Exception as e:
-        await update.message.reply_text(f"❌ Error processing image: {e}")

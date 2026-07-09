@@ -1,0 +1,18 @@
+{
+  "id": "cfc5435d",
+  "workspace_id": "5e8a975da7e941c3",
+  "type": "stress",
+  "data": {
+    "msg": "Job 561"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.905867",
+  "started_at": "2026-07-09T14:21:36.528544",
+  "completed_at": "2026-07-09T14:21:36.631236",
+  "result": {
+    "result": "Job 561"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

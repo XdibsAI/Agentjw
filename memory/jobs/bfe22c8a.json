@@ -1,0 +1,18 @@
+{
+  "id": "bfe22c8a",
+  "workspace_id": "52758a323af64f37",
+  "type": "stress",
+  "data": {
+    "msg": "Job 953"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.060035",
+  "started_at": "2026-07-09T14:22:17.012155",
+  "completed_at": "2026-07-09T14:22:17.113133",
+  "result": {
+    "result": "Job 953"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

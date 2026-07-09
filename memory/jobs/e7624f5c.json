@@ -1,0 +1,18 @@
+{
+  "id": "e7624f5c",
+  "workspace_id": "b303cbba253d474f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 362"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.822783",
+  "started_at": "2026-07-09T14:21:15.778420",
+  "completed_at": "2026-07-09T14:21:15.880019",
+  "result": {
+    "result": "Job 362"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

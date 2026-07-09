@@ -1,0 +1,42 @@
+{
+  "id": "e0868e1c25f54584",
+  "name": "Stress Workspace 79",
+  "owner_id": 79,
+  "members": [
+    {
+      "id": 79,
+      "role": "owner"
+    }
+  ],
+  "created_at": "2026-07-09T14:20:37.350421",
+  "updated_at": "2026-07-09T14:20:37.350431",
+  "config": {},
+  "billing": {
+    "plan": "free",
+    "quota": {
+      "monthly_tokens": 10000,
+      "used_tokens": 0,
+      "reset_date": "2026-07-01T14:20:37.350435"
+    }
+  },
+  "providers": {
+    "openai": {
+      "enabled": false
+    },
+    "anthropic": {
+      "enabled": false
+    },
+    "groq": {
+      "enabled": false
+    },
+    "openrouter": {
+      "enabled": true
+    }
+  },
+  "agents": [],
+  "plugins": [],
+  "settings": {
+    "default_language": "id",
+    "default_model": "deepseek/deepseek-chat"
+  }
+}

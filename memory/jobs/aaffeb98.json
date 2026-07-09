@@ -1,0 +1,18 @@
+{
+  "id": "aaffeb98",
+  "workspace_id": "872343531d484974",
+  "type": "stress",
+  "data": {
+    "msg": "Job 746"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.977539",
+  "started_at": "2026-07-09T14:21:55.693954",
+  "completed_at": "2026-07-09T14:21:55.794484",
+  "result": {
+    "result": "Job 746"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

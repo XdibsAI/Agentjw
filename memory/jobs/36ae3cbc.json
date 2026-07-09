@@ -1,0 +1,18 @@
+{
+  "id": "36ae3cbc",
+  "workspace_id": "9888c6085e8a4c95",
+  "type": "stress",
+  "data": {
+    "msg": "Job 450"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.873565",
+  "started_at": "2026-07-09T14:21:24.909520",
+  "completed_at": "2026-07-09T14:21:25.015449",
+  "result": {
+    "result": "Job 450"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

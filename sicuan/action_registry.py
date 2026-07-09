@@ -78,6 +78,12 @@ class ActionRegistry:
             "requires_target": True,
         }
         self._actions["modify_logic"] = {
+        "generate_function": {
+            "module": "sicuan.actions.generate_function",
+            "function": "execute",
+            "category": "generation",
+            "description": "Generate new function"
+        },
             "module": "sicuan.actions.modify_logic",
             "entry": "execute",
             "category": "code",

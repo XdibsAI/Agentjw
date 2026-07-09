@@ -1,0 +1,18 @@
+{
+  "id": "63823996",
+  "workspace_id": "d7d8f4bce3604708",
+  "type": "stress",
+  "data": {
+    "msg": "Job 301"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.805907",
+  "started_at": "2026-07-09T14:21:09.313465",
+  "completed_at": "2026-07-09T14:21:09.417269",
+  "result": {
+    "result": "Job 301"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

@@ -1,0 +1,18 @@
+{
+  "id": "5927fe47",
+  "workspace_id": "fd79d2f5c3484fa0",
+  "type": "stress",
+  "data": {
+    "msg": "Job 642"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.953833",
+  "started_at": "2026-07-09T14:21:45.010377",
+  "completed_at": "2026-07-09T14:21:45.110866",
+  "result": {
+    "result": "Job 642"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

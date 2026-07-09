@@ -1,0 +1,18 @@
+{
+  "id": "3e179bfb",
+  "workspace_id": "6850f1cbb47c4e3f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 360"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.821992",
+  "started_at": "2026-07-09T14:21:15.572210",
+  "completed_at": "2026-07-09T14:21:15.673016",
+  "result": {
+    "result": "Job 360"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

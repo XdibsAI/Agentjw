@@ -1,0 +1,18 @@
+{
+  "id": "79d48bf4",
+  "workspace_id": "bf790410e76c4eb4",
+  "type": "stress",
+  "data": {
+    "msg": "Job 365"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.823457",
+  "started_at": "2026-07-09T14:21:16.085979",
+  "completed_at": "2026-07-09T14:21:16.186974",
+  "result": {
+    "result": "Job 365"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

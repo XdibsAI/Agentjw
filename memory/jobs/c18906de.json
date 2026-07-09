@@ -1,0 +1,18 @@
+{
+  "id": "c18906de",
+  "workspace_id": "bae07d9203aa460d",
+  "type": "stress",
+  "data": {
+    "msg": "Job 609"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.922775",
+  "started_at": "2026-07-09T14:21:41.534807",
+  "completed_at": "2026-07-09T14:21:41.635254",
+  "result": {
+    "result": "Job 609"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

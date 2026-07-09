@@ -1,0 +1,18 @@
+{
+  "id": "39e8ea5f",
+  "workspace_id": "30b946359b614404",
+  "type": "stress",
+  "data": {
+    "msg": "Job 286"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.801447",
+  "started_at": "2026-07-09T14:21:07.742166",
+  "completed_at": "2026-07-09T14:21:07.842827",
+  "result": {
+    "result": "Job 286"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

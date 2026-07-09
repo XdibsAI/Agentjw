@@ -1,0 +1,18 @@
+{
+  "id": "b311ea2a",
+  "workspace_id": "6234c2810443496f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 806"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.992032",
+  "started_at": "2026-07-09T14:22:01.888164",
+  "completed_at": "2026-07-09T14:22:01.990258",
+  "result": {
+    "result": "Job 806"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

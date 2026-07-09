@@ -1,0 +1,18 @@
+{
+  "id": "9d288ed2",
+  "workspace_id": "5820f79c1bcc4650",
+  "type": "stress",
+  "data": {
+    "msg": "Job 345"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.818756",
+  "started_at": "2026-07-09T14:21:13.891861",
+  "completed_at": "2026-07-09T14:21:13.992981",
+  "result": {
+    "result": "Job 345"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

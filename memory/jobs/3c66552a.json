@@ -1,0 +1,18 @@
+{
+  "id": "3c66552a",
+  "workspace_id": "f62c57d50cab4079",
+  "type": "stress",
+  "data": {
+    "msg": "Job 988"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.068202",
+  "started_at": "2026-07-09T14:22:20.633860",
+  "completed_at": "2026-07-09T14:22:20.734499",
+  "result": {
+    "result": "Job 988"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

@@ -1,0 +1,18 @@
+{
+  "id": "c66e1f74",
+  "workspace_id": "f19fc9cb45104ac6",
+  "type": "stress",
+  "data": {
+    "msg": "Job 314"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.809390",
+  "started_at": "2026-07-09T14:21:10.671169",
+  "completed_at": "2026-07-09T14:21:10.780757",
+  "result": {
+    "result": "Job 314"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

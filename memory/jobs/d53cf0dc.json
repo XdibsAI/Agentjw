@@ -1,0 +1,18 @@
+{
+  "id": "d53cf0dc",
+  "workspace_id": "682b30c69ecd4b9f",
+  "type": "stress",
+  "data": {
+    "msg": "Job 704"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.968778",
+  "started_at": "2026-07-09T14:21:51.380625",
+  "completed_at": "2026-07-09T14:21:51.482032",
+  "result": {
+    "result": "Job 704"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

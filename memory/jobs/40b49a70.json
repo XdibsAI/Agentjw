@@ -1,0 +1,18 @@
+{
+  "id": "40b49a70",
+  "workspace_id": "196d996b7fea4278",
+  "type": "stress",
+  "data": {
+    "msg": "Job 694"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.966842",
+  "started_at": "2026-07-09T14:21:50.350530",
+  "completed_at": "2026-07-09T14:21:50.451018",
+  "result": {
+    "result": "Job 694"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

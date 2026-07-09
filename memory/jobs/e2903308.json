@@ -1,0 +1,18 @@
+{
+  "id": "e2903308",
+  "workspace_id": "68dd0cea65a048a1",
+  "type": "stress",
+  "data": {
+    "msg": "Job 478"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:37.882422",
+  "started_at": "2026-07-09T14:21:27.784028",
+  "completed_at": "2026-07-09T14:21:27.884597",
+  "result": {
+    "result": "Job 478"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}

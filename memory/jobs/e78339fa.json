@@ -1,0 +1,18 @@
+{
+  "id": "e78339fa",
+  "workspace_id": "8e69bf806dea4d07",
+  "type": "stress",
+  "data": {
+    "msg": "Job 919"
+  },
+  "status": "completed",
+  "created_at": "2026-07-09T14:20:38.052014",
+  "started_at": "2026-07-09T14:22:13.516158",
+  "completed_at": "2026-07-09T14:22:13.616714",
+  "result": {
+    "result": "Job 919"
+  },
+  "error": null,
+  "progress": 100,
+  "priority": 5
+}
