@@ -1,748 +1,162 @@
-import os
 """
-api_server.py - AgentJW REST API Server v2.0
-FastAPI exposing chat, build, and Video Studio endpoints
-Run: uvicorn api_server:app --host 0.0.0.0 --port 18790
+API Server v1 - REST API dengan authentication
 """
-import uuid, json
+
+import json
+import sys
 from pathlib import Path
-from datetime import datetime
-from typing import Optional, List, Dict, Any
-
-from fastapi import FastAPI, HTTPException, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Request, Header
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
 from pydantic import BaseModel
+from typing import Optional, List
 
-import sys, os
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, '/home/dibs/agentjw')
+sys.path.insert(0, '/home/dibs/agentjw/core')
 
-app = FastAPI(title="AgentJW API", version="2.0.0")
-app.add_middleware(CORSMiddleware, allow_origins=["*"],
-                   allow_methods=["*"], allow_headers=["*"])
+from sicuan.platform.api_gateway import get_api_gateway
+from sicuan.platform.auth import get_auth
+from sicuan.platform.workspace import get_workspace
+from sicuan.platform.project_manager import get_project_manager
+from sicuan.platform.job_queue import get_job_queue
+from sicuan.chat import SiCuanChat
 
-# ── API Key Authentication ──
-import os as _os
-from fastapi import Request as _Request
-from fastapi.responses import JSONResponse as _JSONResponse
-from dotenv import load_dotenv as _load_dotenv
-_load_dotenv()
+app = FastAPI(title="SiCuan API", version="v1.0.0")
 
-_SICUAN_API_KEY = _os.getenv("SICUAN_API_KEY", "")
+# CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
-# Endpoint yang TIDAK perlu auth (publik)
-_PUBLIC_PATHS = {
-    "/health", "/", "/docs", "/openapi.json",
-    "/docs/oauth2-redirect", "/redoc"
-}
-
-@app.middleware("http")
-async def _verify_api_key(request: _Request, call_next):
-    path = request.url.path
-
-    # Lewati auth untuk endpoint publik & static files
-    if path in _PUBLIC_PATHS or path.startswith("/uploads"):
-        return await call_next(request)
-
-    if not _SICUAN_API_KEY:
-        # Kalau key belum diset, jangan block (fail-open utk dev)
-        return await call_next(request)
-
-    provided = request.headers.get("x-api-key", "")
-
-    if provided != _SICUAN_API_KEY:
-        return _JSONResponse(
-            status_code=401,
-            content={"detail": "Invalid or missing API key. Set header X-API-Key."}
-        )
-
-    return await call_next(request)
-# ── END API Key Authentication ──
-
-# ── Models ───────────────────────────────────────────────────────────────────
-class ChatReq(BaseModel):
+# Models
+class ChatRequest(BaseModel):
     message: str
-    session_id: Optional[str] = None
-    history: Optional[List[Dict]] = []
+    workspace_id: str
+    user_id: Optional[int] = None
 
-class BuildReq(BaseModel):
-    task: str
-    session_id: Optional[str] = None
+class ProjectRequest(BaseModel):
+    name: str
+    workspace_id: str
 
-class VideoReq(BaseModel):
-    title: str
-    duration: Optional[str] = "12-15"
-    lang: Optional[str] = "bilingual"
-    style: Optional[str] = "cinematic documentary"
-    tone: Optional[str] = "confident, urgent, no fluff"
-    sections: Optional[List[str]] = None
-    model: Optional[str] = None
+class WebhookRequest(BaseModel):
+    url: str
+    events: List[str]
+    workspace_id: str
 
-class VideoSectionReq(BaseModel):
-    section: str
-    title: str
-    duration: Optional[str] = "12-15"
-    lang: Optional[str] = "bilingual"
-    style: Optional[str] = "cinematic documentary"
-    tone: Optional[str] = "confident, urgent, no fluff"
 
-class JSXReq(BaseModel):
-    jsx_content: str
-    title: Optional[str] = None
+# Middleware: Auth
+async def authenticate(request: Request):
+    api_key = request.headers.get("X-API-Key")
+    if not api_key:
+        raise HTTPException(status_code=401, detail="API key required")
+    
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=result.get("status", 401), detail=result.get("error"))
+    
+    return result["workspace_id"]
 
-# ── Job tracker ───────────────────────────────────────────────────────────────
-_jobs: Dict[str, Dict] = {}
 
-def _set_job(jid, status, result=None, error=None):
-    print(f"[JOB DEBUG] jid={jid} status={status}", flush=True)
-
-    if isinstance(result, dict):
-        print(f"[JOB DEBUG] result keys={list(result.keys())}", flush=True)
-
-        if "package" in result:
-            print(
-                f"[JOB DEBUG] package sections="
-                f"{list(result['package'].get('sections', {}).keys())}"
-            )
-
-    _jobs[jid] = {
-        "job_id": jid,
-        "status": status,
-        "result": result,
-        "error": error,
-        "updated_at": datetime.now().isoformat()
-    }
-
-# ── Routes ────────────────────────────────────────────────────────────────────
-@app.get("/health")
-def health():
-    from core.config import config
-    return {"status": "ok", "version": "2.0.0",
-            "model": config.get_model(), "provider": config.LLM_PROVIDER,
-            "video_studio": config.has_video_studio(),
-            "timestamp": datetime.now().isoformat()}
-
+# Routes
 @app.get("/")
 def root():
-    return {"name": "AgentJW API v2.0",
-            "endpoints": ["GET /health", "POST /chat", "POST /build",
-                          "POST /video/package", "POST /video/section",
-                          "POST /video/parse-jsx",
-                          "GET /video/jobs/{id}", "GET /video/projects",
-                          "GET /projects"]}
-
-@app.post("/chat")
-def chat(req: ChatReq):
-    try:
-        chat_inst = get_sicuan(req.session_id)
-        response = chat_inst.chat(req.message)
-        return {"response": response, "session_id": chat_inst.session_id}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-
-@app.get("/api/status")
-def api_status():
-    """Legacy status endpoint"""
-    from core.config import config
-    return {"status": "ok", "agent": "AgentJW GOD MODE",
-            "model": config.get_model(), "session": "active"}
-
-
-@app.post("/api/chat")
-def api_chat_legacy(req: ChatReq):
-    return api_agent_v2(req)
-
-
-@app.post("/api/build")
-def api_build_legacy(req: ChatReq):
-    """Legacy /api/build endpoint"""
-    from pydantic import BaseModel
-    msg = req.message
-    from agents.orchestrator import orchestrator
-    import uuid
-    result = orchestrator.smart_build(msg, str(uuid.uuid4())[:8])
-    return {"status": "ok", "result": result}
-
-
-class SiCuanReq(BaseModel):
-    message: str
-    session_id: Optional[str] = None
-
-@app.post("/sicuan")
-def sicuan_endpoint(req: SiCuanReq):
-    """SiCuan — Si Paling Cuan autonomous chat"""
-    try:
-        import sys
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        from sicuan.chat import SiCuanChat
-        chat = SiCuanChat()
-        if req.session_id:
-            chat.session_id = req.session_id
-        response = chat.chat(req.message)
-        return {"response": response, "session_id": chat.session_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-# Persistent SiCuan sessions per session_id
-_sicuan_sessions = {}
-
-def get_sicuan(session_id: str = None):
-    """Get or create SiCuan chat instance per session"""
-    from sicuan.chat import SiCuanChat
-    sid = session_id or "default"
-    if sid not in _sicuan_sessions:
-        chat = SiCuanChat()
-        chat.session_id = sid
-        _sicuan_sessions[sid] = chat
-    return _sicuan_sessions[sid]
-
-@app.post("/api/agent")
-def api_agent_v2(req: ChatReq):
-    try:
-        chat = get_sicuan(req.session_id)
-        response = chat.chat(req.message)
-        return {"response": response, "session_id": chat.session_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/build")
-def build(req: BuildReq):
-    try:
-        from agents.orchestrator import orchestrator
-        sid = req.session_id or str(uuid.uuid4())
-        result = orchestrator.smart_build(req.task, sid)
-        return {"status": "success", "result": result, "session_id": sid}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.post("/video/package")
-def video_package(req: VideoReq, bg: BackgroundTasks):
-    from core.config import config
-    if not config.has_video_studio():
-        raise HTTPException(400, "OPENROUTER_API_KEY not set in .env")
-    jid = str(uuid.uuid4())[:8]
-    _set_job(jid, "queued")
-
-    def _run():
-        try:
-            _set_job(jid, "running")
-            from tools.video.video_studio_tool import video_studio_tool
-            if req.model:
-                config.VIDEO_STUDIO_MODEL = req.model
-            intent = {"title": req.title, "duration": req.duration,
-                      "lang": req.lang, "style": req.style, "tone": req.tone}
-
-            secs = req.sections or [
-                "script",
-                "scenes",
-                "voice",
-                "sound",
-                "editing",
-                "thumbnails"
-            ]
-
-            pkg = {
-                "id": str(uuid.uuid4())[:8],
-                "created_at": datetime.now().isoformat(),
-                "intent": intent,
-                "sections": {}
-            }
-
-            for section in secs:
-                pkg["sections"][section] = (
-                    video_studio_tool.generate_section(
-                        section,
-                        intent
-                    )
-                )
-            pdir = config.PROJECTS_DIR / f"video_{jid}"
-            files = video_studio_tool.save_package(pkg, pdir)
-            from tools.project_manager.manager import project_manager
-            pid = project_manager.register_project(
-                name=f"video_{jid}", description=req.title,
-                project_dir=str(pdir), tool_type="youtube")
-
-            from core.models import CodeFile
-
-            tracked_files = []
-
-            for fp in files:
-                try:
-                    p = Path(fp)
-
-                    tracked_files.append(
-                        CodeFile(
-                            path=p.name,
-                            content=p.read_text(encoding="utf-8"),
-                            language="text",
-                            description=f"Video file: {p.name}"
-                        )
-                    )
-                except Exception:
-                    pass
-
-            if tracked_files:
-                project_manager.save_files(
-                    pid,
-                    tracked_files
-                )
-
-            project_manager.set_status(
-                pid,
-                "success",
-                "Video package generated successfully"
-            )
-
-            _set_job(jid, "done", {
-                "project_id": pid,
-                "project_dir": str(pdir),
-                "package_id": pkg["id"],
-                "sections_done": [
-                    s for s,v in pkg["sections"].items()
-                    if not v.startswith("ERROR")
-                ],
-                "files": [str(f) for f in files],
-                "title": req.title,
-                "package": pkg
-            })
-        except Exception as e:
-            _set_job(jid, "error", error=str(e))
-
-    bg.add_task(_run)
-    return {"job_id": jid, "status": "queued",
-            "poll": f"GET /video/jobs/{jid}"}
-
-@app.post("/video/section")
-def video_section(req: VideoSectionReq):
-    from core.config import config
-    if not config.has_video_studio():
-        raise HTTPException(400, "OPENROUTER_API_KEY not set")
-    try:
-        from tools.video.video_studio_tool import video_studio_tool
-        intent = {"title": req.title, "duration": req.duration,
-                  "lang": req.lang, "style": req.style, "tone": req.tone}
-        content = video_studio_tool.generate_section(req.section, intent)
-        return {"section": req.section, "content": content,
-                "chars": len(content), "title": req.title}
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.post("/video/parse-jsx")
-def parse_jsx(req: JSXReq):
-    import re
-    jsx = req.jsx_content
-    if not jsx.strip():
-        raise HTTPException(400, "Empty JSX content")
-    title_m = re.search(r'title(?:En)?:\s*["\']([^"\']+)["\']', jsx)
-    higgsfield = re.findall(r'higgsfieldPrompt:\s*["\']([^"\']{20,})["\']', jsx, re.DOTALL)
-    vo_lines = re.findall(r'\bvo:\s*["\']([^"\']+)["\']', jsx)
-    sub_lines = re.findall(r'\bsub:\s*["\']([^"\']+)["\']', jsx)
-    thumbs = re.findall(r'concept:\s*["\']([^"\']+)["\']', jsx)
-    cameras = re.findall(r'camera:\s*["\']([^"\']+)["\']', jsx)
-    styles = re.findall(r'style:\s*["\']([^"\']+)["\']', jsx)
-    return {
-        "parsed": True,
-        "title": title_m.group(1) if title_m else (req.title or "Unknown"),
-        "stats": {
-            "scenes": len(re.findall(r'higgsfieldPrompt:', jsx)),
-            "vo_lines": len(vo_lines), "subtitle_lines": len(sub_lines),
-            "thumbnails": len(thumbs), "jsx_size_kb": round(len(jsx)/1024, 1),
-        },
-        "higgsfield_prompts": higgsfield[:12],
-        "vo_lines": vo_lines[:20], "subtitle_lines": sub_lines[:20],
-        "thumbnail_concepts": thumbs, "camera_movements": cameras[:12],
-        "style_references": styles[:12],
-    }
-
-@app.get("/video/jobs/{job_id}")
-def get_job(job_id: str):
-    job = _jobs.get(job_id)
-    if not job:
-        raise HTTPException(404, f"Job {job_id} not found")
-    return job
-
-@app.get("/video/projects")
-def video_projects():
-    from memory.unified_projects import unified_projects
-    projects = [p for p in unified_projects.list_projects() if p['tool_type']=='youtube']
-    return {"projects": projects, "total": len(projects)}
-
-@app.get("/video/download/{project_id}")
-def download(project_id: str):
-    from memory.memory_store import memory_store
-    proj = memory_store.get_project(project_id)
-    if not proj:
-        raise HTTPException(404, "Project not found")
-    p = Path(proj["project_dir"]) / "video_package.json"
-    if not p.exists():
-        raise HTTPException(404, "Package file not found")
-    return FileResponse(str(p), media_type="application/json",
-                        filename=f"video_package_{project_id}.json")
-
-@app.get("/files/download")
-def download_file(path: str):
-    """Serve a file by path relative to ~/agentjw (e.g. projects/video_xxx/final_video.mp4)."""
-    try:
-        base = Path(__file__).resolve().parent
-        target = (base / path).resolve()
-        if not str(target).startswith(str(base)):
-            raise HTTPException(403, "Path outside project root")
-        if not target.exists() or not target.is_file():
-            raise HTTPException(404, "File not found")
-        return FileResponse(str(target), filename=target.name)
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-
-@app.get("/projects")
-def projects():
-    from memory.memory_store import memory_store
-    return {"projects": unified_projects.list_projects()}
-
-
-@app.delete("/projects/{project_id}")
-def delete_project_endpoint(project_id: str):
-    """Delete project — dipanggil dari APK"""
-    try:
-        from sicuan.cleanup import delete_project
-        result = delete_project(project_id, delete_files=True)
-        return result
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.post("/projects/cleanup")
-def cleanup_projects_endpoint():
-    """Audit dan return list project yang bisa dihapus"""
-    try:
-        from sicuan.cleanup import audit_projects, cleanup_report
-        return {
-            "report": cleanup_report(),
-            "projects": audit_projects()
-        }
-    except Exception as e:
-        raise HTTPException(500, str(e))
-
-@app.get("/projects/{pid}")
-def get_project(pid: str):
-    from memory.memory_store import memory_store
-    p = memory_store.get_project(pid)
-    if not p:
-        raise HTTPException(404, "Project not found")
-    return p
-
-if __name__ == "__main__":
-    import uvicorn
-    from core.config import config
-    uvicorn.run("api_server:app", host=config.API_HOST, port=config.API_PORT, reload=False)
-
-@app.get("/api/projects")
-async def get_projects():
-    try:
-        from memory.memory_store import memory_store
-        projects = unified_projects.list_projects()[:50]
-        formatted = [{
-            "id": p.get("id",""), "name": p.get("name",""),
-            "status": p.get("status","unknown"),
-            "tool_type": p.get("tool_type","general"),
-            "created_at": p.get("created_at",""),
-            "description": p.get("description",""),
-        } for p in projects]
-        return {"projects": formatted, "total": len(formatted), "status": "ok"}
-    except Exception as e:
-        return {"projects": [], "total": 0, "error": str(e), "status": "error"}
-
-@app.get("/api/logs")
-async def get_logs(project_id: str = None, lines: int = 100):
-    try:
-        from memory.memory_store import memory_store
-        from pathlib import Path as P
-        log_data = {}
-        api_log = P("/home/dibs/agentjw/api.log")
-        if api_log.exists():
-            all_lines = api_log.read_text(errors="ignore").splitlines()
-            log_data["api_server"] = "\n".join(all_lines[-lines:])
-        if project_id:
-            projects = unified_projects.list_projects()
-            proj = next((p for p in projects if p["id"].startswith(project_id)), None)
-            if proj:
-                proj_dir = P(proj["project_dir"])
-                for lf in list(proj_dir.glob("*.log")):
-                    all_lines = lf.read_text(errors="ignore").splitlines()
-                    log_data[lf.name] = "\n".join(all_lines[-lines:])
-        return {"logs": log_data, "status": "ok"}
-    except Exception as e:
-        return {"logs": {}, "error": str(e), "status": "error"}
-
-
-
-# ══════════════════════════════════════════════════════════════════
-# MEDIA ROUTES — dipanggil APK Flutter (MediaTab)
-# Ditambah otomatis oleh agentjw_flutter_patcher.py
-# ══════════════════════════════════════════════════════════════════
-from fastapi import UploadFile, File
-import aiofiles
-
-@app.post("/media/image/generate")
-async def media_image_generate(req: dict):
-    """
-    Generate gambar via fal.ai.
-    APK kirim: prompt, model, image_size, negative_prompt, num_images
-    """
-    try:
-        prompt = req.get("prompt", "").strip()
-        model  = req.get("model", "fal-ai/flux/schnell")
-        size   = req.get("image_size", "landscape_16_9")
-        neg    = req.get("negative_prompt", "")
-
-        if not prompt:
-            raise HTTPException(400, "prompt wajib diisi")
-
-        # ── Coba integrasikan dengan fal-client jika tersedia ──────────
-        try:
-            import fal_client
-            from core.config import config
-            fal_key = getattr(config, "FAL_API_KEY", "") or os.getenv("FAL_API_KEY", "")
-            if fal_key:
-                os.environ["FAL_KEY"] = fal_key
-                result = fal_client.run(model, arguments={
-                    "prompt":          prompt,
-                    "negative_prompt": neg,
-                    "image_size":      size,
-                    "num_images":      req.get("num_images", 1),
-                })
-                images = result.get("images", [])
-                url = images[0]["url"] if images else ""
-                return {
-                    "status":    "ok",
-                    "image_url": url,
-                    "url":       url,
-                    "model":     model,
-                }
-        except ImportError:
-            pass  # fal_client belum diinstall
-
-        # ── Fallback: return info bahwa perlu fal-client ───────────────
-        return {
-            "status":    "pending_config",
-            "image_url": "",
-            "message":   (
-                f"Image generation siap. "
-                f"Install fal-client: pip install fal-client "
-                f"dan set FAL_API_KEY di .env untuk model {model}"
-            ),
-            "prompt": prompt,
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, f"media_image_generate error: {e}")
-
-
-@app.post("/media/upload")
-async def media_upload(file: UploadFile = File(...)):
-    """
-    Upload file gambar dari APK (untuk img2video).
-    Return: filename + URL untuk di-pass ke /media/video/generate
-    """
-    try:
-        upload_dir = Path("uploads")
-        upload_dir.mkdir(exist_ok=True)
-
-        ext      = Path(file.filename or "upload.jpg").suffix.lower() or ".jpg"
-        filename = f"{uuid.uuid4().hex}{ext}"
-        dest     = upload_dir / filename
-
-        content = await file.read()
-        dest.write_bytes(content)
-
-        return {
-            "status":   "ok",
-            "filename": filename,
-            "url":      f"/uploads/{filename}",
-            "size":     len(content),
-        }
-    except Exception as e:
-        raise HTTPException(500, f"upload error: {e}")
-
-
-@app.post("/media/video/generate")
-async def media_video_generate(req: dict, background_tasks: BackgroundTasks):
-    """
-    Generate video dari image URL.
-    APK kirim: image_url, model, prompt, duration
-    Return: job_id untuk di-poll via /media/video/jobs/{id}
-    """
-    try:
-        image_url = req.get("image_url", "").strip()
-        model     = req.get("model", "fal-ai/kling-video/v1.6/standard/image-to-video")
-        prompt    = req.get("prompt", "")
-        duration  = req.get("duration", "5")
-
-        if not image_url:
-            raise HTTPException(400, "image_url wajib diisi")
-
-        jid = str(uuid.uuid4())[:12]
-        _set_job(jid, "processing")
-
-        def _do_video():
-            try:
-                import fal_client
-                from core.config import config
-                fal_key = getattr(config, "FAL_API_KEY", "") or os.getenv("FAL_API_KEY", "")
-                if fal_key:
-                    os.environ["FAL_KEY"] = fal_key
-                    result = fal_client.run(model, arguments={
-                        "image_url":       image_url,
-                        "prompt":          prompt,
-                        "duration":        duration,
-                        "aspect_ratio":    "16:9",
-                    })
-                    video_url = result.get("video", {}).get("url", "")
-                    _set_job(jid, "completed", result={"video_url": video_url, "url": video_url})
-                else:
-                    _set_job(jid, "error", error="FAL_API_KEY belum diset di .env")
-            except ImportError:
-                _set_job(jid, "error",
-                    error="fal-client belum diinstall. Jalankan: pip install fal-client")
-            except Exception as e:
-                _set_job(jid, "error", error=str(e))
-
-        background_tasks.add_task(_do_video)
-
-        return {
-            "status": "ok",
-            "job_id": jid,
-            "poll":   f"GET /media/video/jobs/{jid}",
-        }
-
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, f"media_video_generate error: {e}")
-
-
-@app.get("/media/video/jobs/{job_id}")
-async def media_video_job_status(job_id: str):
-    """
-    Cek status video generation job.
-    APK polling setiap ~5 detik sampai status = 'completed' | 'error'
-    Response: { job_id, status, result: { video_url } }
-    """
-    job = _jobs.get(job_id)
-    if not job:
-        raise HTTPException(404, f"Job {job_id} tidak ditemukan")
-
-    # Flatten result.video_url ke top-level untuk memudahkan APK
-    result  = job.get("result") or {}
-    vid_url = result.get("video_url") or result.get("url") or ""
-
-    return {
-        "job_id":    job_id,
-        "status":    job.get("status", "unknown"),
-        "video_url": vid_url,
-        "url":       vid_url,
-        "error":     job.get("error"),
-        "result":    result,
-        "updated_at": job.get("updated_at"),
-    }
-
-
-@app.get("/media/gallery")
-async def media_gallery():
-    """
-    Daftar semua file media (gambar + video) di folder uploads/.
-    Digunakan GalleryTab APK untuk tampilkan riwayat.
-    """
-    try:
-        upload_dir = Path("uploads")
-        items = []
-        if upload_dir.exists():
-            for f in sorted(
-                upload_dir.iterdir(),
-                key=lambda x: x.stat().st_mtime,
-                reverse=True
-            )[:100]:
-                if f.suffix.lower() in {".jpg", ".jpeg", ".png", ".webp", ".gif",
-                                        ".mp4", ".mov", ".webm"}:
-                    is_video = f.suffix.lower() in {".mp4", ".mov", ".webm"}
-                    items.append({
-                        "filename":   f.name,
-                        "url":        f"/uploads/{f.name}",
-                        "type":       "video" if is_video else "image",
-                        "size":       f.stat().st_size,
-                        "size_mb":    round(f.stat().st_size / 1_048_576, 2),
-                        "created_at": datetime.fromtimestamp(f.stat().st_mtime).isoformat(),
-                    })
-
-        return {"items": items, "total": len(items)}
-
-    except Exception as e:
-        raise HTTPException(500, f"gallery error: {e}")
-
-
-# Static file serving untuk uploads
-from fastapi.staticfiles import StaticFiles
-_uploads_dir = Path("uploads")
-_uploads_dir.mkdir(exist_ok=True)
-try:
-    app.mount("/uploads", StaticFiles(directory=str(_uploads_dir)), name="uploads")
-except Exception:
-    pass  # Already mounted
-
-# ══ END MEDIA ROUTES ══════════════════════════════════════════════
-# PATCH: Override media_gallery to scan projects too
-from fastapi import Request
-import importlib, sys
-
-@app.get("/media/gallery/v2")
-async def media_gallery_v2():
-    """Scan uploads/ + projects/*/final_video.mp4 + projects/*/preview.jpg"""
-    import glob
-    items = []
-    base = Path(__file__).parent
+    return {"name": "SiCuan API", "version": "v1.0.0", "status": "ok"}
+
+@app.post("/v1/chat")
+async def chat(request: ChatRequest, api_key: str = Header(...)):
+    """Chat dengan SiCuan"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
     
-    # Scan uploads/
-    for f in (base / "uploads").glob("*"):
-        if f.suffix.lower() in [".jpg",".jpeg",".png",".mp4",".webm"]:
-            items.append({
-                "filename": f.name,
-                "url": f"/media/file/{f.name}",
-                "type": "video" if f.suffix == ".mp4" else "image",
-                "size": f.stat().st_size,
-                "source": "uploads"
-            })
+    workspace_id = result["workspace_id"]
+    if request.workspace_id and request.workspace_id != workspace_id:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
     
-    # Scan projects/*/final_video.mp4
-    for f in base.glob("projects/*/final_video.mp4"):
-        items.append({
-            "filename": f.name,
-            "url": f"/media/project-file/{f.parent.name}/final_video.mp4",
-            "type": "video",
-            "size": f.stat().st_size,
-            "source": f.parent.name
-        })
+    chat = SiCuanChat()
+    chat.brain._current_workspace_id = workspace_id
+    response = chat.chat(request.message, user_id=request.user_id or 0, workspace_id=workspace_id)
     
-    # Scan projects/*/preview.jpg
-    for f in base.glob("projects/*/preview.jpg"):
-        items.append({
-            "filename": f"{f.parent.name}_preview.jpg",
-            "url": f"/media/project-file/{f.parent.name}/preview.jpg",
-            "type": "image",
-            "size": f.stat().st_size,
-            "source": f.parent.name
-        })
-    
-    return {"items": items, "total": len(items)}
+    return {"response": response, "workspace_id": workspace_id}
 
-@app.get("/media/project-file/{project_id}/{filename}")
-async def serve_project_file(project_id: str, filename: str):
-    base = Path(__file__).parent
-    p = base / "projects" / project_id / filename
-    if not p.exists():
-        raise HTTPException(404, "File not found")
-    mt = "video/mp4" if filename.endswith(".mp4") else "image/jpeg"
-    return FileResponse(str(p), media_type=mt)
+@app.get("/v1/workspace/{workspace_id}/projects")
+async def list_projects(workspace_id: str, api_key: str = Header(...)):
+    """List projects di workspace"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if workspace_id != result["workspace_id"]:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
+    
+    pm = get_project_manager()
+    projects = pm.list_projects(workspace_id)
+    return {"projects": projects, "workspace_id": workspace_id}
+
+@app.post("/v1/project")
+async def create_project(request: ProjectRequest, api_key: str = Header(...)):
+    """Create project"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if request.workspace_id != result["workspace_id"]:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
+    
+    pm = get_project_manager()
+    project = pm.create_project(request.workspace_id, request.name)
+    return {"project": project, "workspace_id": request.workspace_id}
+
+@app.get("/v1/workspace/{workspace_id}/jobs")
+async def list_jobs(workspace_id: str, api_key: str = Header(...)):
+    """List jobs di workspace"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if workspace_id != result["workspace_id"]:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
+    
+    queue = get_job_queue()
+    jobs = queue.get_jobs(workspace_id, limit=20)
+    return {"jobs": jobs, "workspace_id": workspace_id}
+
+@app.get("/v1/workspace/{workspace_id}/billing")
+async def get_billing(workspace_id: str, api_key: str = Header(...)):
+    """Get billing info"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if workspace_id != result["workspace_id"]:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
+    
+    from sicuan.platform.billing import get_billing
+    billing = get_billing()
+    usage = billing.get_usage(workspace_id)
+    return {"usage": usage, "workspace_id": workspace_id}
+
+@app.post("/v1/webhook")
+async def register_webhook(request: WebhookRequest, api_key: str = Header(...)):
+    """Register webhook"""
+    gateway = get_api_gateway()
+    result = gateway.authenticate({"X-API-Key": api_key})
+    if not result["success"]:
+        raise HTTPException(status_code=401, detail="Invalid API key")
+    
+    if request.workspace_id != result["workspace_id"]:
+        raise HTTPException(status_code=403, detail="Workspace mismatch")
+    
+    from sicuan.platform.webhook import get_webhook_engine
+    webhook = get_webhook_engine()
+    result = webhook.register(request.workspace_id, request.url, request.events)
+    return {"webhook": result}
