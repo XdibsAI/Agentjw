@@ -74,6 +74,12 @@ class SiCuanChat:
         self._load_context()
     
     def chat(self, user_message: str, image_path: str = None, user_id: int = None, workspace_id: str = None) -> str:
+        # Set workspace_id ke brain
+        if workspace_id:
+            self.brain._current_workspace_id = workspace_id
+        # Set workspace_id ke brain
+        if workspace_id:
+            self.brain._current_workspace_id = workspace_id
         # Set user context jika ada
         if user_id:
             from sicuan.core.user_manager import get_user_manager

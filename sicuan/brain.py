@@ -76,6 +76,7 @@ class SiCuanBrain:
         return default
 
     def __init__(self):
+        self._current_workspace_id = None
         self.conversation_context = []
         self._llm = None
         self._data_awareness = None

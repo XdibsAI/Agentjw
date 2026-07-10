@@ -225,7 +225,7 @@ class TelegramBot:
             self.init_sicuan()
             
             # Process with SiCuan
-            response = self.sicuan.chat(text)
+            response = self.sicuan.chat(text, user_id=user_id, workspace_id=workspace_id)
             response_time = time.time() - start_time
             
             # Record metrics
