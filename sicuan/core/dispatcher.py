@@ -38,7 +38,7 @@ class Dispatcher:
             "result": {"status": "not_found"}
         }
 
-    #     def _dispatch_coder(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_coder(self, user_message: str, context: Dict = None) -> Dict:
         """Coder Agent"""
         from sicuan.agents.coder_agent import get_coder_agent
         agent = get_coder_agent()
@@ -49,7 +49,7 @@ class Dispatcher:
             "result": result
         }
 
-    #     def _dispatch_reviewer(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_reviewer(self, user_message: str, context: Dict = None) -> Dict:
         """Reviewer Agent"""
         from sicuan.agents.reviewer_agent import get_reviewer_agent
         agent = get_reviewer_agent()
@@ -60,7 +60,7 @@ class Dispatcher:
             "result": result
         }
 
-    #     def _dispatch_analyzer(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_analyzer(self, user_message: str, context: Dict = None) -> Dict:
         """Analyzer Agent"""
         from sicuan.agents.analyzer_agent import get_analyzer_agent
         agent = get_analyzer_agent()
@@ -71,7 +71,7 @@ class Dispatcher:
             "result": result
         }
 
-    #     def _dispatch_planner(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_planner(self, user_message: str, context: Dict = None) -> Dict:
         """Planner Agent"""
         return {
             "action": "planner_dispatch",
@@ -79,7 +79,7 @@ class Dispatcher:
             "result": {"status": "pending"}
         }
 
-    #     def _dispatch_vision(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_vision(self, user_message: str, context: Dict = None) -> Dict:
         """Vision Agent"""
         return {
             "action": "vision_dispatch",
@@ -87,7 +87,7 @@ class Dispatcher:
             "result": {"status": "pending"}
         }
 
-    #     def _dispatch_chat(self, user_message: str, context: Dict = None) -> Dict:
+    def _dispatch_chat(self, user_message: str, context: Dict = None) -> Dict:
         """Chat - default fallback"""
         return {
             "action": "chat",
