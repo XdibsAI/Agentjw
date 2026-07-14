@@ -29,6 +29,7 @@ from sicuan.core.fix_reporter import get_reporter
 from sicuan.core.auto_fix_loop import get_auto_fix_loop
 from sicuan.core.repair_planner import get_repair_memory
 from sicuan.adapters.project_adapter import get_project_adapter
+from sicuan.core.diagnostic_memory import get_diagnostic_memory
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -167,6 +168,18 @@ class SiCuanBrain:
 
 
     def load_context(self, user_message: str = "") -> str:
+        """Load semua konteks nyata dari disk"""
+        ctx = []
+        
+        # Diagnostic memory - cek error terakhir
+        try:
+            diag = get_diagnostic_memory()
+            if diag.has_error():
+                last_error = diag.get_last_error()
+                ctx.append(f"\n⚠️ ERROR TERAKHIR TERJADI: {last_error.message[:200]}")
+                ctx.append(f"   Sumber: {last_error.source} | Waktu: {last_error.timestamp.strftime('%H:%M:%S')}")
+        except Exception:
+            pass
         """Load semua konteks nyata dari disk"""
         ctx = []
 
@@ -1162,7 +1175,7 @@ Buat jawaban final:
                 req_check = self.check_project_requirements(user_request)
                 if req_check:
                     return req_check
-                from agents.orchestrator import orchestrator
+                from sicuan.agents.orchestrator import orchestrator
                 result = orchestrator.execute(user_request, [], session_id)
                 return f"Project '{target}' sedang dibangun. Status: {self._safe_get(result, 'status','running')}"
 
@@ -1172,7 +1185,7 @@ Buat jawaban final:
                 Modify existing project berdasarkan request user.
                 """
 
-                from agents.orchestrator import orchestrator
+                from sicuan.agents.orchestrator import orchestrator
 
                 projects = self._get_projects()
                 p = self._find_project_adapter(target)
@@ -1352,7 +1365,7 @@ Rules:
 
 
             elif action == "repair_project":
-                from agents.orchestrator import orchestrator
+                from sicuan.agents.orchestrator import orchestrator
                 from agents.auditor_agent import auditor_agent
 
                 # target bisa format "nama_project: instruksi" atau cuma nama

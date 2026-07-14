@@ -80,17 +80,16 @@ DEFAULT_EXCLUDES = {
 }
 
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
-DEFAULT_MODEL = "qwen/qwen-2.5-72b-instruct"
+DEFAULT_MODEL = "openai/gpt-4o-mini"
 
 # Fallback chain: kalau model utama gagal (rate-limited, provider bermasalah,
 # dst), coba model berikutnya di daftar ini secara berurutan. Ini membantu
 # karena beberapa model di OpenRouter di-routing ke banyak provider upstream
 # yang reliabilitasnya bisa naik-turun (terutama model gratis/murah).
 FALLBACK_MODELS = [
-    "qwen/qwen-2.5-72b-instruct",
-    "qwen/qwen-2.5-32b-instruct",
     "openai/gpt-4o-mini",
     "anthropic/claude-3.5-haiku",
+    "qwen/qwen-2.5-72b-instruct",
 ]
 
 ROUTE_DECORATOR_RE = re.compile(r"(route|get|post|put|delete|patch|websocket)$", re.IGNORECASE)

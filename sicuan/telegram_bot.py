@@ -53,6 +53,26 @@ class TelegramBot:
         
         self.sicuan = None
 
+    async def _safe_reply(self, reply_func, text: str, **kwargs):
+        """Send reply with safe text - escape markdown"""
+        if not text:
+            return
+        
+        # Escape text if parse_mode is MARKDOWN
+        parse_mode = kwargs.get('parse_mode')
+        if parse_mode == ParseMode.MARKDOWN:
+            from sicuan.core.text_utils import safe_text
+            text = safe_text(text)
+        
+        # Send in chunks if needed
+        max_len = 4000
+        if len(text) > max_len:
+            for i in range(0, len(text), max_len):
+                chunk = text[i:i+max_len]
+                await reply_func(chunk, **kwargs)
+        else:
+            await reply_func(text, **kwargs)
+
     def init_sicuan(self):
         """Initialize SiCuan brain"""
         if self.sicuan is None:
@@ -206,10 +226,10 @@ class TelegramBot:
             if user_mem.get_user_preference(user_id, "allowed", False):
                 permission = "user"
             else:
-                await update.message.reply_text(
+                await self._safe_reply(update.message.reply_text, 
                     "❌ Maaf, Anda belum memiliki akses ke SiCuan. "
                     "Kirim /start untuk mendaftar."
-                )
+                , parse_mode=ParseMode.MARKDOWN)
                 return
         
         # Check for commands
@@ -236,23 +256,21 @@ class TelegramBot:
                 # Split long messages
                 if len(response) > 4000:
                     for i in range(0, len(response), 4000):
-                        await update.message.reply_text(
-                            response[i:i+4000],
-                            parse_mode=ParseMode.MARKDOWN
-                        )
+                        await self._safe_reply(update.message.reply_text, 
+                            response[i:i+4000], parse_mode=ParseMode.MARKDOWN)
                 else:
-                    await update.message.reply_text(
-                        response,
-                        parse_mode=ParseMode.MARKDOWN
-                    )
+                    await self._safe_reply(update.message.reply_text, 
+                        response, parse_mode=ParseMode.MARKDOWN)
             else:
-                await update.message.reply_text("Maaf, saya tidak bisa memproses permintaan saat ini.")
+                await self._safe_reply(update.message.reply_text, "Maaf, saya tidak bisa memproses permintaan saat ini.", parse_mode=ParseMode.MARKDOWN)
                 
         except Exception as e:
             logger.error(f"Error processing message: {e}")
+            diag = get_diagnostic_memory()
+            diag.record_error("error", "telegram", str(e), {"user_id": user_id})
             self.record_metrics(time.time() - start_time, error=True)
-            await update.message.reply_text(
-                f"❌ Error: {str(e)[:200]}\n\nCoba lagi nanti."
+            await self._safe_reply(update.message.reply_text, 
+                f"❌ Error: {str(e, parse_mode=ParseMode.MARKDOWN)[:200]}\n\nCoba lagi nanti."
             )
 
     async def handle_command(self, update: Update, context: CallbackContext):
@@ -293,15 +311,13 @@ class TelegramBot:
                 welcome_msg += f"Just send me your questions or commands!\n\n"
                 welcome_msg += f"*Powered by SiCuan v2.0*"
             
-            await update.message.reply_text(
-                welcome_msg,
-                parse_mode=ParseMode.MARKDOWN
-            )
+            await self._safe_reply(update.message.reply_text, 
+                welcome_msg, parse_mode=ParseMode.MARKDOWN)
             return
         
         elif text == "/metrics" and self.is_owner(user_id):
-            await update.message.reply_text(
-                self.get_metrics_summary(),
+            await self._safe_reply(update.message.reply_text, 
+                self._safe_reply(update.message.reply_text, self.get_metrics_summary(), parse_mode=ParseMode.MARKDOWN),
                 parse_mode=ParseMode.MARKDOWN
             )
         
@@ -317,7 +333,7 @@ class TelegramBot:
 Mode: Group
 Mention-only: Yes
 """
-            await update.message.reply_text(status, parse_mode=ParseMode.MARKDOWN)
+            await self._safe_reply(update.message.reply_text, status, parse_mode=ParseMode.MARKDOWN)
 
 
 def run_bot():

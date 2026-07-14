@@ -1,7 +1,6 @@
 import json
 from sicuan.adapters.project_adapter import get_project_adapter
 from pathlib import Path
-from memory.project_registry import ProjectRegistry
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -88,9 +87,8 @@ class ExecutiveEngine:
         # PROJECT DRIVEN TASKS
         # =========================
 
-        registry = ProjectRegistry()
-
-        items = registry.list_projects()
+        
+        items = adapter.get_projects()
 
         if items:
 

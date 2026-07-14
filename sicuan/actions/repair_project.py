@@ -3,7 +3,7 @@ repair_project - Perbaiki project dengan Result Contract
 """
 
 from pathlib import Path
-from agents.orchestrator import orchestrator
+from sicuan.agents.orchestrator import orchestrator
 from agents.auditor_agent import auditor_agent
 # # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract

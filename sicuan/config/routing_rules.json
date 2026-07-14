@@ -84,3 +84,25 @@
   "default_action": "analyze_project",
   "fallback_action": "chat"
 }
+{
+  "intent_rules": [
+    {
+      "pattern": "kenapa kamu|kok kamu|kamu kenapa",
+      "intent": "self_diagnostic",
+      "action": "diagnostic",
+      "priority": 10
+    },
+    {
+      "pattern": "error|bug|masalah",
+      "intent": "diagnostic",
+      "action": "diagnostic",
+      "priority": 8
+    },
+    {
+      "pattern": "analisa|audit.*project",
+      "intent": "project_audit",
+      "action": "analyze_project",
+      "priority": 5
+    }
+  ]
+}
