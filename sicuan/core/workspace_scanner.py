@@ -1,4 +1,5 @@
 import json
+from sicuan.adapters.project_adapter import get_project_adapter
 from pathlib import Path
 from memory.project_registry import ProjectRegistry
 

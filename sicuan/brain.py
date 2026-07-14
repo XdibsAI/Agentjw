@@ -1174,12 +1174,11 @@ Buat jawaban final:
 
                 from agents.orchestrator import orchestrator
 
-                projects = []
-
-                p = self._find_project(target, projects)
+                projects = self._get_projects()
+                p = self._find_project_adapter(target)
 
                 if not p and "godmeme" in user_request.lower():
-                    p = self._find_project("godmeme_bot", projects)
+                    p = self._find_project_adapter("godmeme_bot")
 
                 if not p:
                     return f"Project '{target}' tidak ditemukan untuk dimodifikasi."
@@ -1241,9 +1240,8 @@ Rules:
 
                 from sicuan.project_trace import audit_project
 
-                projects = []
-
-                p = self._find_project(target, projects)
+                projects = self._get_projects()
+                p = self._find_project_adapter(target)
 
                 if not p and "godmeme" in user_request.lower():
                     p = self._find_project(
@@ -1364,7 +1362,7 @@ Rules:
                     proj_name = proj_name.strip()
 
                 # Cari project dir untuk snapshot SEBELUM repair
-                projects = []
+                projects = self._get_projects()
                 proj = None
                 for p in projects:
                     if proj_name and proj_name.lower() in p["name"].lower():
@@ -1440,7 +1438,7 @@ Rules:
                     if instruction_part.strip():
                         instruction = instruction_part.strip()
 
-                projects = []
+                projects = self._get_projects()
                 proj = None
                 for p in projects:
                     if proj_name and proj_name.lower() in p["name"].lower():
@@ -1567,7 +1565,7 @@ USER REQUEST:
             elif action == "run_bot":
                 from mcp.tools.filesystem_tool import filesystem_tool
                 from memory.memory_store import memory_store
-                projects = []
+                projects = self._get_projects()
                 if projects:
                     result = filesystem_tool.run_and_capture(projects[0]["project_dir"], timeout=10)
                     return f"Bot dijalankan. Output: {self._safe_get(result, 'stdout','')[:200]}"
@@ -1575,8 +1573,8 @@ USER REQUEST:
 
             elif action == "scan_project":
                 from mcp.tools.filesystem_tool import filesystem_tool
-                projects = []
-                p = self._find_project(target, projects)
+                projects = self._get_projects()
+                p = self._find_project_adapter(target)
                 if p:
                     data = filesystem_tool.scan_project(p["project_dir"])
                     return f"Scan {p['name']}: {data.get('valid_syntax',0)}/{data.get('total_py',0)} files valid"
@@ -1627,8 +1625,8 @@ USER REQUEST:
                     if m2:
                         filename = m2.group(1)
 
-                projects = []
-                p = self._find_project(proj_name, projects)
+                projects = self._get_projects()
+                p = self._find_project_adapter(proj_name)
                 if not p:
                     return f"Project '{proj_name}' tidak ditemukan."
 
@@ -1680,8 +1678,8 @@ USER REQUEST:
                 import subprocess, json as _json
                 from pathlib import Path as _Path
                 from memory.memory_store import memory_store
-                projects = []
-                p = self._find_project(target, projects)
+                projects = self._get_projects()
+                p = self._find_project_adapter(target)
                 if not p:
                     return f"Project video '{target}' tidak ditemukan."
                 final = _Path(p["project_dir"]) / "final_video.mp4"

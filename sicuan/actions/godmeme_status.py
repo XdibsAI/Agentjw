@@ -1,99 +1,75 @@
 """
-godmeme_status - Status trading bot dengan Result Contract
+Godmeme Status Action - Get status of godmeme_bot
 """
-
-from projects.godmeme_bot.status_sync_provider import get_godmeme_status
+import json
 from pathlib import Path
 from datetime import datetime
-from sicuan.core.result_contract import ResultContract
+from typing import Dict
+
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
-    """Execute godmeme_status dengan Result Contract"""
+    """
+    Execute godmeme status check
+    """
     try:
+        # Get project data from adapter
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
+        
+        # Find godmeme_bot project
+        godmeme_project = None
+        for p in projects:
+            if p.get("name") == "godmeme_bot":
+                godmeme_project = p
+                break
+        
+        if not godmeme_project:
+            return {
+                "success": False,
+                "display": "❌ Project godmeme_bot tidak ditemukan",
+                "data": {}
+            }
+        
+        # Import status_sync_provider
+        import sys
+        sys.path.insert(0, '/home/dibs/agentjw')
+        from projects.godmeme_bot.status_sync_provider import get_godmeme_status
+        
+        # Get status
         data = get_godmeme_status()
-
-        # Sync balance to workspace_state
-        try:
-            state_file = Path("memory/workspace_state.json")
-            if state_file.exists():
-                import json as _json
-                state_data = _json.loads(state_file.read_text())
-                state_data["godmeme_bot"] = state_data.get("godmeme_bot", {})
-                state_data["godmeme_bot"]["balance"] = str(data.get("balance", 0))
-                state_data["godmeme_bot"]["updated_at"] = str(datetime.now())
-                state_file.write_text(_json.dumps(state_data, indent=2))
-        except Exception as _e:
-            print(f"[SYNC] Failed to sync balance: {_e}")
-
+        
+        # Build response
         process = data.get("process", {})
+        mode = data.get("mode", "unknown")
+        balance = data.get("balance", 0)
         database = data.get("database", {})
-        positions = data.get("positions", [])
         
-        # Build display
-        lines = []
-        lines.append("🤖 GODMEME BOT STATUS")
-        lines.append("=" * 40)
-        lines.append("")
+        response = f"""
+🤖 GODMEME STATUS
+Process: {'RUNNING' if process.get('alive', False) else 'STOPPED'}
+PID: {process.get('pid', 'N/A')}
+Mode: {mode}
+Balance: {balance:.6f} SOL
+
+Trades: {database.get('trades', 0)}
+BUY: {database.get('buy', 0)}
+SELL: {database.get('sell', 0)}
+Realized PnL: {database.get('realized_pnl', 0):.6f} SOL
+
+Last Event: {data.get('last_event', 'N/A')}
+"""
         
-        proc_status = process.get("status", "unknown")
-        proc_icon = "🟢" if proc_status == "running" else "🔴" if proc_status == "stopped" else "🟡"
-        lines.append(f"{proc_icon} Process: {proc_status}")
-        if process.get("pid"):
-            lines.append(f"   PID: {process.get('pid')}")
-        if process.get("uptime"):
-            lines.append(f"   Uptime: {process.get('uptime')}")
-        lines.append("")
-        
-        db_status = database.get("status", "unknown")
-        db_icon = "🟢" if db_status == "ok" else "🔴"
-        lines.append(f"{db_icon} Database: {db_status}")
-        if database.get("records"):
-            lines.append(f"   Records: {database.get('records')}")
-        lines.append("")
-        
-        if positions:
-            lines.append(f"📊 Open Positions: {len(positions)}")
-            for p in positions[:5]:
-                symbol = p.get('symbol', '-')
-                amount = p.get('amount', 0)
-                pnl = p.get('pnl', 0)
-                pnl_icon = "📈" if pnl > 0 else "📉" if pnl < 0 else "⚪"
-                lines.append(f"  {pnl_icon} {symbol}: {amount} SOL (PnL: {pnl:.4f} SOL)")
-        else:
-            lines.append("📊 Open Positions: 0")
-        
-        lines.append("")
-        lines.append("=" * 40)
-        
-        total_pnl = data.get("total_pnl", 0)
-        if total_pnl:
-            pnl_icon = "📈" if total_pnl > 0 else "📉" if total_pnl < 0 else "⚪"
-            lines.append(f"{pnl_icon} Total PnL: {total_pnl:.4f} SOL")
-        
-        display = "\n".join(lines)
-        
-        contract = ResultContract(
-            success=True,
-            action="godmeme_status",
-            entity="godmeme_bot",
-            display=display,
-            metrics={
-                "status": proc_status,
-                "positions": len(positions),
-                "total_pnl": total_pnl
-            },
-            confidence=0.95,
-            data=data
-        )
-        return contract.to_dict()
+        return {
+            "success": True,
+            "display": response.strip(),
+            "data": data
+        }
         
     except Exception as e:
-        contract = ResultContract(
-            success=False,
-            action="godmeme_status",
-            entity="godmeme_bot",
-            display=f"❌ Gagal mendapatkan status GodMeme: {str(e)}",
-            errors=[str(e)]
-        )
-        return contract.to_dict()
+        return {
+            "success": False,
+            "display": f"❌ Error getting godmeme status: {str(e)}",
+            "data": {"error": str(e)}
+        }
