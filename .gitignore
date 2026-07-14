@@ -158,3 +158,5 @@ reports/*.json
 *.archived
 audit_output.txt
 audit_report.json
+.env
+*.env
