@@ -3,7 +3,7 @@ Data Awareness Injector - Menyisipkan status data ke context tanpa mengubah brai
 """
 
 from pathlib import Path
-from memory.unified_projects import unified_projects
+#   # Migrated to adapter
 
 
 def get_data_availability(target: str) -> str:
@@ -14,7 +14,8 @@ def get_data_availability(target: str) -> str:
     # Cari project
     project_dir = Path("/home/dibs/agentjw/projects") / target
     if not project_dir.exists():
-        projects = unified_projects.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         for p in projects:
             if target.lower() in p["name"].lower():
                 project_dir = Path(p["project_dir"])

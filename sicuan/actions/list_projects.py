@@ -1,44 +1,44 @@
 """
-list_projects - Daftar project dengan Result Contract
+list_projects - List all projects with Result Contract
 """
 
-from memory.project_registry import ProjectRegistry
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
     """Execute list_projects dengan Result Contract"""
     try:
-        registry = ProjectRegistry()
-        projects = registry.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         
         if not projects:
             contract = ResultContract(
-                success=True,
+                success=False,
                 action="list_projects",
-                entity="",
-                display="📂 Belum ada project terdaftar",
-                metrics={"total": 0}
+                entity="projects",
+                display="📂 Belum ada project terdaftar.",
+                errors=["No projects found"]
             )
             return contract.to_dict()
         
-        # Build display
+        # Build response
         lines = ["📂 DAFTAR PROJECT KITA:\n"]
         for p in projects:
-            name = p[0] if isinstance(p, tuple) else p.get("name", "unknown")
-            status = p[4] if isinstance(p, tuple) else p.get("status", "unknown")
-            path = p[1] if isinstance(p, tuple) else p.get("path", "")
+            name = p.get("name", "unknown")
+            status = p.get("status", "active")
+            path = p.get("path", "")
             lines.append(f"• {name}")
             lines.append(f"  Status: {status}")
             lines.append(f"  Path: {path}\n")
         
+        display = "\n".join(lines)
+        
         contract = ResultContract(
             success=True,
             action="list_projects",
-            entity="",
-            display="\n".join(lines),
-            metrics={"total": len(projects)},
-            confidence=1.0,
+            entity="projects",
+            display=display,
             data={"projects": projects}
         )
         return contract.to_dict()
@@ -47,8 +47,8 @@ def execute(task: dict) -> dict:
         contract = ResultContract(
             success=False,
             action="list_projects",
-            entity="",
-            display=f"❌ Gagal mengambil daftar project: {str(e)}",
+            entity="projects",
+            display=f"❌ Error listing projects: {str(e)}",
             errors=[str(e)]
         )
         return contract.to_dict()

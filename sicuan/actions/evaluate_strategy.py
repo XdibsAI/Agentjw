@@ -12,6 +12,7 @@ import statistics
 
 from sicuan.core.result_contract import ResultContract
 from core.logger import logger
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 @dataclass
@@ -222,8 +223,9 @@ def execute(task: dict) -> dict:
     project_dir = Path("/home/dibs/agentjw/projects") / target
     if not project_dir.exists():
         # Coba cari di daftar project
-        from memory.unified_projects import unified_projects
-        projects = unified_projects.list_projects()
+        # # Migrated to adapter  # Migrated to adapter
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         proj = None
         for p in projects:
             if target.lower() in p["name"].lower():

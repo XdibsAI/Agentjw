@@ -2,13 +2,14 @@
 analyze_project - Analisa project dengan Result Contract + Response Composer
 """
 
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.project_trace import audit_project
 from sicuan.core.result_contract import ResultContract
 from sicuan.core.response_composer import ResponseComposer
 from sicuan.core.context_classifier import get_context_classifier
 import sqlite3
 from pathlib import Path
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 
@@ -111,7 +112,8 @@ def execute(task: dict) -> dict:
             print(f"[CONTEXT] Returning system analysis")
             return result
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     
     # If no target specified, use first project or default
     if not target:

@@ -5,15 +5,17 @@ video_info - Info video dengan Result Contract
 import subprocess
 import json as _json
 from pathlib import Path
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
     """Execute video_info dengan Result Contract"""
     target = task.get("target", "")
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     video_projects = [p for p in projects if p["name"].startswith("video_")]
     
     proj = None

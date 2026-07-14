@@ -4,9 +4,10 @@ get_file - Ambil isi file dengan Result Contract
 
 from pathlib import Path
 from mcp.tools.filesystem_tool import filesystem_tool
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
 import re
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
@@ -44,7 +45,8 @@ def execute(task: dict) -> dict:
         if match:
             line_start, line_end = int(match.group(1)), int(match.group(2))
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     
     # Cari project
     proj = None

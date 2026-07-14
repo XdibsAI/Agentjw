@@ -5,8 +5,9 @@ run_bot - Jalankan bot trading dengan Result Contract
 import subprocess
 import os
 from pathlib import Path
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
@@ -14,7 +15,8 @@ def execute(task: dict) -> dict:
     target = task.get("target", "")
     context = task.get("context", {})
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     
     if not target:
         for p in projects:

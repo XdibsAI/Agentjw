@@ -1,5 +1,6 @@
 import uuid
 import json
+from sicuan.adapters.project_adapter import get_project_adapter
 from pathlib import Path
 from typing import Dict, List, Optional
 from rich.panel import Panel
@@ -11,6 +12,7 @@ from core.logger import logger, console
 from memory.memory_store import memory_store
 from tools.project_manager.manager import project_manager
 from agents.brain import brain
+from tools.video.video_renderer import video_renderer_tool
 
 
 class OrchestratorAgent:
@@ -35,7 +37,7 @@ class OrchestratorAgent:
 
         console.print("[dim]Brain: " + action + " | file=" + str(target_file) + " | project=" + str(target_project) + "[/dim]")
 
-        projects = memory_store.list_projects()
+        projects = adapter.get_projects()
         proj = brain.resolve_project(target_project, projects)
 
         if action == "read_file":
@@ -160,7 +162,7 @@ class OrchestratorAgent:
 
     def _build_trading(self, user_request: str, session_id: str) -> Dict:
         from tools.trading.trading_tool import trading_tool
-        existing = memory_store.list_projects(tool_type="trading")
+        existing = adapter.get_projects()
         if existing:
             console.print("[yellow]Existing trading projects: " + str(len(existing)) + "[/yellow]")
         console.print(Panel("TRADING BOT BUILDER", border_style="yellow"))
@@ -243,7 +245,7 @@ class OrchestratorAgent:
             )
 
         # ── Build rich project context ──────────────────────────────────────
-        projects = memory_store.list_projects(limit=5)
+        projects = adapter.get_projects()
         proj_ctx = ""
         real_data = ""
 
@@ -615,7 +617,7 @@ RECENT CHAT:
             return None
 
         # Find target project
-        projects = memory_store.list_projects()
+        projects = adapter.get_projects()
         if not projects:
             return None
 
@@ -667,7 +669,7 @@ RECENT CHAT:
     def _repair_existing(self, user_request: str, session_id: str = None) -> Dict:
         """Auto-repair most recent or referenced project"""
         from agents.specialist.repair_specialist import repair_specialist
-        projects = memory_store.list_projects()
+        projects = adapter.get_projects()
         target = self._find_project_ref(user_request, projects)
         if not target and projects:
             target = projects[0]
@@ -680,7 +682,7 @@ RECENT CHAT:
     def _inspect_action(self, user_request: str) -> Dict:
         """Inspect project files, logs, hashes — NO hallucination"""
         lower = user_request.lower()
-        projects = memory_store.list_projects()
+        projects = adapter.get_projects()
         proj = self._find_project_ref(user_request, projects) or (projects[0] if projects else None)
         if not proj:
             console.print("[yellow]No project found[/yellow]")
@@ -723,9 +725,9 @@ RECENT CHAT:
     def _render_video(self, user_request: str, session_id: str) -> Dict:
         """Render final_video.mp4 from the most recent (or referenced) video project."""
         import json
-        from tools.video.video_renderer import video_renderer_tool
 
-        projects = memory_store.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         video_projects = [p for p in projects if p["name"].startswith("video_")]
         if not video_projects:
             return {"status": "error", "reason": "Belum ada project video. Generate dulu dengan 'buat video ...'"}
@@ -753,7 +755,8 @@ RECENT CHAT:
 
     def _run_project(self, user_request: str) -> Dict:
         """Run a project and capture output"""
-        projects = memory_store.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         proj = self._find_project_ref(user_request, projects) or (projects[0] if projects else None)
         if not proj:
             return {"status": "no_project"}

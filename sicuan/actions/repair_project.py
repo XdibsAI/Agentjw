@@ -5,9 +5,10 @@ repair_project - Perbaiki project dengan Result Contract
 from pathlib import Path
 from agents.orchestrator import orchestrator
 from agents.auditor_agent import auditor_agent
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
 from core.logger import logger
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
@@ -22,7 +23,8 @@ def execute(task: dict) -> dict:
         proj_name, _, _ = target.partition(":")
         proj_name = proj_name.strip()
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     proj = None
     for p in projects:
         if proj_name and proj_name.lower() in p["name"].lower():

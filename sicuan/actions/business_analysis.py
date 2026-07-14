@@ -3,15 +3,17 @@ business_analysis - Analisa bisnis dengan Result Contract
 """
 
 from core.llm_client import llm
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
     """Execute business_analysis dengan Result Contract"""
     user_request = task.get("user_request", "Analisa bisnis kita")
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     if not projects:
         contract = ResultContract(
             success=False,

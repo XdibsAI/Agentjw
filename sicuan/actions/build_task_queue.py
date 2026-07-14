@@ -7,6 +7,7 @@ Pakai ExecutiveEngine jika tersedia, fallback ke inline logic.
 
 import json
 from pathlib import Path
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(brain=None, **kwargs) -> str:
@@ -85,8 +86,9 @@ def _build_queue_inline(root, memory):
 
     # Project driven
     try:
-        from memory.unified_projects import unified_projects
-        projects = unified_projects.list_projects()
+        # # Migrated to adapter  # Migrated to adapter
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
         if projects:
             name = projects[0]["name"]
             queue.extend([f"Review project {name}", f"Improve {name}"])

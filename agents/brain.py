@@ -103,7 +103,8 @@ class Brain:
         target_file    = None
         try:
             from memory.memory_store import memory_store
-            projects = memory_store.list_projects()
+            adapter = get_project_adapter()
+            projects = adapter.get_projects()
             lower = user_input.lower()
             for p in (projects or []):
                 if p.get("id","") in user_input or p.get("name","").lower() in lower:

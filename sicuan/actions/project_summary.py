@@ -2,14 +2,16 @@
 project_summary - Ringkasan project dengan Result Contract
 """
 
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
     """Execute project_summary dengan Result Contract"""
     target = task.get("target", "")
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     
     if not projects:
         contract = ResultContract(

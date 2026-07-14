@@ -390,7 +390,8 @@ class WorkflowEngine:
     def _handle_project_action(self, intent: Dict, user_request: str) -> Dict:
         """Handle repair/analyze/modify/continue"""
         target = intent.get("target", "")
-        projects = memory_store.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
 
         # Find target project
         proj = None
@@ -431,7 +432,8 @@ class WorkflowEngine:
     def _handle_run(self, intent: Dict, user_request: str) -> Dict:
         """Handle run/start bot request"""
         target = intent.get("target", "")
-        projects = memory_store.list_projects()
+        adapter = get_project_adapter()
+        projects = adapter.get_projects()
 
         proj = None
         for p in projects:

@@ -3,10 +3,11 @@ modify_logic - Modifikasi logic dengan Result Contract
 """
 
 from pathlib import Path
-from memory.unified_projects import unified_projects
+# # Migrated to adapter  # Migrated to adapter
 from sicuan.core.repair_trace_guard import must_trace_before_repair
 from agents.specialist.logic_modifier import logic_modifier
 from sicuan.core.result_contract import ResultContract
+from sicuan.adapters.project_adapter import get_project_adapter
 
 
 def execute(task: dict) -> dict:
@@ -22,7 +23,8 @@ def execute(task: dict) -> dict:
         if instruction_part.strip():
             instruction = instruction_part.strip()
     
-    projects = unified_projects.list_projects()
+    adapter = get_project_adapter()
+    projects = adapter.get_projects()
     proj = None
     for p in projects:
         if proj_name and proj_name.lower() in p["name"].lower():
