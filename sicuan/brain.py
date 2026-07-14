@@ -2,7 +2,6 @@
 from sicuan.core.autonomous_controller import AutonomousController
 from sicuan.core.trade_analytics import TradeAnalytics
 from sicuan.core.hypothesis_engine import HypothesisEngine
-from sicuan.core.patch_validator import PatchValidator
 
 autonomous_controller = AutonomousController()
 SiCuan Brain - Bukan keyword/parsing/mapping
@@ -29,6 +28,7 @@ from sicuan.core.error_fix_map import get_error_fixer
 from sicuan.core.fix_reporter import get_reporter
 from sicuan.core.auto_fix_loop import get_auto_fix_loop
 from sicuan.core.repair_planner import get_repair_memory
+from sicuan.adapters.project_adapter import get_project_adapter
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -141,6 +141,30 @@ class SiCuanBrain:
             if t_tokens & name_tokens:
                 return p
         return None
+    def _get_projects(self, workspace_id: str = None) -> list:
+        """Get projects from adapter"""
+        try:
+            adapter = get_project_adapter()
+            projects = adapter.get_projects(workspace_id)
+            for p in projects:
+                if 'id' not in p:
+                    p['id'] = p.get('name', '')
+                if 'project_dir' not in p:
+                    p['project_dir'] = p.get('path', '')
+            return projects
+        except Exception as e:
+            print(f"[BRAIN] Error getting projects: {e}")
+            return []
+
+    def _find_project_adapter(self, target: str, workspace_id: str = None) -> dict:
+        """Find project using adapter"""
+        try:
+            adapter = get_project_adapter()
+            return adapter.find_project(target, workspace_id)
+        except Exception as e:
+            print(f"[BRAIN] Error finding project: {e}")
+            return None
+
 
     def load_context(self, user_message: str = "") -> str:
         """Load semua konteks nyata dari disk"""
@@ -2167,7 +2191,6 @@ USER REQUEST:
         try:
             from sicuan.core.trade_analytics import TradeAnalytics
             from sicuan.core.hypothesis_engine import HypothesisEngine
-            from sicuan.core.patch_validator import PatchValidator
             
             analytics = TradeAnalytics()
             data = analytics.analyze()
