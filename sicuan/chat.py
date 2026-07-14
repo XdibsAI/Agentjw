@@ -138,9 +138,9 @@ class SiCuanChat:
                     pm = get_project_manager()
                     projects = pm.list_projects(workspace_id)
                     if projects:
-                        lines = ["📂 **PROJECTS IN YOUR WORKSPACE:**"]
+                        lines = ["📂 PROJECTS IN YOUR WORKSPACE:"]
                         for p in projects[:10]:
-                            lines.append(f"• **{p['name']}**")
+                            lines.append(f"• {p['name']}")
                             lines.append(f"  Status: {p.get('status', 'active')}")
                         return "\n".join(lines)
                     else:
@@ -311,9 +311,9 @@ class SiCuanChat:
                     pm = get_project_manager()
                     projects = pm.list_projects(workspace_id)
                     if projects:
-                        lines = ["📂 **PROJECTS IN YOUR WORKSPACE:**"]
+                        lines = ["📂 PROJECTS IN YOUR WORKSPACE:"]
                         for p in projects[:10]:
-                            lines.append(f"• **{p['name']}**")
+                            lines.append(f"• {p['name']}")
                             lines.append(f"  Status: {p.get('status', 'active')}")
                         return "\n".join(lines)
                     else:

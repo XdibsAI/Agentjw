@@ -175,7 +175,7 @@ class RepairPipeline:
                         # Use repair_with_ast which handles this case
                         result = repair.repair_with_ast(file_path)
                         return result.get("success", False)
-                    result = repair.repair_indentation_aggressive(file_path, line)
+                    result = repair.repair_indentation(file_path, line)
                     return result.get("success", False)
 
             result = repair.repair_with_ast(file_path)

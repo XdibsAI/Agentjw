@@ -105,3 +105,11 @@ def auto_fix_error(error_message: str, max_attempts: int = 3) -> Dict:
             return {"success": False, "result": result, "verification": verification}
 
     return {"success": False, "message": f"Unknown action: {action}"}
+
+# Patch Engine
+try:
+    from sicuan.core.patch_engine import get_patch_engine, PatchOperation
+except ImportError:
+    print("[WARN] Patch Engine not available")
+    def get_patch_engine():
+        return None

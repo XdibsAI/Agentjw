@@ -946,7 +946,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
         if missing:
             msgs = []
             for key, desc in missing:
-                msgs.append(f"- **{key}**: {desc}")
+                msgs.append(f"- {key}: {desc}")
             return (
                 "Sebentar Mas, sebelum aku build — ada yang perlu aku minta dulu:\n\n" +
                 "\n".join(msgs) +
@@ -1203,11 +1203,11 @@ Rules:
                 # === VALIDASI ===
                 validation = validator.validate({"patch": result})
                 if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                    result += "\n\n✅ Validation: " + validation["reason"]
                 elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                    result += "\n\n⚠️ Validation: " + validation["reason"]
                 else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
+                    result += "\n\n❌ Validation: " + validation["reason"]
                 return result.to_report()
 
             
@@ -1502,11 +1502,11 @@ USER REQUEST:
                     validator = get_validator()
                     validation = validator.validate({"patch": result})
                     if validation["status"] == "verified":
-                        verdict += "\n\n✅ **Validation**: " + validation["reason"]
+                        verdict += "\n\n✅ Validation: " + validation["reason"]
                     elif validation["status"] == "warning":
-                        verdict += "\n\n⚠️ **Validation**: " + validation["reason"]
+                        verdict += "\n\n⚠️ Validation: " + validation["reason"]
                     else:
-                        verdict += "\n\n❌ **Validation**: " + validation["reason"]
+                        verdict += "\n\n❌ Validation: " + validation["reason"]
                 except Exception as e:
                     verdict += "\n\n⚠️ Validation error: " + str(e)
 
@@ -2023,7 +2023,7 @@ USER REQUEST:
                     max_tokens=2000
                 )
                 llm.model = original_model
-                return f"📸 **Analisis Gambar**\n\n{response}"
+                return f"📸 Analisis Gambar\n\n{response}"
             except Exception as e:
                 llm.model = original_model
                 # Coba fallback dengan model lain
@@ -2035,10 +2035,10 @@ USER REQUEST:
                         max_tokens=2000
                     )
                     llm.model = original_model
-                    return f"📸 **Analisis Gambar (Claude)**\n\n{response}"
+                    return f"📸 Analisis Gambar (Claude)\n\n{response}"
                 except Exception as e2:
                     llm.model = original_model
-                    return f"📸 **Gambar Diterima**\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e2)[:100]}"
+                    return f"📸 Gambar Diterima\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e2)[:100]}"
                 
         except Exception as e:
             return f"❌ Error processing image: {e}"
@@ -2073,14 +2073,14 @@ USER REQUEST:
                         {"role": "user", "content": f"{prompt}\n\nTeks hasil OCR:\n{extracted_text}"}
                     ]
                     response = llm.chat(messages, temperature=0.7, max_tokens=2000)
-                    return f"📸 **Analisis Gambar (OCR)**\n\n{response}"
+                    return f"📸 Analisis Gambar (OCR)\n\n{response}"
                 else:
-                    return f"📸 **Gambar Diterima**\n\nTidak ada teks yang terdeteksi di gambar. Coba kirim gambar yang lebih jelas atau dengan teks yang lebih besar."
+                    return f"📸 Gambar Diterima\n\nTidak ada teks yang terdeteksi di gambar. Coba kirim gambar yang lebih jelas atau dengan teks yang lebih besar."
             except ImportError:
-                return f"📸 **Gambar Diterima**\n\nOCR tidak tersedia. Install pytesseract: pip install pytesseract pillow"
+                return f"📸 Gambar Diterima\n\nOCR tidak tersedia. Install pytesseract: pip install pytesseract pillow"
             except Exception as e:
                 # Fallback: beritahu user
-                return f"📸 **Gambar Diterima**\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e)[:100]}"
+                return f"📸 Gambar Diterima\n\nMaaf, analisis gambar sedang dalam pengembangan.\n\nDetail: {str(e)[:100]}"
                 
         except Exception as e:
             return f"❌ Error processing image: {e}"
@@ -2178,7 +2178,7 @@ USER REQUEST:
             
             # Build response
             lines = []
-            lines.append("📊 **DEEP TRADING ANALYSIS**")
+            lines.append("📊 DEEP TRADING ANALYSIS")
             lines.append("")
             
             # Summary
@@ -2188,21 +2188,21 @@ USER REQUEST:
                 return "Belum ada data trading."
             
             winrate = summary.get("wins", 0) / total * 100
-            lines.append(f"📈 **Summary:** {total} trades, Win Rate: {winrate:.1f}%")
+            lines.append(f"📈 Summary: {total} trades, Win Rate: {winrate:.1f}%")
             lines.append(f"   PnL: {summary.get('total_pnl', 0):.4f} SOL")
             lines.append("")
             
             # Score performance
             score_perf = data.get("by_score", {})
             if score_perf:
-                lines.append("**📊 Performance by Score:**")
+                lines.append("📊 Performance by Score:")
                 for score, perf in sorted(score_perf.items()):
                     lines.append(f"  Score {score}: {perf.get('count', 0)} trades, Win Rate: {perf.get('win_rate', 0):.1f}%")
                 lines.append("")
             
             # Hypotheses
             if hypotheses:
-                lines.append("**🔍 Hypotheses:**")
+                lines.append("🔍 Hypotheses:")
                 for h in hypotheses[:3]:
                     lines.append(f"  {h['id']}: {h['title']}")
                     lines.append(f"    Evidence: {h['evidence']}")
@@ -2213,7 +2213,7 @@ USER REQUEST:
             # Recommendations
             recs = data.get("recommendations", [])
             if recs:
-                lines.append("**💡 Recommendations:**")
+                lines.append("💡 Recommendations:")
                 for rec in recs:
                     lines.append(f"  {rec}")
             
@@ -2263,39 +2263,39 @@ USER REQUEST:
                     
                     # Analisis untuk godmeme
                     analysis = f"""
-📦 **Repository:** {repo_name}
-📝 **Description:** {description}
+📦 Repository: {repo_name}
+📝 Description: {description}
 
-🔍 **Analisis untuk Godmeme Bot:**
+🔍 Analisis untuk Godmeme Bot:
 
-Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canvas yang cepat.
+Library ini adalah lightweight-charts dari TradingView — chart HTML5 canvas yang cepat.
 
-**Apa yang bisa diterapkan ke godmeme_bot:**
+Apa yang bisa diterapkan ke godmeme_bot:
 
-1. **📊 Visualisasi PnL Real-time**
+1. 📊 Visualisasi PnL Real-time
    - Tampilkan equity curve dari trading.db
    - Update otomatis setiap posisi baru
 
-2. **🎯 Entry/Exit Point Marker**
+2. 🎯 Entry/Exit Point Marker
    - Tandai posisi BUY/SELL di chart
    - Warna berbeda untuk profit/loss
 
-3. **📈 Historical Price Chart**
+3. 📈 Historical Price Chart
    - Plot harga token yang ditrading
    - Candlestick atau line chart
 
-4. **📉 Dashboard Integration**
+4. 📉 Dashboard Integration
    - Bisa diintegrasikan ke dashboard.py
    - Web-based chart yang interaktif
 
-**💡 Rekomendasi Implementasi:**
+💡 Rekomendasi Implementasi:
 
 1. Buat endpoint API di SiCuan untuk data chart
 2. Tambahkan chart component di dashboard
 3. Data source: trading.db (trades table)
 4. Update real-time via WebSocket
 
-**Mau saya bantu implementasikan? Balas 'implementasi chart'**
+Mau saya bantu implementasikan? Balas 'implementasi chart'
 """
                     return analysis
                 return f"📄 Content: {response.text[:500]}"
@@ -2503,11 +2503,11 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
                 # === VALIDASI ===
                 validation = validator.validate({"patch": result})
                 if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                    result += "\n\n✅ Validation: " + validation["reason"]
                 elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                    result += "\n\n⚠️ Validation: " + validation["reason"]
                 else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
+                    result += "\n\n❌ Validation: " + validation["reason"]
                 return result
             
             process = subprocess.Popen(
@@ -2531,11 +2531,11 @@ Library ini adalah **lightweight-charts** dari TradingView — chart HTML5 canva
                 # === VALIDASI ===
                 validation = validator.validate({"patch": result})
                 if validation["status"] == "verified":
-                    result += "\n\n✅ **Validation**: " + validation["reason"]
+                    result += "\n\n✅ Validation: " + validation["reason"]
                 elif validation["status"] == "warning":
-                    result += "\n\n⚠️ **Validation**: " + validation["reason"]
+                    result += "\n\n⚠️ Validation: " + validation["reason"]
                 else:
-                    result += "\n\n❌ **Validation**: " + validation["reason"]
+                    result += "\n\n❌ Validation: " + validation["reason"]
                 return result
             
             # Bot running
