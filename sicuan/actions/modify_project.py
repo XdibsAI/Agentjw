@@ -2,7 +2,7 @@
 modify_project - Modifikasi project dengan Result Contract
 """
 
-from sicuan.agents.orchestrator import orchestrator
+from agents.orchestrator import orchestrator
 from agents.auditor_agent import auditor_agent
 # # Migrated to adapter  # Migrated to adapter
 from pathlib import Path

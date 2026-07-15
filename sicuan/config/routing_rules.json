@@ -1,6 +1,18 @@
 {
   "rules": [
     {
+      "pattern": "lepas.*fokus|keluar.*konteks|ngaco|salah|error.*konteks|obrolan.*lepas",
+      "intent": "self_diagnostic",
+      "action": "diagnostic",
+      "priority": 20
+    },
+    {
+      "pattern": "obralan.*ingat|apa.*kita.*bicarakan|ringkasan.*percakapan",
+      "intent": "context_summary",
+      "action": "summarize_context",
+      "priority": 15
+    },
+    {
       "pattern": "kenapa kamu|kok kamu|kamu kenapa",
       "intent": "self_diagnostic",
       "action": "diagnostic",
@@ -26,7 +38,11 @@
     }
   ],
   "api_key_context": {
-    "patterns": ["anthropic", "claude", "api key"],
+    "patterns": [
+      "anthropic",
+      "claude",
+      "api key"
+    ],
     "response": "Jika user bilang tidak pakai Anthropic, jangan sebut ANTHROPIC_API_KEY."
   }
 }

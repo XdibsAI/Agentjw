@@ -82,6 +82,17 @@ class SiCuanChat:
             self.brain._current_workspace_id = workspace_id
         # Set user context jika ada
         if user_id:
+            # Set user context
+            from pathlib import Path
+            import json
+            self._user_context_file = Path(f"/home/dibs/agentjw/memory/users/{user_id}_conversation.json")
+            if self._user_context_file.exists():
+                try:
+                    self._user_context = json.loads(self._user_context_file.read_text())
+                except:
+                    self._user_context = {"topics": [], "actions": []}
+            else:
+                self._user_context = {"topics": [], "actions": []}
             from sicuan.core.user_manager import get_user_manager
             self._user_manager = get_user_manager()
             self._user_data = self._user_manager.get_user_data(user_id)
@@ -174,7 +185,7 @@ class SiCuanChat:
             selected_model = None
             if hasattr(self, '_selected_model'):
                 selected_model = self._selected_model
-            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model)
+            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model, user_id=str(user_id) if user_id else None)
             # Normalisasi result
             if isinstance(result, list):
                 result = result[0] if result else {}
@@ -347,7 +358,7 @@ class SiCuanChat:
             selected_model = None
             if hasattr(self, '_selected_model'):
                 selected_model = self._selected_model
-            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model)
+            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model, user_id=str(user_id) if user_id else None)
             response = self._execute_and_format(result, user_message)
             self.memory.add_interaction(user_message, response)
             self._save_context()

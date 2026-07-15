@@ -167,13 +167,13 @@ class SiCuanBrain:
             return None
 
 
-    def load_context(self, user_message: str = "") -> str:
+    def load_context(self, user_message: str = "", user_id: str = None) -> str:
         """Load semua konteks nyata dari disk"""
         ctx = []
         
         # === STRUKTURAL KONTEKS ===
         try:
-            cm = get_context_manager()
+            cm = get_context_manager(user_id)
             ctx.append("=== KONTEKS PERCAKAPAN ===")
             
             # Topik saat ini
@@ -506,14 +506,15 @@ class SiCuanBrain:
 
     def think_and_respond(self, user_message: str,
                           chat_history: List[Dict] = None,
-                          force_model: str = None) -> Dict:
+                          force_model: str = None,
+                          user_id: str = None) -> Dict:
         """
         Core brain — LLM membaca semua konteks dan decide:
         - Apa yang harus direspons
         - Action apa yang perlu diambil
         - Apa yang perlu diminta dari user
         """
-        real_context = self.load_context(user_message)
+        real_context = self.load_context(user_message, user_id)
         chat_history = chat_history or []
 
         # Build full system prompt dengan konteks nyata
@@ -1200,7 +1201,7 @@ Buat jawaban final:
                 req_check = self.check_project_requirements(user_request)
                 if req_check:
                     return req_check
-                from sicuan.agents.orchestrator import orchestrator
+                from agents.orchestrator import orchestrator
                 result = orchestrator.execute(user_request, [], session_id)
                 return f"Project '{target}' sedang dibangun. Status: {self._safe_get(result, 'status','running')}"
 
@@ -1210,7 +1211,7 @@ Buat jawaban final:
                 Modify existing project berdasarkan request user.
                 """
 
-                from sicuan.agents.orchestrator import orchestrator
+                from agents.orchestrator import orchestrator
 
                 projects = self._get_projects()
                 p = self._find_project_adapter(target)
@@ -1430,7 +1431,7 @@ Rules:
 
 
             elif action == "repair_project":
-                from sicuan.agents.orchestrator import orchestrator
+                from agents.orchestrator import orchestrator
                 from agents.auditor_agent import auditor_agent
 
                 # target bisa format "nama_project: instruksi" atau cuma nama
