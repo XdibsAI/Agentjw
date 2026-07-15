@@ -181,8 +181,8 @@ if __name__ == "__main__":
 def check_drift():
     """Check drift secara periodik"""
     from sicuan.core.drift_monitor import get_drift_monitor
-from sicuan.core.self_healing_loop import SelfHealingLoop
-from sicuan.core.entry_tester import EntryTester
+    from sicuan.core.self_healing_loop import SelfHealingLoop
+    from sicuan.core.entry_tester import EntryTester
     from sicuan.core.self_review_data import get_self_review
     
     # Get current metrics dari self-review
@@ -302,65 +302,25 @@ def auto_heal():
         print(f"[AUTO-HEAL] Error: {e}")
 
 # Add to scheduler - run every 2 minutes
-def auto_heal():
-    """Auto-healing: detect errors and fix them automatically"""
-    try:
-        from pathlib import Path
-        import subprocess
-        import time
-        
-        # Check log for errors
-        log_file = Path("projects/godmeme_bot/trading_bot_live.log")
-        if not log_file.exists():
-            return
-        
-        with open(log_file, "r") as f:
-            lines = f.readlines()[-100:]
-            errors = [l for l in lines if "ERROR" in l]
-        
-        if not errors:
-            return
-        
-        print(f"[AUTO-HEAL] Detected {len(errors)} errors")
-        
-        # Check for missing _check_cooldown
-        error_text = "\n".join(errors[-5:])
-        if "_check_cooldown" in error_text:
-            print("[AUTO-HEAL] Detected missing _check_cooldown method")
-            
-            strategy_file = Path("projects/godmeme_bot/strategy.py")
-            if strategy_file.exists():
-                content = strategy_file.read_text()
-                if "def _check_cooldown" not in content:
-                    stub = '''
-    async def _check_cooldown(self) -> bool:
-        """Check if bot is in cooldown mode"""
-        if not hasattr(self, '_cooldown_until'):
-            self._cooldown_until = 0
-            self._cooldown_mode = False
-        if self._cooldown_until and time.time() < self._cooldown_until:
-            remaining = int(self._cooldown_until - time.time())
-            if remaining % 60 == 0:
-                logger.info(f"COOLDOWN: {remaining//60}m remaining")
-            return True
-        return False
-'''
-                    # Insert before _handle_429
-                    content = content.replace(
-                        "    async def _handle_429(self):",
-                        stub + "\n\n    async def _handle_429(self):"
-                    )
-                    strategy_file.write_text(content)
-                    print("[AUTO-HEAL] ✅ Added _check_cooldown method")
-                    
-                    # Restart bot
-                    print("[AUTO-HEAL] 🔄 Restarting bot...")
-                    subprocess.run(["pkill", "-f", "main.py"], capture_output=True)
-                    time.sleep(2)
-                    subprocess.Popen(["python3", "main.py"], cwd="projects/godmeme_bot")
-                    print("[AUTO-HEAL] ✅ Bot restarted")
-    except Exception as e:
-        print(f"[AUTO-HEAL] Error: {e}")
+schedule.every(2).minutes.do(auto_heal)
+
+def run_self_healing():
+    """Jalankan self-healing loop"""
+    from sicuan.core.self_healing_loop import SelfHealingLoop
+    healer = SelfHealingLoop()
+    return healer.report()
+
+# Tambahkan ke schedule setiap 5 menit
+schedule.every(5).minutes.do(run_self_healing)
+
+def run_entry_test():
+    """Jalankan entry time test"""
+    from sicuan.core.entry_tester import EntryTester
+    tester = EntryTester()
+    return tester.get_recommendation()
+
+# Tambahkan ke schedule setiap 6 jam
+schedule.every(6).hours.do(run_entry_test)
 
 def run_self_healing():
     """Jalankan self-healing loop"""
