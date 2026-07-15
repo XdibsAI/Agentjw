@@ -171,6 +171,31 @@ class SiCuanBrain:
         """Load semua konteks nyata dari disk"""
         ctx = []
         
+        # === STRUKTURAL KONTEKS ===
+        try:
+            cm = get_context_manager()
+            ctx.append("=== KONTEKS PERCAKAPAN ===")
+            
+            # Topik saat ini
+            current_topic = cm.get_current_topic()
+            if current_topic:
+                ctx.append(f"Topik saat ini: {current_topic}")
+                ctx.append("Pertahankan topik ini dalam menjawab.")
+            
+            # Fokus saat ini
+            current_focus = cm.get_current_focus()
+            if current_focus:
+                ctx.append(f"Fokus saat ini: {current_focus}")
+            
+            # Topik terakhir
+            recent = cm.get_recent_topics(3)
+            if recent:
+                ctx.append("Topik terakhir:")
+                for t in recent:
+                    ctx.append(f"  - {t[:100]}")
+        except Exception as e:
+            print(f"[CONTEXT] Error loading structural context: {e}")
+        
         # Diagnostic memory - cek error terakhir
         try:
             diag = get_diagnostic_memory()
@@ -1248,6 +1273,46 @@ Rules:
 
             
             elif action == "analyze_url":
+                # Deteksi YouTube
+                if "youtube.com" in target or "youtu.be" in target:
+                    try:
+                        from sicuan.core.youtube_analyzer import get_youtube_analyzer
+                        analyzer = get_youtube_analyzer()
+                        result = analyzer.analyze_channel(target)
+                        if "error" in result:
+                            return f"❌ Error analyzing YouTube: {result['error']}"
+                        display = f"📊 **Channel:** {result.get('name', 'Unknown')}\n"
+                        display += f"📊 **Subscribers:** {result.get('subscribers', '0')}\n"
+                        display += f"📊 **Total Views:** {result.get('total_views', '0')}\n"
+                        display += f"📊 **Total Videos:** {result.get('total_videos', '0')}\n"
+                        subscribers = int(result.get('subscribers', '0').replace(',', ''))
+                        if subscribers > 100000:
+                            display += "🔥 **Ini channel besar!** "
+                        elif subscribers > 10000:
+                            display += "📈 **Channel berkembang dengan baik!** "
+                        elif subscribers > 1000:
+                            display += "🌱 **Channel masih growing, ada potensi besar!** "
+                        else:
+                            display += "🌱 **Channel masih baru, tapi punya potensi!** "
+                        videos = result.get('recent_videos', [])
+                        if videos:
+                            display += "\n\n📹 **Video Terbaru:**\n"
+                            for v in videos[:3]:
+                                display += f"  - {v.get('title', 'Unknown')}\n"
+                        return display
+                    except Exception as e:
+                        return f"❌ Error analyzing YouTube: {str(e)}"
+                
+                # Deteksi search query (bukan URL)
+                if not target.startswith("http"):
+                    try:
+                        from sicuan.core.serper_client import get_serper_client
+                        client = get_serper_client()
+                        result = client.search(target)
+                        return client.format_search_result(result)
+                    except Exception as e:
+                        return f"❌ Error searching: {str(e)}"
+                
                 return self.fetch_url_content(target)
             elif action == "analyze_project":
 

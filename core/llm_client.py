@@ -79,7 +79,7 @@ class LLMClient:
         if self.provider == "openai":
             try:
                 from openai import OpenAI
-                self._client = OpenAI(api_key=config.OPENAI_API_KEY)
+                self._client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
                 logger.info(f"LLM Client initialized: OpenAI ({self.model})")
             except ImportError:
                 raise ImportError("openai package not installed. Run: pip install openai")

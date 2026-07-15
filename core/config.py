@@ -13,6 +13,7 @@ class Config:
     # LLM
     LLM_PROVIDER: str = os.getenv("LLM_PROVIDER", "openai")
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")
+    OPENAI_BASE_URL: str = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
     OPENAI_MODEL: str = os.getenv("OPENAI_MODEL", "gpt-4o")
     ANTHROPIC_API_KEY: str = os.getenv("ANTHROPIC_API_KEY", "")
     ANTHROPIC_MODEL: str = os.getenv("ANTHROPIC_MODEL", "claude-3-5-sonnet-20241022")
@@ -113,3 +114,6 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 
 # ===== ALIAS =====
 OPENAI_API_KEY = Config.OPENROUTER_API_KEY
+
+# OpenAI Base URL - redirect to OpenRouter
+OPENAI_BASE_URL = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")

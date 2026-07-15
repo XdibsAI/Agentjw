@@ -1,92 +1,6 @@
 {
   "rules": [
     {
-      "id": "url_analysis",
-      "patterns": ["http://", "https://", "github.com", ".com", ".io"],
-      "action": "analyze_url",
-      "priority": 10,
-      "requires_context": false,
-      "description": "Deteksi URL dan analisis"
-    },
-    {
-      "id": "fix_error",
-      "patterns": ["perbaiki error", "fix error", "error di", "bug di", "perbaiki bug", "module not found", "syntax error"],
-      "action": "modify_logic",
-      "priority": 10,
-      "requires_context": true,
-      "description": "Perbaiki error di project"
-    },
-    {
-      "id": "repair_project",
-      "patterns": ["perbaiki project", "repair project", "betulin project"],
-      "action": "repair_project",
-      "priority": 9,
-      "requires_context": true,
-      "description": "Perbaiki project secara umum"
-    },
-    {
-      "id": "memory_query",
-      "patterns": ["masih ingat", "ingat", "terakhir", "kemarin", "sebelumnya", "yang tadi", "obrolan kita"],
-      "action": "memory_query",
-      "priority": 8,
-      "requires_context": false,
-      "description": "Query memory percakapan"
-    },
-    {
-      "id": "decision_query",
-      "patterns": ["kenapa", "mengapa", "alasan", "kok"],
-      "action": "decision_query",
-      "priority": 7,
-      "requires_context": false,
-      "description": "Query keputusan"
-    },
-    {
-      "id": "progress_query",
-      "patterns": ["sampai mana", "progress", "pending", "sejauh mana", "status", "performa", "performa sistem"],
-      "action": "progress_query",
-      "priority": 6,
-      "requires_context": false,
-      "description": "Query progress"
-    },
-    {
-      "id": "project_analysis",
-      "patterns": ["analisa", "analyze", "cek", "analisis"],
-      "action": "analyze_project",
-      "priority": 5,
-      "requires_context": true,
-      "description": "Analisis project"
-    },
-    {
-      "id": "strategy_fix",
-      "patterns": ["perbaiki strategi", "optimasi strategi", "tuning parameter"],
-      "action": "modify_logic",
-      "priority": 9,
-      "requires_context": true,
-      "description": "Perbaiki strategi"
-    },
-    {
-      "id": "list_projects",
-      "patterns": ["daftar project", "list project", "project apa saja"],
-      "action": "list_projects",
-      "priority": 4,
-      "requires_context": false,
-      "description": "Daftar project"
-    },
-    {
-      "id": "attribution_dashboard",
-      "patterns": ["attribution", "dashboard", "trade attribution"],
-      "action": "attribution_dashboard",
-      "priority": 5,
-      "requires_context": false,
-      "description": "Tampilkan attribution dashboard"
-    }
-  ],
-  "default_action": "analyze_project",
-  "fallback_action": "chat"
-}
-{
-  "intent_rules": [
-    {
       "pattern": "kenapa kamu|kok kamu|kamu kenapa",
       "intent": "self_diagnostic",
       "action": "diagnostic",
@@ -99,10 +13,20 @@
       "priority": 8
     },
     {
-      "pattern": "analisa|audit.*project",
+      "pattern": "analisa.*project|audit.*project",
       "intent": "project_audit",
       "action": "analyze_project",
       "priority": 5
+    },
+    {
+      "pattern": "status godmeme|godmeme status",
+      "intent": "trading_status",
+      "action": "godmeme_status",
+      "priority": 5
     }
-  ]
+  ],
+  "api_key_context": {
+    "patterns": ["anthropic", "claude", "api key"],
+    "response": "Jika user bilang tidak pakai Anthropic, jangan sebut ANTHROPIC_API_KEY."
+  }
 }

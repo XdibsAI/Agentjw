@@ -1,145 +1,142 @@
 """
-Context Manager - Mengingat konteks percakapan
+Context Manager - Kelola konteks percakapan secara struktural
 """
-
+import json
+from pathlib import Path
 from typing import Dict, List, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 
 
 class ContextManager:
-    """Mengelola konteks percakapan"""
-    
-    def __init__(self):
-        self.contexts: Dict[str, Dict] = {}
-        self.current_context: Optional[str] = None
-    
-    def start_context(self, context_id: str, topic: str, data: Dict = None):
-        """Mulai konteks baru"""
-        self.contexts[context_id] = {
-            "topic": topic,
-            "data": data or {},
-            "started": datetime.now(),
-            "last_activity": datetime.now(),
-            "history": []
-        }
-        self.current_context = context_id
-    
-    def update_context(self, context_id: str, update: Dict):
-        """Update konteks"""
-        if context_id in self.contexts:
-            self.contexts[context_id]["data"].update(update)
-            self.contexts[context_id]["last_activity"] = datetime.now()
-    
-    def add_to_history(self, context_id: str, entry: Dict):
-        """Tambahkan ke history"""
-        if context_id in self.contexts:
-            self.contexts[context_id]["history"].append(entry)
-    
-    def get_context(self, context_id: str) -> Optional[Dict]:
-        """Dapatkan konteks"""
-        return self.contexts.get(context_id)
-    
-    def get_current_context(self) -> Optional[Dict]:
-        """Dapatkan konteks saat ini"""
-        if self.current_context:
-            return self.get_context(self.current_context)
-        return None
-    
-    def get_recent_contexts(self, limit: int = 5) -> List[Dict]:
-        """Dapatkan konteks terbaru"""
-        sorted_contexts = sorted(
-            self.contexts.items(),
-            key=lambda x: x[1]["last_activity"],
-            reverse=True
-        )
-        return [ctx for _, ctx in sorted_contexts[:limit]]
-    
-    def summarize_context(self, context_id: str) -> str:
-        """Ringkasan konteks"""
-        ctx = self.get_context(context_id)
-        if not ctx:
-            return "Tidak ada konteks"
-        
-        return f"""
-Topik: {ctx['topic']}
-Total interaksi: {len(ctx['history'])}
-Terakhir: {ctx['last_activity'].strftime('%H:%M')}
+    """Kelola konteks percakapan dengan struktur yang konsisten"""
 
-Ringkasan history:
-{self._format_history(ctx['history'])}
-"""
-    
-    def _format_history(self, history: List) -> str:
-        """Format history untuk ringkasan"""
-        if not history:
-            return "Belum ada interaksi"
-        
+    def __init__(self):
+        self.context_file = Path("/home/dibs/agentjw/memory/conversation_context.json")
+        self._context = self._load()
+
+    def _load(self) -> Dict:
+        """Load context dari file"""
+        if self.context_file.exists():
+            try:
+                return json.loads(self.context_file.read_text())
+            except:
+                return self._default_context()
+        return self._default_context()
+
+    def _default_context(self) -> Dict:
+        """Default context structure"""
+        return {
+            "last_topic": "",
+            "last_action": "",
+            "last_intent": "",
+            "last_entity": "",
+            "last_result": "",
+            "topics": [],
+            "actions": [],
+            "entities": [],
+            "current_focus": "",
+            "session_id": ""
+        }
+
+    def get_current_topic(self) -> str:
+        """Dapatkan topik saat ini"""
+        return self._context.get("last_topic", "")
+
+    def get_last_action(self) -> str:
+        """Dapatkan action terakhir"""
+        return self._context.get("last_action", "")
+
+    def get_current_focus(self) -> str:
+        """Dapatkan fokus saat ini (project/entity/channel)"""
+        return self._context.get("current_focus", "")
+
+    def set_current_focus(self, focus: str):
+        """Set fokus saat ini"""
+        self._context["current_focus"] = focus
+        self._save()
+
+    def is_focus_on(self, entity: str) -> bool:
+        """Cek apakah fokus saat ini pada entity tertentu"""
+        current = self._context.get("current_focus", "").lower()
+        return entity.lower() in current or current in entity.lower()
+
+    def get_recent_topics(self, count: int = 5) -> List[str]:
+        """Dapatkan N topik terakhir"""
+        topics = self._context.get("topics", [])
+        return topics[-count:] if topics else []
+
+    def get_context_summary(self) -> str:
+        """Dapatkan ringkasan konteks untuk prompt"""
         lines = []
-        for h in history[-5:]:
-            lines.append(f"- {h.get('user', '')[:50]}... → {h.get('response', '')[:50]}...")
+        lines.append("=== KONTEKS PERCAKAPAN ===")
+        
+        last_topic = self.get_current_topic()
+        if last_topic:
+            lines.append(f"Topik saat ini: {last_topic}")
+        
+        last_action = self.get_last_action()
+        if last_action:
+            lines.append(f"Action terakhir: {last_action}")
+        
+        current_focus = self.get_current_focus()
+        if current_focus:
+            lines.append(f"Fokus saat ini: {current_focus}")
+        
+        recent = self.get_recent_topics(3)
+        if recent:
+            lines.append("Topik terakhir:")
+            for t in recent:
+                lines.append(f"  - {t[:80]}")
+        
         return "\n".join(lines)
 
+    def is_same_topic(self, topic: str) -> bool:
+        """Cek apakah topik ini sama dengan topik saat ini"""
+        current = self.get_current_topic().lower()
+        return topic.lower() in current or current in topic.lower()
 
-    # === PERSISTENCE ===
-    def save(self, memory_dir: str = "memory") -> bool:
-        """Save semua konteks ke disk"""
-        from pathlib import Path
-        import json
-        from datetime import datetime
+    def update(self, topic: str = None, action: str = None, focus: str = None):
+        """Update context"""
+        if topic:
+            self._context["last_topic"] = topic
+            topics = self._context.get("topics", [])
+            topics.append(topic)
+            if len(topics) > 50:
+                topics = topics[-50:]
+            self._context["topics"] = topics
         
-        path = Path(memory_dir)
-        path.mkdir(exist_ok=True)
-        file_path = path / "contexts.json"
+        if action:
+            self._context["last_action"] = action
+            actions = self._context.get("actions", [])
+            actions.append(action)
+            if len(actions) > 50:
+                actions = actions[-50:]
+            self._context["actions"] = actions
         
-        # Konversi datetime ke string
-        data = {
-            "current_context": self.current_context,
-            "contexts": {}
-        }
+        if focus:
+            self._context["current_focus"] = focus
         
-        for ctx_id, ctx in self.contexts.items():
-            data["contexts"][ctx_id] = {
-                "topic": ctx["topic"],
-                "data": ctx["data"],
-                "started": ctx["started"].isoformat() if isinstance(ctx["started"], datetime) else ctx["started"],
-                "last_activity": ctx["last_activity"].isoformat() if isinstance(ctx["last_activity"], datetime) else ctx["last_activity"],
-                "history": ctx["history"]
-            }
-        
-        with open(file_path, "w") as f:
-            json.dump(data, f, indent=2)
-        
-        print(f"[CONTEXT] ✅ Saved {len(self.contexts)} contexts to {file_path}")
-        return True
-    
-    def load(self, memory_dir: str = "memory") -> bool:
-        """Load semua konteks dari disk"""
-        from pathlib import Path
-        import json
-        from datetime import datetime
-        
-        file_path = Path(memory_dir) / "contexts.json"
-        if not file_path.exists():
-            print(f"[CONTEXT] ℹ️ No context file at {file_path}")
-            return False
-        
+        self._context["updated_at"] = datetime.now().isoformat()
+        self._save()
+
+    def _save(self):
+        """Save context ke file"""
         try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
-            
-            # Restore contexts
-            for ctx_id, ctx_data in data.get("contexts", {}).items():
-                self.contexts[ctx_id] = {
-                    "topic": ctx_data["topic"],
-                    "data": ctx_data["data"],
-                    "started": datetime.fromisoformat(ctx_data["started"]) if isinstance(ctx_data["started"], str) else ctx_data["started"],
-                    "last_activity": datetime.fromisoformat(ctx_data["last_activity"]) if isinstance(ctx_data["last_activity"], str) else ctx_data["last_activity"],
-                    "history": ctx_data["history"]
-                }
-            
-            self.current_context = data.get("current_context")
-            print(f"[CONTEXT] ✅ Loaded {len(self.contexts)} contexts from {file_path}")
-            return True
+            self.context_file.write_text(json.dumps(self._context, indent=2))
         except Exception as e:
-            print(f"[CONTEXT] ❌ Failed to load: {e}")
-            return False
+            print(f"[ContextManager] Error saving: {e}")
+
+    def clear(self):
+        """Clear context"""
+        self._context = self._default_context()
+        self._save()
+
+
+_context_manager = None
+
+
+def get_context_manager() -> ContextManager:
+    global _context_manager
+    if _context_manager is None:
+        _context_manager = ContextManager()
+    return _context_manager
