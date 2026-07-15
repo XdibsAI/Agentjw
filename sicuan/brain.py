@@ -30,6 +30,7 @@ from sicuan.core.auto_fix_loop import get_auto_fix_loop
 from sicuan.core.repair_planner import get_repair_memory
 from sicuan.adapters.project_adapter import get_project_adapter
 from sicuan.core.diagnostic_memory import get_diagnostic_memory
+from sicuan.core.fetcher import get_fetcher
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -1314,7 +1315,33 @@ Rules:
                     except Exception as e:
                         return f"❌ Error searching: {str(e)}"
                 
-                return self.fetch_url_content(target)
+                # Gunakan fetcher untuk semua URL
+                try:
+                    fetcher = get_fetcher()
+                    result = fetcher.fetch(target)
+                    if result.get("success"):
+                        data = result.get("data")
+                        if result.get("type") == "json":
+                            import json
+                            if isinstance(data, dict) and "skills" in data:
+                                skills = data.get("skills", [])
+                                lines = []
+                                lines.append("📚 **GMGN.AI SKILLS DIRECTORY**")
+                                lines.append(f"Total skills: {len(skills)}")
+                                lines.append("")
+                                for skill in skills[:5]:
+                                    title = skill.get("title", "Unknown")
+                                    subtitle = skill.get("subtitle", "")
+                                    lines.append(f"**{title}**")
+                                    if subtitle:
+                                        lines.append(f"  {subtitle[:100]}")
+                                    lines.append("")
+                                return "\n".join(lines)
+                            return f"📄 JSON Data:\n```json\n{json.dumps(data, indent=2)[:1000]}\n```"
+                        return f"📄 Content:\n{str(data)[:1000]}"
+                    return f"❌ {result.get('error', 'Unknown error')}"
+                except Exception as e:
+                    return f"❌ Error fetching: {str(e)}"
             elif action == "analyze_project":
 
                 from sicuan.project_trace import audit_project

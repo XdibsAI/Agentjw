@@ -22,6 +22,7 @@ from sicuan.core.conversation_state import ConversationState
 from sicuan.core.intent_classifier import IntentClassifier
 from sicuan.core.semantic_query import SemanticQuery
 from sicuan.core.multimodel_orchestrator import get_multimodel_orchestrator
+from sicuan.core.semantic_router import get_semantic_router
 from sicuan.core.context_memory import get_context_memory
 from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.goal_engine import GoalEngine
@@ -72,6 +73,7 @@ class SiCuanChat:
         self.shadow = ShadowMode()
         self.provenance = ProvenanceEngine()
         self._load_context()
+        self._current_user_id = None
     
     def chat(self, user_message: str, image_path: str = None, user_id: int = None, workspace_id: str = None) -> str:
         # Set workspace_id ke brain
@@ -82,6 +84,7 @@ class SiCuanChat:
             self.brain._current_workspace_id = workspace_id
         # Set user context jika ada
         if user_id:
+            self._current_user_id = user_id
             # Set user context
             from pathlib import Path
             import json
@@ -618,7 +621,9 @@ class SiCuanChat:
         self.shadow = ShadowMode()
         self.provenance = ProvenanceEngine()
         self._load_context()
+        self._current_user_id = None
         self.history = []
+        self._current_user_id = None
 
     def _handle_memory_query(self, user_message: str) -> str:
         if not self.state:
