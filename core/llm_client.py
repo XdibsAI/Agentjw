@@ -1,9 +1,10 @@
 """
-core/llm_client.py - Unified LLM client (OpenAI + Anthropic)
+LLM Client — Unified LLM client (OpenAI + Anthropic + Groq + OpenRouter + Ollama + NVIDIA NIM)
 """
-
+import os
+import json
+import requests
 from typing import List, Dict, Optional
-
 from tenacity import retry, stop_after_attempt, wait_exponential
 
 from core.config import config
@@ -13,9 +14,31 @@ from core.cost_tracker import CostTracker
 
 
 class LLMClient:
+    """Unified LLM client dengan multi-provider support"""
+
+    def __init__(self):
+        self.provider = config.LLM_PROVIDER
+        self.model = config.get_model()
+        self._client = None
+        
+        # NVIDIA NIM fallback
+        self.nvidia_nim_api_key = os.getenv("NVIDIA_NIM_API_KEY", "")
+        self.nvidia_nim_base_url = os.getenv("NVIDIA_NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+        self.nvidia_nim_model = os.getenv("NVIDIA_NIM_MODEL", "meta/llama-3.1-70b-instruct")
+        
+        self.router = ModelRouter()
+        self.cost_tracker = CostTracker()
+        self._init_client()
+
+    def _init_client(self):
+        if self.provider == "openai":
+            try:
+                from openai import OpenAI
+                self._client = OpenAI(api_key=config.OPENAI_API_KEY)
+            except:
+                pass
 
     def _get_api_key(self):
-        """Dapatkan API key berdasarkan provider"""
         import os
         if self.provider == "openai":
             return os.getenv("OPENAI_API_KEY")
@@ -28,86 +51,82 @@ class LLMClient:
         else:
             return os.getenv("OPENROUTER_API_KEY")
 
+    def chat(self, messages: List[Dict], system: Optional[str] = None,
+             temperature: float = 0.7, max_tokens: int = 16000,
+             json_mode: bool = False) -> str:
+        """Main chat method"""
+        if json_mode:
+            temperature = 0.0
+        return self._openai_chat(messages, system, temperature, max_tokens, json_mode)
 
-    def groq_chat(self, messages: List[Dict], model: str = "llama-3.3-70b-versatile",
-                  temperature: float = 0.7, max_tokens: int = 4096) -> str:
-        """Chat khusus untuk Groq (tanpa retry)"""
-        import requests
-        import json
+    def chat_with_fallback(self, messages: List[Dict], system: Optional[str] = None,
+                           temperature: float = 0.7, max_tokens: int = 16000,
+                           json_mode: bool = False) -> str:
+        """Chat dengan fallback chain"""
+        # 1. Coba OpenAI
+        try:
+            return self._openai_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            logger.warning(f"OpenAI failed: {e}")
+        
+        # 2. Coba OpenRouter
+        try:
+            return self._openrouter_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            logger.warning(f"OpenRouter failed: {e}")
+        
+        # 3. Coba NVIDIA NIM
+        try:
+            return self._nvidia_nim_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            logger.warning(f"NVIDIA NIM failed: {e}")
+        
+        # 4. Coba Ollama
+        try:
+            return self._ollama_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            logger.warning(f"Ollama failed: {e}")
+        
+        return "❌ All LLM providers failed"
+
+    def _openai_chat(self, messages: List[Dict], system: Optional[str] = None,
+                     temperature: float = 0.7, max_tokens: int = 16000,
+                     json_mode: bool = False) -> str:
+        """Chat via OpenAI"""
+        # Coba OpenRouter dulu via OpenAI client
+        api_key = os.getenv("OPENAI_API_KEY") or os.getenv("OPENROUTER_API_KEY")
+        base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")
+        
+        if not api_key:
+            raise Exception("No API key available")
         
         headers = {
-            "Authorization": f"Bearer {self.api_key}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
-        data = {
-            "model": model,
-            "messages": messages,
+        
+        messages_list = []
+        if system:
+            messages_list.append({"role": "system", "content": system})
+        messages_list.extend(messages)
+        
+        payload = {
+            "model": "gpt-4o",
+            "messages": messages_list,
             "temperature": temperature,
             "max_tokens": max_tokens
         }
         
-        try:
-            response = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers=headers,
-                json=data,
-                timeout=30
-            )
-            
-            if response.status_code == 200:
-                result = response.json()
-                return result["choices"][0]["message"]["content"]
-            else:
-                return f"❌ Groq API error: {response.status_code} - {response.text[:200]}"
-        except Exception as e:
-            return f"❌ Groq request failed: {e}"
-
-
-    def __init__(self):
-        self.provider = config.LLM_PROVIDER
-        self.model = config.get_model()
-
-        self._client = None
-
-        self.router = ModelRouter()
-        self.cost_tracker = CostTracker()
-
-        self._init_client()
-
-    def chat_with_fallback(self, messages: List[Dict], system: Optional[str] = None,
-                          temperature: float = 0.7, max_tokens: int = 16000,
-                          json_mode: bool = False) -> str:
-        """Chat dengan fallback: OpenAI → OpenRouter → Ollama"""
-        # 1. Coba OpenAI
-        try:
-            print("[LLM] Trying OpenAI...")
-            return self.chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            print(f"[LLM] OpenAI failed: {e}")
-        
-        # 2. Coba OpenRouter
-        try:
-            print("[LLM] Trying OpenRouter...")
-            return self._openrouter_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            print(f"[LLM] OpenRouter failed: {e}")
-        
-        # 3. Coba Ollama
-        try:
-            print("[LLM] Trying Ollama...")
-            return self._ollama_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            print(f"[LLM] Ollama failed: {e}")
-        
-        return "❌ All LLM providers failed"
+        response = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+        raise Exception(f"HTTP {response.status_code}")
 
     def _openrouter_chat(self, messages: List[Dict], system: Optional[str] = None,
-                        temperature: float = 0.7, max_tokens: int = 16000,
-                        json_mode: bool = False) -> str:
-        import requests
-        import json
-        import os
-        
+                         temperature: float = 0.7, max_tokens: int = 16000,
+                         json_mode: bool = False) -> str:
+        """Chat via OpenRouter"""
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
             raise Exception("OPENROUTER_API_KEY not set")
@@ -119,46 +138,68 @@ class LLMClient:
             "X-Title": "AgentJW"
         }
         
-        url = "https://openrouter.ai/api/v1/chat/completions"
+        messages_list = []
+        if system:
+            messages_list.append({"role": "system", "content": system})
+        messages_list.extend(messages)
+        
         payload = {
             "model": "qwen/qwen3-coder",
-            "messages": messages,
+            "messages": messages_list,
             "temperature": temperature,
             "max_tokens": max_tokens
         }
-        if system:
-            payload["system"] = system
         
-        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        response = requests.post("https://openrouter.ai/api/v1/chat/completions", 
+                                 headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+        raise Exception(f"HTTP {response.status_code}")
+
+    def _nvidia_nim_chat(self, messages: List[Dict], system: Optional[str] = None,
+                         temperature: float = 0.7, max_tokens: int = 16000,
+                         json_mode: bool = False) -> str:
+        """Chat via NVIDIA NIM"""
+        if not self.nvidia_nim_api_key:
+            raise Exception("NVIDIA_NIM_API_KEY not set")
+        
+        messages_list = []
+        if system:
+            messages_list.append({"role": "system", "content": system})
+        messages_list.extend(messages)
+        
+        payload = {
+            "model": self.nvidia_nim_model,
+            "messages": messages_list,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        
+        headers = {
+            "Authorization": f"Bearer {self.nvidia_nim_api_key}",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.post(f"{self.nvidia_nim_base_url}/chat/completions", 
+                                 headers=headers, json=payload, timeout=120)
         if response.status_code == 200:
             data = response.json()
             return data["choices"][0]["message"]["content"]
         raise Exception(f"HTTP {response.status_code}")
 
     def _ollama_chat(self, messages: List[Dict], system: Optional[str] = None,
-                    temperature: float = 0.7, max_tokens: int = 16000,
-                    json_mode: bool = False) -> str:
-        import requests
-        import json
-        
-        # Gunakan system prompt jika ada, atau gunakan identity dari brain
-        if not system:
-            try:
-                from sicuan.brain import SICUAN_IDENTITY
-                system = SICUAN_IDENTITY
-            except:
-                system = "Kamu adalah SiCuan, AI partner bisnis."
-        
-        # Format messages untuk Ollama
-        ollama_messages = []
+                     temperature: float = 0.7, max_tokens: int = 16000,
+                     json_mode: bool = False) -> str:
+        """Chat via Ollama"""
+        messages_list = []
         if system:
-            ollama_messages.append({"role": "system", "content": system})
-        ollama_messages.extend(messages)
+            messages_list.append({"role": "system", "content": system})
+        messages_list.extend(messages)
         
-        url = "http://localhost:11434/api/chat"
         payload = {
             "model": "llama3.2",
-            "messages": ollama_messages,
+            "messages": messages_list,
             "stream": False,
             "options": {
                 "temperature": temperature,
@@ -167,244 +208,34 @@ class LLMClient:
         }
         
         try:
-            response = requests.post(url, json=payload, timeout=120)
+            response = requests.post("http://localhost:11434/api/chat", json=payload, timeout=120)
             if response.status_code == 200:
                 data = response.json()
                 return data.get("message", {}).get("content", "")
             raise Exception(f"HTTP {response.status_code}")
         except requests.exceptions.ConnectionError:
-            raise Exception("Ollama not running (http://localhost:11434)")
-        except Exception as e:
-            raise Exception(f"Ollama error: {e}")
+            raise Exception("Ollama not running")
 
-    def _init_client(self):
-
-        if self.provider == "openai":
-            try:
-                from openai import OpenAI
-                self._client = OpenAI(api_key=config.OPENAI_API_KEY, base_url=config.OPENAI_BASE_URL)
-                logger.info(f"LLM Client initialized: OpenAI ({self.model})")
-            except ImportError:
-                raise ImportError("openai package not installed. Run: pip install openai")
-
-        elif self.provider == "anthropic":
-            try:
-                import anthropic
-                self._client = anthropic.Anthropic(api_key=config.ANTHROPIC_API_KEY)
-                logger.info(f"LLM Client initialized: Anthropic ({self.model})")
-            except ImportError:
-                raise ImportError("anthropic package not installed.")
-
-        else:
-            # openrouter/groq/others — pakai OpenAI-compatible client
-            try:
-                from openai import OpenAI
-                base_url = "https://openrouter.ai/api/v1"
-                api_key = config.OPENROUTER_API_KEY
-                self._client = OpenAI(api_key=api_key, base_url=base_url)
-                logger.info(f"LLM Client initialized: OpenAI ({self.model})")
-            except ImportError:
-                raise ImportError("openai package not installed.")
-
-    @retry(
-        stop=stop_after_attempt(3),
-        wait=wait_exponential(
-            multiplier=1,
-            min=2,
-            max=10
-        )
-    )
-    def chat(
-        self,
-        messages: List[Dict],
-        system: Optional[str] = None,
-        temperature: float = 0.7,
-        max_tokens: int = 16000,
-        json_mode: bool = False,
-    ) -> str:
-
-        try:
-
-            task_hint = ""
-
-            if messages:
-                task_hint = str(
-                    messages[-1].get(
-                        "content",
-                        ""
-                    )
-                )
-
-            self._dynamic_model = self.router.route(
-                task_hint
-            )
-
-            logger.info(
-                f"Router selected model: {self._dynamic_model}"
-            )
-
-            if self.provider == "openai":
-
-                return self._openai_chat(
-                    messages,
-                    system,
-                    temperature,
-                    max_tokens,
-                    json_mode
-                )
-
-            elif self.provider == "anthropic":
-
-                return self._anthropic_chat(
-                    messages,
-                    system,
-                    temperature,
-                    max_tokens
-                )
-
-            raise RuntimeError(
-                "No provider selected"
-            )
-
-        except Exception as e:
-
-            logger.error(
-                f"LLM call failed: {e}"
-            )
-
-            raise
-
-    def _openai_chat(
-        self,
-        messages,
-        system,
-        temperature,
-        max_tokens,
-        json_mode
-    ) -> str:
-
-        full_messages = []
-
-        if system:
-            full_messages.append(
-                {
-                    "role": "system",
-                    "content": system
-                }
-            )
-
-        full_messages.extend(messages)
-
-        kwargs = {
-            "model": getattr(
-                self,
-                "_dynamic_model",
-                self.model
-            ),
-            "messages": full_messages,
-            "temperature": temperature,
-            "max_tokens": max_tokens or 4096,
-        }
-
-        if json_mode:
-
-            kwargs["response_format"] = {
-                "type": "json_object"
-            }
-
-        logger.info(
-            f"Using model: {kwargs['model']}"
-        )
-
-        response = self._client.chat.completions.create(
-            **kwargs
-        )
-
-        try:
-
-            usage = response.usage
-
-            self.cost_tracker.add(
-                usage.prompt_tokens,
-                usage.completion_tokens
-            )
-
-        except Exception as e:
-
-            logger.warning(
-                f"Cost tracker failed: {e}"
-            )
-
-        return response.choices[0].message.content
-
-    def _anthropic_chat(
-        self,
-        messages,
-        system,
-        temperature,
-        max_tokens
-    ) -> str:
-
-        kwargs = {
-            "model": getattr(
-                self,
-                "_dynamic_model",
-                self.model
-            ),
-            "max_tokens": max_tokens or 4096,
-            "temperature": temperature,
-            "messages": messages,
-        }
-
-        if system:
-
-            kwargs["system"] = system
-
-        logger.info(
-            f"Using model: {kwargs['model']}"
-        )
-
-        response = self._client.messages.create(
-            **kwargs
-        )
-
-        try:
-
-            self.cost_tracker.add(
-                response.usage.input_tokens,
-                response.usage.output_tokens
-            )
-
-        except Exception as e:
-
-            logger.warning(
-                f"Cost tracker failed: {e}"
-            )
-
-        return response.content[0].text
-
-    def count_tokens(
-        self,
-        text: str
-    ) -> int:
-
-        try:
-
-            import tiktoken
-
-            enc = tiktoken.encoding_for_model(
-                "gpt-4"
-            )
-
-            return len(
-                enc.encode(text)
-            )
-
-        except Exception:
-
-            return len(
-                text.split()
-            ) * 2
+    def count_tokens(self, text: str) -> int:
+        """Estimate token count"""
+        return len(text) // 4
 
 
-llm = LLMClient()
+_client = None
+
+
+def get_llm_client() -> LLMClient:
+    global _client
+    if _client is None:
+        _client = LLMClient()
+    return _client
+
+
+# Global instance untuk backward compatibility
+llm = None
+
+def get_llm():
+    global llm
+    if llm is None:
+        llm = LLMClient()
+    return llm
