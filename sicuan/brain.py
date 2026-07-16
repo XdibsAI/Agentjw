@@ -31,6 +31,14 @@ from sicuan.core.repair_planner import get_repair_memory
 from sicuan.adapters.project_adapter import get_project_adapter
 from sicuan.core.diagnostic_memory import get_diagnostic_memory
 from sicuan.core.fetcher import get_fetcher
+from sicuan.core.planning import create_plan, Plan
+from sicuan.core.sub_agent import create_sub_agent, SubAgent
+from sicuan.core.persistent_tasks import get_task_store
+from sicuan.core.context_compressor import get_context_compressor
+from sicuan.core.knowledge_loader import get_knowledge_loader
+from sicuan.core.background_tasks import get_background_task_manager
+from sicuan.core.agent_team import get_agent_team_manager
+from sicuan.core.system_prompt_builder import get_prompt_builder
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"

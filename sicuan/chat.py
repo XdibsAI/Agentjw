@@ -114,6 +114,18 @@ class SiCuanChat:
         print("[CHAT] Received:", user_message[:60])
         
         # === SHORTCUT: AUTO-REPAIR ===
+        if "plan" in user_message.lower() or "buat plan" in user_message.lower():
+            try:
+                from sicuan.core.planning import create_plan
+                plan = create_plan(user_message)
+                # Extract steps
+                steps = user_message.split(":")[1].split(",") if ":" in user_message else ["Analisis", "Eksekusi", "Verifikasi"]
+                for step in steps:
+                    plan.add_step(step.strip())
+                return plan.to_string()
+            except Exception as e:
+                return f"❌ Error creating plan: {str(e)}"
+        
         if "auto-repair" in user_message.lower() or "repair godmeme" in user_message.lower():
             try:
                 from sicuan.core.generalized_repair import get_generalized_repair
