@@ -57,10 +57,16 @@ WAJIB:
         try:
             response = llm.chat(prompt, max_tokens=200)
             import re
-            json_match = re.search(r'\{.*\}', response, re.DOTALL)
-            if json_match:
-                result = json.loads(json_match.group())
-                return result
+            if isinstance(response, str):
+                json_match = re.search(r'\{.*\}', response, re.DOTALL)
+                if json_match:
+                    try:
+                        result = json.loads(json_match.group())
+                        if isinstance(result, dict):
+                            return result
+                    except:
+                        pass
+            return {"action": "null", "reason": "parse_failed", "confidence": 0}
         except Exception as e:
             print(f"[SemanticRouter] Error: {e}")
         

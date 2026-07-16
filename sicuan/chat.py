@@ -112,6 +112,22 @@ class SiCuanChat:
             return self.brain.process_image(image_path, user_message)
         
         print("[CHAT] Received:", user_message[:60])
+        
+        # === SHORTCUT: AUTO-REPAIR ===
+        if "auto-repair" in user_message.lower() or "repair godmeme" in user_message.lower():
+            try:
+                from sicuan.core.generalized_repair import get_generalized_repair
+                from pathlib import Path
+                repair = get_generalized_repair()
+                project_dir = Path("/home/dibs/agentjw/projects/godmeme_bot")
+                log_file = project_dir / "trading_bot_live.log"
+                error = repair.detect_error(log_file)
+                if error:
+                    result = repair.repair(project_dir, error)
+                    return f"🔧 Auto-repair: {result.get('message', 'Done')}\n\nRestart bot..."
+                return "✅ No error detected in logs"
+            except Exception as e:
+                return f"❌ Auto-repair failed: {str(e)}"
 
         # Update memory
         self.memory.add_interaction(user_message, "")
@@ -120,6 +136,46 @@ class SiCuanChat:
         if len(user_message.strip()) <= 2:
             return "Halo! Ada yang bisa aku bantu?"
 
+        # === SEMANTIC ROUTER - PRIORITAS ===
+        try:
+            # Convert history ke format yang diharapkan semantic router
+            history_for_router = []
+            if self.history:
+                for h in self.history:
+                    if isinstance(h, dict):
+                        history_for_router.append(h)
+                    else:
+                        history_for_router.append({"topic": str(h)})
+            
+            router = get_semantic_router()
+            context_summary = self.brain.load_context(user_message) if hasattr(self.brain, 'load_context') else ""
+            route_result = router.route(user_message, context_summary, history_for_router)
+            # route_result bisa string (dari llm.chat) atau dict
+            if isinstance(route_result, dict):
+                routed_action = route_result.get("action", "")
+                if routed_action and routed_action != "null" and routed_action != "":
+                    print(f"[ROUTER] Semantic routing: {routed_action} ({route_result.get('confidence', 0)})")
+                    self.brain._routed_action = routed_action
+                    self.brain._routed_target = ""
+            elif isinstance(route_result, str):
+                # Jika route_result adalah string, coba parse atau fallback
+                print(f"[ROUTER] Semantic router returned string: {route_result[:100]}")
+                # Fallback: cari action di string
+                if "auto" in route_result.lower() and "repair" in route_result.lower():
+                    self.brain._routed_action = "auto_repair_project"
+                    self.brain._routed_target = ""
+                elif "godmeme" in route_result.lower():
+                    self.brain._routed_action = "godmeme_status"
+                    self.brain._routed_target = ""
+                elif "project" in route_result.lower():
+                    self.brain._routed_action = "list_projects"
+                    self.brain._routed_target = ""
+            else:
+                print(f"[ROUTER] Invalid route_result type: {type(route_result)}")
+        except Exception as e:
+            print(f"[ROUTER] Semantic error: {e}")
+        
+        # Fallback: orchestrator
         # Semua pesan → brain (LLM decide intent + action)
         try:
             # Route to appropriate model via orchestrator

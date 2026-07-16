@@ -74,6 +74,109 @@ class LLMClient:
 
         self._init_client()
 
+    def chat_with_fallback(self, messages: List[Dict], system: Optional[str] = None,
+                          temperature: float = 0.7, max_tokens: int = 16000,
+                          json_mode: bool = False) -> str:
+        """Chat dengan fallback: OpenAI → OpenRouter → Ollama"""
+        # 1. Coba OpenAI
+        try:
+            print("[LLM] Trying OpenAI...")
+            return self.chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            print(f"[LLM] OpenAI failed: {e}")
+        
+        # 2. Coba OpenRouter
+        try:
+            print("[LLM] Trying OpenRouter...")
+            return self._openrouter_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            print(f"[LLM] OpenRouter failed: {e}")
+        
+        # 3. Coba Ollama
+        try:
+            print("[LLM] Trying Ollama...")
+            return self._ollama_chat(messages, system, temperature, max_tokens, json_mode)
+        except Exception as e:
+            print(f"[LLM] Ollama failed: {e}")
+        
+        return "❌ All LLM providers failed"
+
+    def _openrouter_chat(self, messages: List[Dict], system: Optional[str] = None,
+                        temperature: float = 0.7, max_tokens: int = 16000,
+                        json_mode: bool = False) -> str:
+        import requests
+        import json
+        import os
+        
+        api_key = os.getenv("OPENROUTER_API_KEY")
+        if not api_key:
+            raise Exception("OPENROUTER_API_KEY not set")
+        
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+            "HTTP-Referer": "https://agentjw.ai",
+            "X-Title": "AgentJW"
+        }
+        
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        payload = {
+            "model": "qwen/qwen3-coder",
+            "messages": messages,
+            "temperature": temperature,
+            "max_tokens": max_tokens
+        }
+        if system:
+            payload["system"] = system
+        
+        response = requests.post(url, headers=headers, json=payload, timeout=60)
+        if response.status_code == 200:
+            data = response.json()
+            return data["choices"][0]["message"]["content"]
+        raise Exception(f"HTTP {response.status_code}")
+
+    def _ollama_chat(self, messages: List[Dict], system: Optional[str] = None,
+                    temperature: float = 0.7, max_tokens: int = 16000,
+                    json_mode: bool = False) -> str:
+        import requests
+        import json
+        
+        # Gunakan system prompt jika ada, atau gunakan identity dari brain
+        if not system:
+            try:
+                from sicuan.brain import SICUAN_IDENTITY
+                system = SICUAN_IDENTITY
+            except:
+                system = "Kamu adalah SiCuan, AI partner bisnis."
+        
+        # Format messages untuk Ollama
+        ollama_messages = []
+        if system:
+            ollama_messages.append({"role": "system", "content": system})
+        ollama_messages.extend(messages)
+        
+        url = "http://localhost:11434/api/chat"
+        payload = {
+            "model": "llama3.2",
+            "messages": ollama_messages,
+            "stream": False,
+            "options": {
+                "temperature": temperature,
+                "num_predict": max_tokens
+            }
+        }
+        
+        try:
+            response = requests.post(url, json=payload, timeout=120)
+            if response.status_code == 200:
+                data = response.json()
+                return data.get("message", {}).get("content", "")
+            raise Exception(f"HTTP {response.status_code}")
+        except requests.exceptions.ConnectionError:
+            raise Exception("Ollama not running (http://localhost:11434)")
+        except Exception as e:
+            raise Exception(f"Ollama error: {e}")
+
     def _init_client(self):
 
         if self.provider == "openai":
@@ -305,4 +408,3 @@ class LLMClient:
 
 
 llm = LLMClient()
-

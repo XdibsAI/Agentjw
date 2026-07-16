@@ -1,6 +1,13 @@
 {
   "rules": [
     {
+      "pattern": "auto.?repair|auto.?fix|repair.*project|fix.*project",
+      "intent": "auto_repair",
+      "action": "auto_repair_project",
+      "priority": 25,
+      "description": "Auto-repair project"
+    },
+    {
       "pattern": "lepas.*fokus|keluar.*konteks|ngaco|salah|error.*konteks|obrolan.*lepas",
       "intent": "self_diagnostic",
       "action": "diagnostic",

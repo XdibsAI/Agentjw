@@ -96,11 +96,11 @@ class RepairPipeline:
         return result
 
     def _check_preflight(self, file_path: str) -> Dict:
-        from sicuan.core.auto_repair import preflight_check
+        # from sicuan.core.auto_repair import preflight_check  # REMOVED - orphan
         return preflight_check(file_path)
 
     def _check_runtime(self, file_path: str) -> Dict:
-        from sicuan.core.auto_repair import verify_runtime
+        # from sicuan.core.auto_repair import verify_runtime  # REMOVED - orphan
         return verify_runtime(file_path)
 
     def _repair_by_action(self, file_path: str, action: str, classification: Dict, error_text: str) -> bool:
@@ -134,8 +134,8 @@ class RepairPipeline:
     def _repair_syntax(self, file_path: str, error_text: str) -> bool:
         """Repair syntax error"""
         try:
-            from sicuan.core.syntax_repair import SyntaxRepair
-            repair = SyntaxRepair()
+            # from sicuan.core.syntax_repair import SyntaxRepair  # REMOVED - using generalized_repair
+            # repair = SyntaxRepair()  # REMOVED - using generalized_repair
 
             # Special case: return outside function
             if "return outside function" in error_text:

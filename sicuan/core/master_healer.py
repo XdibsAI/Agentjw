@@ -29,8 +29,8 @@ class MasterHealer:
 
     def _heal_syntax(self, diagnosis: Dict) -> Dict:
         """Fix syntax error"""
-        from sicuan.core.syntax_repair import get_syntax_repair
-        repair = get_syntax_repair()
+        from sicuan.core.repair_pipeline import get_repair_pipeline
+        repair = get_repair_pipeline()
         return repair.repair_with_ast(diagnosis.get("file"))
 
     def _heal_import(self, diagnosis: Dict) -> Dict:

@@ -135,7 +135,7 @@ class ContextManager:
 _context_manager = None
 
 
-def get_context_manager() -> ContextManager:
+def get_context_manager(user_id: Optional[str] = None) -> ContextManager:
     global _context_manager
     if _context_manager is None:
         _context_manager = ContextManager()
