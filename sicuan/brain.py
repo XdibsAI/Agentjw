@@ -875,7 +875,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 if isinstance(raw, str):
                     import json as _j
                     return _j.loads(raw)
-            except:
+            except Exception as e:
                 pass
             return {
                 "response": "Waduh, ada yang ga beres di otak aku sebentar. Coba lagi ya Mas.",
@@ -2605,7 +2605,7 @@ Mau saya bantu implementasikan? Balas 'implementasi chart'
             # Check running
             result = subprocess.run(["pgrep", "-f", "main.py"], capture_output=True, timeout=5)
             return result.returncode == 0
-        except:
+        except Exception as e:
             return False
 
 

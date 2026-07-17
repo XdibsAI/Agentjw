@@ -92,7 +92,7 @@ class SiCuanChat:
             if self._user_context_file.exists():
                 try:
                     self._user_context = json.loads(self._user_context_file.read_text())
-                except:
+                except Exception as e:
                     self._user_context = {"topics": [], "actions": []}
             else:
                 self._user_context = {"topics": [], "actions": []}

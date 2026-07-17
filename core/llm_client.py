@@ -35,7 +35,7 @@ class LLMClient:
             try:
                 from openai import OpenAI
                 self._client = OpenAI(api_key=config.OPENAI_API_KEY)
-            except:
+            except Exception as e:
                 pass
 
     def _get_api_key(self):
