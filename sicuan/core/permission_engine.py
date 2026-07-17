@@ -1,139 +1,165 @@
-"""
-Permission Engine — Kontrol izin setiap agent
-"""
+"""Permission Engine - Centralized access control for AgentJW"""
+
 import json
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Dict, Optional
+from datetime import datetime
+import logging
 
+logger = logging.getLogger(__name__)
 
 class PermissionEngine:
-    """Permission Engine — Atur izin agent"""
-
-    def __init__(self):
-        self.permission_file = Path("/home/dibs/agentjw/memory/permissions.json")
-        self._data = self._load()
-
+    """Centralized permission management"""
+    
+    def __init__(self, config_path: Optional[Path] = None):
+        self.config_path = config_path or Path("memory/permissions.json")
+        self.permissions = self._load()
+        
     def _load(self) -> Dict:
-        if self.permission_file.exists():
+        """Load permissions from file"""
+        if self.config_path.exists():
             try:
-                return json.loads(self.permission_file.read_text())
+                return json.loads(self.config_path.read_text())
             except:
-                return self._default()
-        return self._default()
-
-    def _default(self) -> Dict:
+                pass
+        return self._default_permissions()
+    
+    def _default_permissions(self) -> Dict:
+        """Default permission structure"""
         return {
-            "agents": {
-                "ceo": {
-                    "permissions": ["read", "plan", "assign", "approve"],
-                    "restrictions": ["delete_project", "delete_database", "transfer_funds"],
-                    "level": 10
-                },
-                "coder": {
-                    "permissions": ["read", "modify_code", "create_code"],
-                    "restrictions": ["git_push", "deploy", "delete_project"],
-                    "level": 8
-                },
-                "reviewer": {
-                    "permissions": ["read", "review_code", "approve_changes"],
-                    "restrictions": ["modify_code", "deploy"],
-                    "level": 7
-                },
-                "deployer": {
-                    "permissions": ["deploy", "rollback"],
-                    "restrictions": ["delete_database", "modify_code"],
-                    "level": 6
-                },
-                "finance": {
-                    "permissions": ["read", "create_invoice", "view_payment"],
-                    "restrictions": ["transfer_funds", "delete_transaction"],
-                    "level": 5
-                },
-                "support": {
-                    "permissions": ["read", "create_ticket", "view_customer"],
-                    "restrictions": ["modify_code", "deploy"],
-                    "level": 4
-                }
-            },
             "roles": {
-                "admin": ["ceo", "coder", "reviewer", "deployer", "finance", "support"],
-                "developer": ["coder", "reviewer"],
-                "operator": ["deployer", "support"],
-                "viewer": ["support"]
+                "admin": ["*"],
+                "developer": [
+                    "read:*",
+                    "write:code",
+                    "write:config",
+                    "execute:workflow",
+                    "deploy:staging"
+                ],
+                "operator": [
+                    "read:metrics",
+                    "read:logs",
+                    "execute:workflow",
+                    "read:customer"
+                ],
+                "viewer": [
+                    "read:dashboard",
+                    "read:metrics"
+                ]
+            },
+            "users": {},
+            "actions": {
+                "deploy": {
+                    "staging": ["developer", "admin"],
+                    "production": ["admin"]
+                },
+                "git": {
+                    "push": ["developer", "admin"],
+                    "force_push": ["admin"]
+                },
+                "project": {
+                    "delete": ["admin"],
+                    "create": ["developer", "admin"],
+                    "update": ["developer", "admin"]
+                },
+                "customer": {
+                    "delete": ["admin"],
+                    "create": ["developer", "operator", "admin"],
+                    "update": ["developer", "operator", "admin"]
+                }
             }
         }
-
-    def _save(self):
-        self.permission_file.write_text(json.dumps(self._data, indent=2))
-
-    def has_permission(self, agent: str, action: str) -> bool:
-        """Cek apakah agent memiliki izin untuk action tertentu"""
-        agent_data = self._data["agents"].get(agent)
-        if not agent_data:
-            return False
+    
+    def check_permission(self, user: str, action: str, resource: str = None) -> bool:
+        """
+        Check if user has permission for action
         
-        permissions = agent_data.get("permissions", [])
-        restrictions = agent_data.get("restrictions", [])
+        Args:
+            user: User identifier
+            action: Action to perform (e.g., 'deploy', 'git:push')
+            resource: Optional resource identifier
         
-        if action in restrictions:
-            return False
-        if action in permissions:
+        Returns:
+            True if permitted, False otherwise
+        """
+        # Get user role
+        user_data = self.permissions["users"].get(user, {})
+        role = user_data.get("role", "viewer")
+        
+        # Admin has all permissions
+        if role == "admin":
             return True
         
-        # Cek role-based
-        for role, agents in self._data["roles"].items():
-            if agent in agents:
-                if self._role_has_permission(role, action):
+        # Get role permissions
+        role_permissions = self.permissions["roles"].get(role, [])
+        
+        # Check wildcard
+        if "*" in role_permissions:
+            return True
+        
+        # Check specific action
+        if action in role_permissions:
+            return True
+        
+        # Check action with wildcard (e.g., "read:*")
+        action_parts = action.split(":")
+        for perm in role_permissions:
+            if perm.endswith(":*"):
+                prefix = perm[:-2]
+                if action.startswith(prefix):
                     return True
         
-        return False
-
-    def _role_has_permission(self, role: str, action: str) -> bool:
-        """Cek apakah role memiliki izin"""
-        role_permissions = {
-            "admin": ["read", "write", "delete", "deploy", "manage"],
-            "developer": ["read", "modify_code", "review_code"],
-            "operator": ["read", "deploy", "rollback", "support"],
-            "viewer": ["read", "view_customer", "create_ticket"]
-        }
-        return action in role_permissions.get(role, [])
-
-    def get_agent_permissions(self, agent: str) -> str:
-        """Dapatkan daftar izin agent"""
-        agent_data = self._data["agents"].get(agent)
-        if not agent_data:
-            return f"Agent {agent} tidak ditemukan"
+        # Check resource-specific permissions
+        if resource and action in self.permissions["actions"]:
+            resource_config = self.permissions["actions"][action]
+            if resource in resource_config:
+                if role in resource_config[resource]:
+                    return True
         
-        lines = []
-        lines.append(f"🔐 **{agent.capitalize()} Agent**")
-        lines.append("=" * 30)
-        lines.append(f"Level: {agent_data.get('level', 0)}")
-        lines.append("")
-        lines.append("✅ **Permissions:**")
-        for p in agent_data.get("permissions", []):
-            lines.append(f"  ✓ {p.replace('_', ' ').title()}")
-        lines.append("")
-        lines.append("🚫 **Restrictions:**")
-        for r in agent_data.get("restrictions", []):
-            lines.append(f"  ✗ {r.replace('_', ' ').title()}")
-        return "\n".join(lines)
-
-    def can_execute(self, agent: str, action: str) -> Dict:
-        """Cek dan return detail izin"""
-        allowed = self.has_permission(agent, action)
-        return {
-            "agent": agent,
-            "action": action,
-            "allowed": allowed,
-            "reason": "Permission granted" if allowed else "Permission denied or restricted"
+        logger.warning(f"Permission denied: {user} -> {action} (role: {role})")
+        return False
+    
+    def require_permission(self, user: str, action: str, resource: str = None):
+        """Check permission and raise exception if denied"""
+        if not self.check_permission(user, action, resource):
+            raise PermissionError(f"User {user} not authorized for {action}")
+        return True
+    
+    def add_user(self, username: str, role: str = "viewer"):
+        """Add user with role"""
+        if role not in self.permissions["roles"]:
+            raise ValueError(f"Invalid role: {role}")
+        
+        self.permissions["users"][username] = {
+            "role": role,
+            "added": datetime.now().isoformat()
         }
+        self._save()
+        logger.info(f"User {username} added with role {role}")
+    
+    def remove_user(self, username: str):
+        """Remove user"""
+        if username in self.permissions["users"]:
+            del self.permissions["users"][username]
+            self._save()
+            logger.info(f"User {username} removed")
+    
+    def _save(self):
+        """Save permissions to file"""
+        self.config_path.parent.mkdir(parents=True, exist_ok=True)
+        self.config_path.write_text(json.dumps(self.permissions, indent=2))
+    
+    def get_user_role(self, username: str) -> Optional[str]:
+        """Get role for user"""
+        user_data = self.permissions["users"].get(username, {})
+        return user_data.get("role")
 
-
-_permission = None
-
+# Singleton
+_permission_engine = None
 
 def get_permission_engine() -> PermissionEngine:
-    global _permission
-    if _permission is None:
-        _permission = PermissionEngine()
-    return _permission
+    """Get singleton instance"""
+    global _permission_engine
+    if _permission_engine is None:
+        _permission_engine = PermissionEngine()
+    return _permission_engine

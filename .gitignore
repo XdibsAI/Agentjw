@@ -199,3 +199,20 @@ logs/
 *.bak.*
 backup_*/
 snapshots/
+
+# Runtime data (jangan commit)
+memory/users/
+memory/customers/
+memory/sessions/
+memory/worktrees/
+memory/capabilities.json
+memory/workspace_state.json
+.agents/
+agentjw
+skills-lock.json
+memory/crm/
+memory/*.db
+memory/*.json
+!memory/*.template.json
+logs/*.log
+*.pid
