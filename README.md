@@ -295,3 +295,25 @@ Built by XdibsAI
 ⭐ Star this repository if you find it useful!
 
 </div>
+
+
+### 🔹 Multi-LLM Fallback Chain
+
+| Layer | Provider | Status | Model |
+|-------|----------|--------|-------|
+| 1 | NVIDIA NIM | ✅ Working | meta/llama-3.1-70b-instruct |
+| 2 | OpenRouter | ✅ Working | meta-llama/llama-3.1-70b-instruct |
+| 3 | Ollama (local) | ✅ Available | llama3 |
+
+**Usage Example:**
+```python
+from core.llm_client import LLMClient
+
+client = LLMClient()
+response = client.chat(
+    messages=[{"role": "user", "content": "Hello"}],
+    system="You are a helpful assistant",
+    temperature=0.7,
+    max_tokens=16000
+)
+```
