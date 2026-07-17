@@ -160,3 +160,12 @@ async def register_webhook(request: WebhookRequest, api_key: str = Header(...)):
     webhook = get_webhook_engine()
     result = webhook.register(request.workspace_id, request.url, request.events)
     return {"webhook": result}
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {
+        "status": "healthy",
+        "timestamp": datetime.now().isoformat(),
+        "version": "0.8.0"
+    }
