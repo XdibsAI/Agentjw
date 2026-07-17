@@ -56,7 +56,7 @@ class Workflow:
             if step.status == "pending":
                 # Cek dependencies
                 all_done = all(
-                    any(s.id == dep_id and s.status == "done" for s in self.steps)
+                    any(s.id == dep_id and s.status == "completed" for s in self.steps)
                     for dep_id in step.dependencies
                 )
                 if all_done:
@@ -81,13 +81,18 @@ class WorkflowEngine:
     def __init__(self):
         self.workflows: Dict[str, Workflow] = {}
         self.agent_map = {}
+        # Backward compatibility
+        self.agents = self.agent_map
 
     def register_agent(self, name: str, executor: Callable):
         """Daftarkan agent yang bisa dipanggil"""
         self.agent_map[name] = executor
 
-    def create_workflow(self, name: str, goal: str) -> Workflow:
-        workflow = Workflow(name, goal)
+    def create_workflow(self, goal: str, description: str = "") -> Workflow:
+        """Create a new workflow"""
+        workflow = Workflow(goal, goal)
+        if hasattr(workflow, "description"):
+            workflow.description = description
         self.workflows[workflow.id] = workflow
         return workflow
 
@@ -111,7 +116,7 @@ class WorkflowEngine:
                 if step.agent in self.agent_map:
                     result = self.agent_map[step.agent](step.action, step.params)
                     step.result = result
-                    step.status = "done"
+                    step.status = "completed"
                 else:
                     step.status = "failed"
                     step.error = f"Agent {step.agent} not registered"
@@ -121,15 +126,15 @@ class WorkflowEngine:
             
             step.completed_at = datetime.now().isoformat()
 
-        all_done = all(s.status == "done" for s in workflow.steps)
+        all_done = all(s.status == "completed" for s in workflow.steps)
         has_failed = any(s.status == "failed" for s in workflow.steps)
         
         if has_failed:
             workflow.status = "failed"
         elif all_done:
-            workflow.status = "done"
+            workflow.status = "completed"
         else:
-            workflow.status = "partial"
+            workflow.status = "completed"
         
         workflow.completed_at = datetime.now().isoformat()
         return workflow.to_dict()

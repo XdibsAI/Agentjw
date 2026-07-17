@@ -22,26 +22,22 @@ class RegressionSuite:
         }
         
     def run_unit_tests(self) -> bool:
-        """Run unit tests"""
+        """Run unit tests with pytest"""
         print("🧪 Running unit tests...")
         try:
-            # Cari test files
-            test_files = list(Path("tests").glob("test_*.py"))
-            if not test_files:
-                print("  ⚠️  No unit tests found")
-                return True
-            
-            for test_file in test_files:
-                result = subprocess.run(
-                    [sys.executable, str(test_file)],
-                    capture_output=True,
-                    text=True,
-                    timeout=30
-                )
-                if result.returncode != 0:
-                    print(f"  ❌ {test_file.name} failed")
-                    return False
-                print(f"  ✅ {test_file.name} passed")
+            import subprocess
+            # Use pytest for better test discovery
+            result = subprocess.run(
+                [sys.executable, "-m", "pytest", "tests/unit/", "-v", "--tb=short"],
+                capture_output=True,
+                text=True,
+                timeout=60
+            )
+            if result.returncode != 0:
+                print(f"  ❌ Unit tests failed")
+                print(result.stdout[-500:])
+                return False
+            print("  ✅ All unit tests passed")
             return True
         except Exception as e:
             print(f"  ❌ Unit tests error: {e}")
@@ -67,6 +63,10 @@ class RegressionSuite:
             
             # Test 2: CEO Agent
             ceo = get_ceo_agent()
+            # Force refresh metrics
+            from sicuan.core.production_metrics import get_production_metrics
+            metrics = get_production_metrics()
+            metrics._load()  # Reload from file
             health = ceo.get_health_score()
             if not (0 <= health <= 100):
                 print("  ❌ CEO Agent integration failed")
@@ -149,25 +149,43 @@ class RegressionSuite:
         """End-to-end workflow tests"""
         print("🚀 Running E2E tests...")
         try:
-            from sicuan.core.workflow_engine import WorkflowEngine  # Assume exists
+            from sicuan.core.workflow_engine import get_workflow_engine
             
-            # Test workflow execution
-            workflow = {
-                "id": "test-001",
-                "steps": [
-                    {"action": "read", "data": "test"},
-                    {"action": "process", "data": "test"},
-                    {"action": "write", "data": "test"}
-                ]
-            }
+            engine = get_workflow_engine()
             
-            # This would be actual workflow execution
-            # For now, just check if engine exists
-            print("  ⚠️  E2E tests need workflow_engine implementation")
-            return True
+            # Register mock agents
+            def coder(action, params):
+                return {"code": "print('Hello World')"}
+            
+            def reviewer(action, params):
+                return {"review": "✅ Approved"}
+            
+            def deployer(action, params):
+                return {"deploy": "✅ Deployed"}
+            
+            engine.register_agent("coder", coder)
+            engine.register_agent("reviewer", reviewer)
+            engine.register_agent("deployer", deployer)
+            
+            # Create workflow
+            wf = engine.create_workflow("E2E Test", "Test end-to-end workflow")
+            wf.add_step("Write Code", "coder", "generate", {"product": "test"})
+            wf.add_step("Review Code", "reviewer", "review", {"file": "test.py"})
+            wf.add_step("Deploy", "deployer", "deploy", {"env": "test"})
+            
+            # Execute
+            result = engine.execute(wf.id)
+            
+            if result.get("status") == "completed":
+                print("  ✅ E2E workflow completed successfully")
+                return True
+            else:
+                print(f"  ❌ E2E workflow failed: {result}")
+                return False
+                
         except Exception as e:
-            print(f"  ⚠️  E2E tests skipped: {e}")
-            return True
+            print(f"  ❌ E2E tests error: {e}")
+            return False
     
     def run_smoke_tests(self) -> bool:
         """Smoke tests for critical services"""

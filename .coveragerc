@@ -1,0 +1,21 @@
+[run]
+source = sicuan,core
+omit =
+    */tests/*
+    */venv/*
+    */__pycache__/*
+    */migrations/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self.debug:
+    if __name__ == .__main__.:
+    raise AssertionError
+    raise NotImplementedError
+    if 0:
+    if False:
+
+[html]
+directory = htmlcov
