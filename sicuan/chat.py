@@ -825,3 +825,13 @@ class SiCuanChat:
         """Route message menggunakan ConversationRouter"""
         routing = get_routing()
         return routing.route_message(user_message)
+
+# Singleton instance
+_chat_session_instance = None
+
+def get_chat_session():
+    """Get singleton chat session instance"""
+    global _chat_session_instance
+    if _chat_session_instance is None:
+        _chat_session_instance = SiCuanChat()
+    return _chat_session_instance

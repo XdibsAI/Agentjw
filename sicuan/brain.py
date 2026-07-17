@@ -2703,3 +2703,13 @@ Mau saya bantu implementasikan? Balas 'implementasi chart'
 
 
 sicuan_brain = SiCuanBrain()
+
+# Singleton instance
+_brain_instance = None
+
+def get_brain():
+    """Get singleton brain instance"""
+    global _brain_instance
+    if _brain_instance is None:
+        _brain_instance = SiCuanBrain()
+    return _brain_instance
