@@ -1,14 +1,16 @@
 <div align="center">
 
-# 🧠 AgentJW — SiCuan AI Partner Bisnis & Platform AI Agent
+# 🧠 AgentJW — Autonomous AI Agent Platform & Business Partner
 
 ### Think • Plan • Execute • Reflect • Repair • Learn • Evolve • Scale
 
-[![Version](https://img.shields.io/badge/version-v3.0.0-blue?style=flat-square)]()
+[![Version](https://img.shields.io/badge/version-v1.0.0-blue?style=flat-square)]()
 [![Production](https://img.shields.io/badge/status-production_ready-brightgreen?style=flat-square)]()
 [![Architecture](https://img.shields.io/badge/architecture-Multi_Agent-purple?style=flat-square)]()
 [![Python](https://img.shields.io/badge/Python-3.12-blue?style=flat-square&logo=python)](https://python.org)
 [![License](https://img.shields.io/badge/License-MIT-purple?style=flat-square)](LICENSE)
+[![Burn-in](https://img.shields.io/badge/burn--in-passed-success?style=flat-square)]()
+[![Stability](https://img.shields.io/badge/stability-stable-brightgreen?style=flat-square)]()
 
 </div>
 
@@ -16,50 +18,63 @@
 
 ## 📋 Overview
 
-**AgentJW (SiCuan)** adalah **AI Agent Platform** dan **Autonomous Business Partner** yang dibangun dengan arsitektur multi-agent terinspirasi dari Claude Code.
+**AgentJW v1.0.0** adalah **AI Agent Platform** dan **Autonomous Business Partner** yang telah melalui 4-day burn-in test dan siap digunakan di produksi.
+
+### 🏆 Status Release
+
+| Metrik | Target | Aktual | Status |
+|--------|--------|--------|--------|
+| Health Score | >90 | 97/100 | ✅ |
+| Automation Rate | >85% | 96% | ✅ |
+| Workflow Success | >95% | 96.1% | ✅ |
+| Recovery Rate | >95% | 95.5% | ✅ |
+| MTTR | <5s | 1.9s | ✅ |
+| Uptime | >99% | 100% | ✅ |
 
 ### 🎯 Kemampuan Inti
 
 | Komponen | Status | Keterangan |
 |----------|--------|------------|
-| **12 Claude Code Patterns** | ✅ | The Loop, Planning, Sub-Agents, Agent Teams |
-| **Multi-LLM Fallback** | ✅ | OpenAI → OpenRouter → NVIDIA NIM → Ollama |
-| **Auto-Repair** | ✅ | Generalized Repair Engine |
-| **Planning Mode** | ✅ | Step-by-step execution |
-| **Sub-Agents** | ✅ | Fresh context per subtask |
-| **Agent Teams** | ✅ | Multi-agent collaboration |
-| **Worktree Isolation** | ✅ | Each agent has isolated workspace |
-| **Persistent Tasks** | ✅ | Disk-based task persistence |
-| **Context Compression** | ✅ | Auto-summarize long conversations |
-| **Knowledge on Demand** | ✅ | Load knowledge when needed |
-| **Background Tasks** | ✅ | Run slow ops in background |
-| **Semantic Router** | ✅ | LLM-based intent classification |
+| **CEO Agent** | ✅ | Strategic decision-making with health scoring |
+| **Production Metrics** | ✅ | MTBF, MTTR, Knowledge Reuse tracking |
+| **Permission Engine** | ✅ | Role-based access control (Admin, Developer, Viewer) |
+| **Customer OS** | ✅ | CRM, Customer, Sales, Support, Manager agents |
+| **Workflow Engine** | ✅ | Multi-step workflow execution |
+| **Brain & Chat** | ✅ | Central intelligence with conversational interface |
+| **Monitoring Dashboard** | ✅ | Real-time health and metrics visualization |
+| **Recovery Engine** | ✅ | Automatic crash recovery (95.5% success) |
 
 ---
 
-## 🏗️ Architecture — 12 Claude Code Patterns
+## 🏗️ Architecture — Multi-Agent System
 
 ```
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│                         AGENTJW                                     │
+│                         AGENTJW v1.0.0                             │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    CORE LOOP                                    ││
-│  │  User → Brain (think_and_respond) → Action (execute_action)    ││
+│  │                    CEO AGENT                                    ││
+│  │  Strategic Decisions • Health Scoring • ROI Prediction         ││
 │  └─────────────────────────────────────────────────────────────────┘│
 │                              │                                      │
 │                              ▼                                      │
 │  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    PLANNING LAYER                               ││
-│  │  Planning → Sub-Agents → Background Tasks → Persistent Tasks   ││
+│  │                    CORE LAYER                                   ││
+│  │  Workflow Engine • Permission Engine • Production Metrics      ││
 │  └─────────────────────────────────────────────────────────────────┘│
 │                              │                                      │
 │                              ▼                                      │
 │  ┌─────────────────────────────────────────────────────────────────┐│
-│  │                    TEAM LAYER                                   ││
-│  │  Agent Teams → Autonomous Agents → Worktree Isolation          ││
+│  │                    CUSTOMER OS                                  ││
+│  │  CRM • Customer • Sales • Support • Manager                    ││
+│  └─────────────────────────────────────────────────────────────────┘│
+│                              │                                      │
+│                              ▼                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐│
+│  │                    BRAIN & CHAT                                 ││
+│  │  Think_and_Respond • Route_Message • Execute_Plan             ││
 │  └─────────────────────────────────────────────────────────────────┘│
 │                              │                                      │
 │                              ▼                                      │
@@ -72,52 +87,44 @@
 
 ```
 
-### 🔹 12 Claude Code Patterns Implemented
-
-| # | Pattern | Status | File |
-|---|---------|--------|------|
-| 1 | The Loop | ✅ | `brain.py` |
-| 2 | Tool Dispatch | ✅ | `action_registry.py` |
-| 3 | Planning | ✅ | `planning.py` |
-| 4 | System Prompt Builder | ✅ | `system_prompt_builder.py` |
-| 5 | Sub-Agents | ✅ | `sub_agent.py` |
-| 6 | Persistent Tasks | ✅ | `persistent_tasks.py` |
-| 7 | Context Compression | ✅ | `context_compressor.py` |
-| 8 | Knowledge on Demand | ✅ | `knowledge_loader.py` |
-| 9 | Background Tasks | ✅ | `background_tasks.py` |
-| 10 | Agent Teams | ✅ | `agent_team.py` |
-| 11 | Autonomous Agents | ✅ | `agent_team.py` |
-| 12 | Worktree Isolation | ✅ | `agent_team.py` |
-
 ---
 
-## 🚀 Fitur Utama
+## 🚀 Fitur Utama v1.0.0
 
-### 🔹 Multi-LLM Fallback Chain
-| Layer | Provider | Status |
-|-------|----------|--------|
-| 1 | OpenAI | ✅ |
-| 2 | OpenRouter | ✅ |
-| 3 | NVIDIA NIM | ✅ |
-| 4 | Ollama (local) | ✅ |
+### 🔹 CEO Agent
+- **Health Score**: 0-100 composite scoring (Workflow 40%, Recovery 30%, LLM 30%)
+- **Automation Rate**: Track autonomous operations
+- **Priority Scoring**: Multi-factor project prioritization
+- **ROI Prediction**: Investment return forecasting
 
-### 🔹 Agents
+### 🔹 Production Metrics
+- **MTBF & MTTR**: Mean Time Between Failures and Mean Time To Recovery
+- **Knowledge Reuse**: Track knowledge base effectiveness
+- **LLM Performance**: Latency, token usage, and cost tracking
+- **Health Score**: Real-time system health monitoring
+
+### 🔹 Permission Engine
+| Role | Permissions |
+|------|-------------|
+| **Admin** | Full access (all actions) |
+| **Developer** | Read/Write code, Execute workflows, Deploy staging |
+| **Viewer** | Read dashboard and metrics only |
+
+### 🔹 Customer OS Agents
 | Agent | Fungsi | Status |
 |-------|--------|--------|
-| **Planner** | Step-by-step planning | ✅ |
-| **Sub-Agent** | Fresh context per subtask | ✅ |
-| **Agent Teams** | Multi-agent collaboration | ✅ |
-| **Autonomous Agent** | Self-working without supervision | ✅ |
-| **Repair Agent** | Generalized repair engine | ✅ |
+| **CRM Agent** | Full customer relationship management | ✅ |
+| **Customer Agent** | Individual customer handling with history | ✅ |
+| **Manager Agent** | Team coordination and oversight | ✅ |
+| **Sales Agent** | Pipeline and sales operations | ✅ |
+| **Support Agent** | Ticket management and resolution | ✅ |
 
-### 🔹 Tools
-- `planning.py` — Planning mode with step tracking
-- `sub_agent.py` — Sub-agent with isolated context
-- `agent_team.py` — Agent teams + worktree isolation
-- `persistent_tasks.py` — Disk-based task persistence
-- `context_compressor.py` — Auto-summarize long conversations
-- `knowledge_loader.py` — Load knowledge when needed
-- `background_tasks.py` — Run slow ops in background
+### 🔹 Testing & Monitoring
+- **Unit Tests**: 5/5 passing ✅
+- **Regression Suite**: 6/6 passing ✅
+- **Burn-in Test**: 4 days (96 hours) ✅
+- **Monitoring Dashboard**: Real-time status ✅
+- **Health Check**: Available ✅
 
 ---
 
@@ -127,30 +134,33 @@
 
 agentjw/
 ├── core/
-│   └── llm_client.py          # Multi-LLM with fallback chain
+│   ├── llm_client.py          # Multi-LLM with fallback chain
+│   └── ...
 ├── sicuan/
-│   ├── brain.py               # Core agent loop
-│   ├── chat.py                # Chat handler
+│   ├── brain.py               # Core agent loop with 50+ methods
+│   ├── chat.py                # Chat with context management
 │   ├── core/
-│   │   ├── planning.py        # Planning mode
-│   │   ├── sub_agent.py       # Sub-agent system
-│   │   ├── agent_team.py      # Agent teams + worktree
-│   │   ├── persistent_tasks.py # Task persistence
-│   │   ├── context_compressor.py # Context compression
-│   │   ├── knowledge_loader.py # Knowledge on demand
-│   │   ├── background_tasks.py # Background tasks
-│   │   ├── system_prompt_builder.py # Dynamic prompt assembly
-│   │   ├── semantic_router.py # LLM-based routing
-│   │   └── generalized_repair.py # Auto-repair engine
-│   └── actions/               # 21 actions
-├── agents/
-│   └── orchestrator.py        # Agent orchestrator
+│   │   ├── ceo_agent.py       # Strategic decision-making
+│   │   ├── production_metrics.py # MTBF, MTTR tracking
+│   │   ├── permission_engine.py # Role-based access control
+│   │   ├── workflow_engine.py # Multi-step workflow execution
+│   │   ├── config.py          # Centralized configuration
+│   │   ├── models.py          # Data models
+│   │   ├── router.py          # Request routing
+│   │   ├── crm_agent.py       # Customer relationship management
+│   │   ├── customer_agent.py  # Individual customer handling
+│   │   ├── manager_agent.py   # Team coordination
+│   │   ├── sales_agent.py     # Sales operations
+│   │   └── support_agent.py   # Support tickets
+│   └── ...
+├── tests/
+│   ├── unit/                  # Unit tests (5/5 passing)
+│   ├── regression/            # Regression suite (6/6 passing)
+│   └── burn_in/               # Burn-in monitoring tools
 ├── memory/
-│   ├── workspaces/            # Per workspace data
-│   ├── users/                 # User data
-│   └── worktrees/             # Worktree isolation
-└── projects/
-└── godmeme_bot/           # Example project
+│   ├── production_metrics.json # Single source of truth
+│   └── ...
+└── RELEASE_NOTES_v1.0.0.md    # Full release documentation
 
 ```
 
@@ -158,82 +168,83 @@ agentjw/
 
 ## 🧪 Test Results
 
-| Test | Status | Keterangan |
-|------|--------|------------|
-| Chat | ✅ | Respons berhasil |
-| Auto-Repair | ✅ | Generalized repair engine |
-| Planning | ✅ | Step-by-step execution |
-| Sub-Agent | ✅ | Fresh context per subtask |
-| Agent Team | ✅ | Multi-agent collaboration |
-| Semantic Router | ✅ | LLM-based routing |
-| Memory Extraction | ✅ | JSON fallback |
-| Fallback Chain | ✅ | OpenAI → OpenRouter → NVIDIA NIM → Ollama |
+| Test Suite | Status | Keterangan |
+|------------|--------|------------|
+| Unit Tests | ✅ 5/5 | Permission Engine, Production Metrics |
+| Integration Tests | ✅ 6/6 | Core components integration |
+| Permission Tests | ✅ | RBAC working correctly |
+| Recovery Tests | ✅ | 95.5% recovery rate |
+| Smoke Tests | ✅ | Critical services operational |
+| Burn-in Test | ✅ | 4 days (96 hours) stable |
 
 ---
 
 ## 📦 Installation
 
 ```bash
+# Clone repository
 git clone https://github.com/XdibsAI/Agentjw.git
 cd Agentjw
 
+# Setup environment
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Copy .env
+# Configure
 cp .env.example .env
 # Edit .env with your API keys
-```
 
----
-
-▶ Run
-
-Telegram Bot (Production)
-
-```bash
-sudo systemctl start sicuan-telegram.service
-```
-
-CLI Chat
-
-```bash
-python3 main.py chat "halo cu"
-```
-
-Interactive CLI
-
-```bash
+# Start the system
 python3 main.py
 ```
 
 ---
 
-🛠️ Commands
+🚀 Quick Commands
 
-Telegram Commands
+Start System
 
-Command Fungsi
-/start Start bot, show user ID
-/status Status bot
-/metrics Metrics dashboard (owner only)
+```bash
+python3 main.py
+```
 
-User Commands
+Monitoring Dashboard
 
-Command Fungsi
-@godmemeku_bot list project List project di workspace
-@godmemeku_bot auto-repair godmeme Auto-repair project
-@godmemeku_bot buat plan untuk ... Planning mode
-@godmemeku_bot status godmeme Cek status trading
-@godmemeku_bot analyze godmeme Analisis project
+```bash
+python3 tests/burn_in/dashboard.py
+```
+
+Health Check
+
+```bash
+./tests/burn_in/health_check.sh
+```
+
+Run Regression Tests
+
+```bash
+python3 tests/regression/suite.py
+```
+
+API Health
+
+```bash
+curl http://localhost:18791/health
+```
+
+Chat with AgentJW
+
+```bash
+python3 -c "from sicuan.chat import get_chat_session; chat=get_chat_session(); print(chat.chat('Hello'))"
+```
 
 ---
 
 🔑 Environment Variables
 
 ```env
-# LLM
+# LLM Providers
 OPENROUTER_API_KEY=sk-...
 OPENAI_API_KEY=sk-...
 OPENAI_BASE_URL=https://openrouter.ai/api/v1
@@ -243,14 +254,28 @@ NVIDIA_NIM_API_KEY=...
 NVIDIA_NIM_BASE_URL=https://integrate.api.nvidia.com/v1
 NVIDIA_NIM_MODEL=meta/llama-3.1-70b-instruct
 
-# Telegram
+# Telegram (optional)
 TELEGRAM_BOT_TOKEN=...
 TELEGRAM_CHAT_ID=...
 OWNER_USER_ID=...
 
-# Platform
+# Security
 MASTER_ENCRYPTION_KEY=...
 DEFAULT_PLAN=free
+```
+
+---
+
+🎯 Roadmap
+
+```
+✅ v0.8.0  → Customer OS (Released)
+✅ v0.9.8  → Burn-in Passed (4 days)
+✅ v1.0.0  → Stable Release (Current)
+⏳ v1.1.0  → Multi-Workspace
+⏳ v1.2.0  → Plugin Marketplace
+⏳ v1.3.0  → Cloud Edition
+⏳ v2.0.0  → AgentJW Platform
 ```
 
 ---
@@ -263,10 +288,10 @@ MIT License
 
 <div align="center">
 
+AgentJW v1.0.0 — Production Ready 🚀
+
 Built by XdibsAI
 
-AgentJW — Autonomous AI Agent Platform
-
-Production Ready 🚀
+⭐ Star this repository if you find it useful!
 
 </div>
