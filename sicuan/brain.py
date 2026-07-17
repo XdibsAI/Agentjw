@@ -878,7 +878,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
             except Exception as e:
                 pass
             return {
-                "response": "Waduh, ada yang ga beres di otak aku sebentar. Coba lagi ya Mas.",
+                "response": "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti.",
                 "action": None,
                 "needs_from_user": None,
                 "reasoning": str(e)

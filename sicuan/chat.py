@@ -266,7 +266,7 @@ class SiCuanChat:
             import traceback
             print(f"[CHAT] Brain error full trace:")
             traceback.print_exc()
-            return "Waduh, ada yang ga beres sebentar. Coba lagi ya Mas."
+            return return brain_response.get("response", "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti.")
 
         action = self._safe_get(result, "action")
         intent = self._safe_get(result, "intent", "unknown")

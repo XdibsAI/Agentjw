@@ -31,63 +31,24 @@ class LLMClient:
         self._init_client()
 
     def _init_client(self):
-        if self.provider == "openai":
-            try:
-                from openai import OpenAI
-                self._client = OpenAI(api_key=config.OPENAI_API_KEY)
-            except Exception as e:
-                pass
-
-    def _get_api_key(self):
-        import os
-        if self.provider == "openai":
-            return os.getenv("OPENAI_API_KEY")
-        elif self.provider == "anthropic":
-            return os.getenv("ANTHROPIC_API_KEY")
-        elif self.provider == "groq":
-            return os.getenv("GROQ_API_KEY")
-        elif self.provider == "openrouter":
-            return os.getenv("OPENROUTER_API_KEY")
+        # Initialize client based on provider
+        # OPENAI = OPENROUTER (alias)
+        if self.provider == "openai" or self.provider == "openrouter":
+            # OpenRouter client (alias for OpenAI)
+            self.client = None  # OpenRouter client
+            self.provider_alias = "openrouter"
+        elif self.provider == "nvidia_nim":
+            # NVIDIA NIM client
+            self.client = None  # NVIDIA NIM client
+        elif self.provider == "ollama":
+            # Ollama local client
+            self.client = None  # Ollama client
         else:
-            return os.getenv("OPENROUTER_API_KEY")
-
-    def chat(self, messages: List[Dict], system: Optional[str] = None,
-             temperature: float = 0.7, max_tokens: int = 16000,
-             json_mode: bool = False) -> str:
-        """Main chat method"""
-        if json_mode:
-            temperature = 0.0
-        return self._openai_chat(messages, system, temperature, max_tokens, json_mode)
-
-    def chat_with_fallback(self, messages: List[Dict], system: Optional[str] = None,
-                           temperature: float = 0.7, max_tokens: int = 16000,
-                           json_mode: bool = False) -> str:
-        """Chat dengan fallback chain"""
-        # 1. Coba OpenAI
-        try:
-            return self._openai_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            logger.warning(f"OpenAI failed: {e}")
+            # Default fallback to OpenRouter
+            self.client = None
+            self.provider_alias = "openrouter"
         
-        # 2. Coba OpenRouter
-        try:
-            return self._openrouter_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            logger.warning(f"OpenRouter failed: {e}")
-        
-        # 3. Coba NVIDIA NIM
-        try:
-            return self._nvidia_nim_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            logger.warning(f"NVIDIA NIM failed: {e}")
-        
-        # 4. Coba Ollama
-        try:
-            return self._ollama_chat(messages, system, temperature, max_tokens, json_mode)
-        except Exception as e:
-            logger.warning(f"Ollama failed: {e}")
-        
-        return "❌ All LLM providers failed"
+        return self.client
 
     def _openai_chat(self, messages: List[Dict], system: Optional[str] = None,
                      temperature: float = 0.7, max_tokens: int = 16000,
@@ -127,8 +88,8 @@ class LLMClient:
         raise Exception(f"HTTP {response.status_code}")
 
     def _openrouter_chat(self, messages: List[Dict], system: Optional[str] = None,
-                         temperature: float = 0.7, max_tokens: int = 16000,
-                         json_mode: bool = False) -> str:
+                     temperature: float = 0.7, max_tokens: int = 16000,
+                     json_mode: bool = False) -> str:
         """Chat via OpenRouter"""
         api_key = os.getenv("OPENROUTER_API_KEY")
         if not api_key:
@@ -161,8 +122,8 @@ class LLMClient:
         raise Exception(f"HTTP {response.status_code}")
 
     def _nvidia_nim_chat(self, messages: List[Dict], system: Optional[str] = None,
-                         temperature: float = 0.7, max_tokens: int = 16000,
-                         json_mode: bool = False) -> str:
+                     temperature: float = 0.7, max_tokens: int = 16000,
+                     json_mode: bool = False) -> str:
         """Chat via NVIDIA NIM"""
         if not self.nvidia_nim_api_key:
             raise Exception("NVIDIA_NIM_API_KEY not set")
