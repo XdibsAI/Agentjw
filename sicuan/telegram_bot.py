@@ -19,6 +19,11 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from telegram.constants import ParseMode
 
 from sicuan.chat import SiCuanChat
+from sicuan.core.customer_agent import get_customer_agent
+from sicuan.core.crm_agent import get_crm_agent
+from sicuan.core.sales_agent import get_sales_agent
+from sicuan.core.support_agent import get_support_agent
+from sicuan.core.manager_agent import get_manager_agent
 from sicuan.platform.workspace_resolver import get_workspace_resolver
 from sicuan.platform.runtime import get_runtime_manager
 from core.logger import logger
