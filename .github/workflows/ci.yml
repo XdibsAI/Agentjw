@@ -11,9 +11,6 @@ on:
 
 jobs:
   test:
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
@@ -71,9 +68,6 @@ jobs:
 
   health-check:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    needs: test
     
     steps:
     - uses: actions/checkout@v4
@@ -98,9 +92,6 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
-    needs: [test, health-check]
     if: github.ref == 'refs/heads/main'
     
     steps:
@@ -122,6 +113,3 @@ jobs:
       with:
         name: dist
         path: dist/
-
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
