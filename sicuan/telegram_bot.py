@@ -234,7 +234,7 @@ class TelegramBot:
                 await self._safe_reply(update.message.reply_text, 
                     "❌ Maaf, Anda belum memiliki akses ke SiCuan. "
                     "Kirim /start untuk mendaftar."
-                , parse_mode=ParseMode.MARKDOWN)
+                , parse_mode=None)
                 return
         
         # Check for commands
@@ -262,12 +262,12 @@ class TelegramBot:
                 if len(response) > 4000:
                     for i in range(0, len(response), 4000):
                         await self._safe_reply(update.message.reply_text, 
-                            response[i:i+4000], parse_mode=ParseMode.MARKDOWN)
+                            response[i:i+4000], parse_mode=None)
                 else:
                     await self._safe_reply(update.message.reply_text, 
-                        response, parse_mode=ParseMode.MARKDOWN)
+                        response, parse_mode=None)
             else:
-                await self._safe_reply(update.message.reply_text, "Maaf, saya tidak bisa memproses permintaan saat ini.", parse_mode=ParseMode.MARKDOWN)
+                await self._safe_reply(update.message.reply_text, "Maaf, saya tidak bisa memproses permintaan saat ini.", parse_mode=None)
                 
         except Exception as e:
             logger.error(f"Error processing message: {e}")
@@ -275,7 +275,7 @@ class TelegramBot:
             diag.record_error("error", "telegram", str(e), {"user_id": user_id})
             self.record_metrics(time.time() - start_time, error=True)
             await self._safe_reply(update.message.reply_text, 
-                f"❌ Error: {str(e, parse_mode=ParseMode.MARKDOWN)[:200]}\n\nCoba lagi nanti."
+                f"❌ Error: {str(e, parse_mode=None)[:200]}\n\nCoba lagi nanti."
             )
 
     async def handle_command(self, update: Update, context: CallbackContext):
@@ -296,34 +296,36 @@ class TelegramBot:
             is_owner = user_mgr.is_owner(user_id)
             
             if is_owner:
-                welcome_msg = f"👋 Halo Mas Gen! **{self.bot_name}** siap membantu.\n\n"
-                welcome_msg += f"**User ID:** `{user_id}`\n"
-                welcome_msg += f"**Username:** @{username}\n\n"
-                welcome_msg += f"**Fitur Owner:**\n"
-                welcome_msg += f"- 📂 Kelola Project\n"
-                welcome_msg += f"- 🔧 Review & Repair Code\n"
-                welcome_msg += f"- 📊 Trading Analysis\n"
-                welcome_msg += f"- 📚 Context Memory\n\n"
-                welcome_msg += f"Gunakan @{self.bot_username} di grup untuk memanggil saya.\n\n"
-                welcome_msg += f"*Powered by SiCuan v2.0*"
+                welcome_msg = (
+                    "👋 Halo! Saya SiCuan - Partner Bisnis AI-mu.\n\n"
+                    "Kirim pesan atau perintah apa saja, saya siap membantu!\n\n"
+                    "📌 Fitur:\n"
+                    "💬 Chat & Konsultasi\n"
+                    "📊 Analisis Data\n"
+                    "🔧 Code Review\n"
+                    "📚 Context Memory\n\n"
+                    "*Powered by SiCuan*"
+                )
             else:
-                welcome_msg = f"👋 Hello! I'm **{self.bot_name}** - Your AI Business Partner.\n\n"
-                welcome_msg += f"I'm here to help you with:\n"
-                welcome_msg += f"- 💬 Chat & Consultation\n"
-                welcome_msg += f"- 📊 Data Analysis\n"
-                welcome_msg += f"- 🔧 Code Review\n"
-                welcome_msg += f"- 📚 Context Memory\n\n"
-                welcome_msg += f"Just send me your questions or commands!\n\n"
-                welcome_msg += f"*Powered by SiCuan v2.0*"
+                welcome_msg = (
+                    "👋 Hello! I'm SiCuan - Your AI Business Partner.\n\n"
+                    "Send me your questions or commands, I'm ready to help!\n\n"
+                    "📌 Features:\n"
+                    "💬 Chat & Consultation\n"
+                    "📊 Data Analysis\n"
+                    "🔧 Code Review\n"
+                    "📚 Context Memory\n\n"
+                    "*Powered by SiCuan*"
+                )
             
             await self._safe_reply(update.message.reply_text, 
-                welcome_msg, parse_mode=ParseMode.MARKDOWN)
+                welcome_msg, parse_mode=None)
             return
         
         elif text == "/metrics" and self.is_owner(user_id):
             await self._safe_reply(update.message.reply_text, 
-                self._safe_reply(update.message.reply_text, self.get_metrics_summary(), parse_mode=ParseMode.MARKDOWN),
-                parse_mode=ParseMode.MARKDOWN
+                self._safe_reply(update.message.reply_text, self.get_metrics_summary(), parse_mode=None),
+                parse_mode=None
             )
         
         elif text == "/status":
@@ -338,7 +340,7 @@ class TelegramBot:
 Mode: Group
 Mention-only: Yes
 """
-            await self._safe_reply(update.message.reply_text, status, parse_mode=ParseMode.MARKDOWN)
+            await self._safe_reply(update.message.reply_text, status, parse_mode=None)
 
 
 def run_bot():
