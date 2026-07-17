@@ -3,7 +3,9 @@ Intent Classifier - Menggunakan LLM untuk klasifikasi intent
 """
 
 from typing import Dict, Optional
-from core.llm_client import llm
+from core.llm_client import get_llm
+
+llm = get_llm()
 from core.logger import logger
 
 

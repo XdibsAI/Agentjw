@@ -39,6 +39,7 @@ from sicuan.core.knowledge_loader import get_knowledge_loader
 from sicuan.core.background_tasks import get_background_task_manager
 from sicuan.core.agent_team import get_agent_team_manager
 from sicuan.core.system_prompt_builder import get_prompt_builder
+from sicuan.core.context_manager import get_context_manager
 
 BASE = Path(__file__).parent
 KNOWLEDGE_DIR = BASE / "knowledge"
@@ -836,7 +837,18 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
                 if isinstance(raw, dict):
                     result = raw
                 else:
-                    result = json.loads(raw)
+                    # Validasi: coba parse JSON, jika gagal, gunakan fallback
+                    try:
+                        result = json.loads(raw)
+                    except json.JSONDecodeError:
+                        # Jika raw adalah string biasa (bukan JSON), gunakan sebagai response
+                        result = {
+                            "response": raw,
+                            "action": "null",
+                            "intent": "chat",
+                            "confidence": 50
+                        }
+                        logger.warning(f"LLM response bukan JSON: {raw[:200]}...")
 
             # Simpan metadata planner terakhir untuk planner memory.
             # Normalisasi final sebelum akses

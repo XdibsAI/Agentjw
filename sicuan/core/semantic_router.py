@@ -55,7 +55,11 @@ WAJIB:
 - Jika user hanya menyapa → action = "null"
 """
         try:
-            response = llm.chat(prompt, max_tokens=200)
+                        # Format messages dengan benar (List[Dict])
+            messages = [
+                {"role": "user", "content": prompt}
+            ]
+            response = llm.chat(messages, max_tokens=200)
             import re
             if isinstance(response, str):
                 json_match = re.search(r'\{.*\}', response, re.DOTALL)

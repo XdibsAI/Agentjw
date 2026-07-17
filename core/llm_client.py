@@ -119,8 +119,11 @@ class LLMClient:
         
         response = requests.post(f"{base_url}/chat/completions", headers=headers, json=payload, timeout=60)
         if response.status_code == 200:
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
+            try:
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+            except Exception as e:
+                raise Exception(f"JSON parse error: {e} - Status: {response.status_code} - Body: {response.text[:200]}")
         raise Exception(f"HTTP {response.status_code}")
 
     def _openrouter_chat(self, messages: List[Dict], system: Optional[str] = None,
