@@ -68,6 +68,8 @@ jobs:
 
   health-check:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     needs: test
     
     steps:
@@ -93,6 +95,8 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
     needs: [test, health-check]
     if: github.ref == 'refs/heads/main'
     
