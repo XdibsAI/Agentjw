@@ -39,14 +39,15 @@ class MonetizationManager:
 
     def analyze_project(self, project_name: str, completion: int, category: str, potential: int) -> Dict:
         """Analisis potensi monetisasi project"""
+        priority_score = self._calculate_priority(completion, potential)
         opportunity = {
             "id": f"OPP-{len(self._data['opportunities'])+1:04d}",
             "timestamp": datetime.now().isoformat(),
             "project": project_name,
             "completion": completion,
-            "category": category,  # SaaS, API, Subscription, White Label, etc
-            "potential": potential,  # Estimated monthly revenue in IDR
-            "priority_score": self._calculate_priority(completion, potential),
+            "category": category,
+            "potential": potential,
+            "priority_score": priority_score,
             "status": "pending",
             "action_plan": []
         }
@@ -55,9 +56,14 @@ class MonetizationManager:
         return opportunity
 
     def _calculate_priority(self, completion: int, potential: int) -> int:
-        """Hitung priority score"""
+        """Hitung priority score (0-100)"""
+        # Normalisasi potential ke skala 0-100 (asumsi max 100 juta)
+        max_potential = 100000000  # 100 juta
+        potential_normalized = min(100, int((potential / max_potential) * 100))
+        
         # Completion weight: 60%, Potential weight: 40%
-        return int((completion * 0.6) + ((potential / 100) * 40))
+        score = int((completion * 0.6) + (potential_normalized * 0.4))
+        return min(100, max(0, score))
 
     def get_priorities(self) -> List[Dict]:
         """Dapatkan daftar prioritas monetisasi"""

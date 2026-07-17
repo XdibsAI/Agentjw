@@ -167,13 +167,16 @@ class LLMClient:
         if not self.nvidia_nim_api_key:
             raise Exception("NVIDIA_NIM_API_KEY not set")
         
+        # Gunakan model yang valid
+        model = self.nvidia_nim_model or "meta/llama-3.1-70b-instruct"
+        
         messages_list = []
         if system:
             messages_list.append({"role": "system", "content": system})
         messages_list.extend(messages)
         
         payload = {
-            "model": self.nvidia_nim_model,
+            "model": model,
             "messages": messages_list,
             "temperature": temperature,
             "max_tokens": max_tokens
@@ -184,12 +187,22 @@ class LLMClient:
             "Content-Type": "application/json"
         }
         
-        response = requests.post(f"{self.nvidia_nim_base_url}/chat/completions", 
-                                 headers=headers, json=payload, timeout=120)
-        if response.status_code == 200:
-            data = response.json()
-            return data["choices"][0]["message"]["content"]
-        raise Exception(f"HTTP {response.status_code}")
+        base_url = self.nvidia_nim_base_url or "https://integrate.api.nvidia.com/v1"
+        
+        try:
+            response = requests.post(f"{base_url}/chat/completions", 
+                                     headers=headers, json=payload, timeout=120)
+            if response.status_code == 200:
+                data = response.json()
+                return data["choices"][0]["message"]["content"]
+            elif response.status_code == 403:
+                raise Exception("NVIDIA NIM 403 - API key tidak valid atau model tidak diizinkan")
+            else:
+                raise Exception(f"HTTP {response.status_code}")
+        except requests.exceptions.ConnectionError:
+            raise Exception("NVIDIA NIM connection failed")
+        except Exception as e:
+            raise Exception(f"NVIDIA NIM error: {e}")
 
     def _ollama_chat(self, messages: List[Dict], system: Optional[str] = None,
                      temperature: float = 0.7, max_tokens: int = 16000,
