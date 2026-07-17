@@ -765,10 +765,46 @@ class SiCuanChat:
             return self.brain.think_and_respond(user_message, self.history)
 
     def _save_context(self):
-        """Auto-save conversation context"""
+        """Auto-save conversation context per user"""
+        print(f"[CONTEXT] SAVE: user_id={getattr(self, '_current_user_id', 'NOT_SET')}")
         try:
-            if hasattr(self, 'context') and hasattr(self.context, 'save'):
-                self.context.save("memory")
+            import json
+            from pathlib import Path
+            from datetime import datetime
+            
+            user_id = getattr(self, '_current_user_id', None)
+            if user_id:
+                user_context_file = Path(f"/home/dibs/agentjw/memory/users/{user_id}_conversation.json")
+                # Load existing
+                if user_context_file.exists():
+                    user_data = json.loads(user_context_file.read_text())
+                else:
+                    user_data = {"user_id": str(user_id), "topics": [], "actions": [], "updated_at": ""}
+                
+                # Update dengan data terakhir
+                if hasattr(self, 'context'):
+                    if hasattr(self.context, 'last_topic') and self.context.last_topic:
+                        user_data["last_topic"] = self.context.last_topic
+                        topics = user_data.get("topics", [])
+                        topics.append(self.context.last_topic)
+                        if len(topics) > 50:
+                            topics = topics[-50:]
+                        user_data["topics"] = topics
+                    
+                    if hasattr(self.context, 'last_action') and self.context.last_action:
+                        user_data["last_action"] = self.context.last_action
+                        actions = user_data.get("actions", [])
+                        actions.append(self.context.last_action)
+                        if len(actions) > 50:
+                            actions = actions[-50:]
+                        user_data["actions"] = actions
+                
+                user_data["updated_at"] = datetime.now().isoformat()
+                user_context_file.write_text(json.dumps(user_data, indent=2))
+            else:
+                # Fallback ke global
+                if hasattr(self, 'context') and hasattr(self.context, 'save'):
+                    self.context.save("memory")
         except Exception as e:
             print(f"[CONTEXT] Failed to save: {e}")
     
