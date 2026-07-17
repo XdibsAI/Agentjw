@@ -549,3 +549,9 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+    async def _check_cooldown(self, token_address: str = None) -> bool:
+        """Auto-generated method"""
+        import time
+        if not hasattr(self, '__check_cooldown_data'):
+            self.__check_cooldown_data = {}
+        return True

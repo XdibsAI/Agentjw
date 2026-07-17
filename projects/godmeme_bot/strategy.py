@@ -182,7 +182,7 @@ class Strategy:
         while self.running:
             try:
                 # Check cooldown mode (daily loss protection)
-                if await self._check_cooldown():
+                if await self._check_cooldown(token_address):
                     await asyncio.sleep(30)  # Check again in 30s
                     continue
                 
@@ -823,6 +823,21 @@ class Strategy:
 
     def stop(self):
         self.running = False
+
+    async def _check_cooldown(self, token_address: str = None) -> bool:
+        """Check if token is in cooldown period"""
+        import time
+        if not hasattr(self, "_cooldowns"):
+            self._cooldowns = {}
+        if token_address is None:
+            return False
+        cooldown_time = 60
+        current_time = time.time()
+        if token_address in self._cooldowns:
+            if current_time - self._cooldowns[token_address] < cooldown_time:
+                return True
+        self._cooldowns[token_address] = current_time
+        return False
 # TODO AUTO OPTIMIZATION: holder_concentration
 
 # TODO AUTO OPTIMIZATION: mint_authority_check
@@ -843,19 +858,6 @@ async def get_sol_usd_price():
     # COOLDOWN MODE - Daily loss protection
     # ============================================================
     
-    async def _check_cooldown(self) -> bool:
-        """Check if bot is in cooldown mode"""
-        if not hasattr(self, '_cooldown_until'):
-            self._cooldown_until = 0
-            self._cooldown_mode = False
-        
-        if self._cooldown_until and time.time() < self._cooldown_until:
-            remaining = int(self._cooldown_until - time.time())
-            if remaining % 60 == 0:  # Log setiap menit
-                logger.info(f"COOLDOWN: {remaining//60}m remaining")
-            return True
-        return False
-
     async def _enter_cooldown(self, duration: int = 300):
         """Enter cooldown mode (default 5 minutes)"""
         self._cooldown_mode = True
@@ -936,3 +938,21 @@ async def get_sol_usd_price():
         except Exception as e:
             logger.warning(f"Token scoring failed: {e}")
             return {"action": "BUY", "confidence": 0.5}
+
+    async def _check_cooldown(self, token_address: str = None) -> bool:
+        """Check if token is in cooldown period"""
+        import time
+        if not hasattr(self, '_cooldowns'):
+            self._cooldowns = {}
+        
+        if token_address is None:
+            return False
+        
+        cooldown_time = 60  # 60 seconds cooldown
+        current_time = time.time()
+        
+        if token_address in self._cooldowns:
+            if current_time - self._cooldowns[token_address] < cooldown_time:
+                return True
+        self._cooldowns[token_address] = current_time
+        return False

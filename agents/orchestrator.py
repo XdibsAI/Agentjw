@@ -37,6 +37,7 @@ class OrchestratorAgent:
 
         console.print("[dim]Brain: " + action + " | file=" + str(target_file) + " | project=" + str(target_project) + "[/dim]")
 
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         proj = brain.resolve_project(target_project, projects)
 
@@ -245,6 +246,7 @@ class OrchestratorAgent:
             )
 
         # ── Build rich project context ──────────────────────────────────────
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         proj_ctx = ""
         real_data = ""
@@ -269,8 +271,8 @@ class OrchestratorAgent:
                     env_status = "❌ tidak ada"
 
                 proj_lines.append(
-                    f"- [{p['id']}] {p['name']} | {p['status']} | {p['tool_type']} "
-                    f"| .env: {env_status} | {p['created_at'][:10]}"
+                    f"- [{p['id']}] {p['name']} | {p['status']} | {p.get('tool_type', 'general')} "
+                    f"| .env: {env_status} | {p.get('created_at', 'N/A')[:10]}"
                 )
             proj_ctx = "\n".join(proj_lines)
 
@@ -617,6 +619,7 @@ RECENT CHAT:
             return None
 
         # Find target project
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         if not projects:
             return None
@@ -669,6 +672,7 @@ RECENT CHAT:
     def _repair_existing(self, user_request: str, session_id: str = None) -> Dict:
         """Auto-repair most recent or referenced project"""
         from agents.specialist.repair_specialist import repair_specialist
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         target = self._find_project_ref(user_request, projects)
         if not target and projects:
@@ -682,6 +686,7 @@ RECENT CHAT:
     def _inspect_action(self, user_request: str) -> Dict:
         """Inspect project files, logs, hashes — NO hallucination"""
         lower = user_request.lower()
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         proj = self._find_project_ref(user_request, projects) or (projects[0] if projects else None)
         if not proj:
@@ -727,6 +732,7 @@ RECENT CHAT:
         import json
 
         adapter = get_project_adapter()
+        adapter = get_project_adapter()
         projects = adapter.get_projects()
         video_projects = [p for p in projects if p["name"].startswith("video_")]
         if not video_projects:
@@ -755,6 +761,7 @@ RECENT CHAT:
 
     def _run_project(self, user_request: str) -> Dict:
         """Run a project and capture output"""
+        adapter = get_project_adapter()
         adapter = get_project_adapter()
         projects = adapter.get_projects()
         proj = self._find_project_ref(user_request, projects) or (projects[0] if projects else None)

@@ -96,7 +96,7 @@ Extract important memories as JSON.
 
         except Exception as e:
 
-            self._log(f"Memory extraction failed: {e}")
+            #             self._log(f"Memory extraction failed: {e}")  # commented out
 
             return {"stored": 0}
 
@@ -179,4 +179,3 @@ Extract important memories as JSON.
 
 
 memory_agent = MemoryAgent()
-
