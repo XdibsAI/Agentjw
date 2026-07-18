@@ -2,23 +2,28 @@ name: AgentJW CI/CD
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    runs-on: ubuntu-latest
 
 on:
   push:
     branches: [ main, develop ]
   pull_request:
     branches: [ main ]
+    runs-on: ubuntu-latest
 
 jobs:
   test:
+    runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
+    runs-on: ubuntu-latest
     
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    runs-on: ubuntu-latest
     
     - name: Install dependencies
       run: |
@@ -56,6 +61,7 @@ jobs:
       with:
         file: ./coverage.xml
         flags: unittests
+    runs-on: ubuntu-latest
     
     - name: Upload test results
       uses: actions/upload-artifact@v4
@@ -65,17 +71,20 @@ jobs:
           coverage.xml
           htmlcov/
           bandit-report.json
+    runs-on: ubuntu-latest
 
   health-check:
     runs-on: ubuntu-latest
     
     steps:
     - uses: actions/checkout@v4
+    runs-on: ubuntu-latest
     
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    runs-on: ubuntu-latest
     
     - name: Install dependencies
       run: |
@@ -96,11 +105,13 @@ jobs:
     
     steps:
     - uses: actions/checkout@v4
+    runs-on: ubuntu-latest
     
     - name: Set up Python
       uses: actions/setup-python@v5
       with:
         python-version: '3.12'
+    runs-on: ubuntu-latest
     
     - name: Build package
       run: |
@@ -113,3 +124,4 @@ jobs:
       with:
         name: dist
         path: dist/
+    runs-on: ubuntu-latest
