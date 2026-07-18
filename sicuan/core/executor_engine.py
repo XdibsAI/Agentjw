@@ -127,7 +127,7 @@ class ExecutorEngine:
                 from sicuan.actions.modify_project import execute
                 return execute
             elif action == "autonomous_project":
-                from sicuan.actions.autonomous_project import execute
+                # from sicuan.actions.autonomous_project import execute  # Lazy import
                 return execute
             else:
                 return None

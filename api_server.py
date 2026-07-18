@@ -52,8 +52,6 @@ async def health_check():
         }
     except Exception as e:
         return {"status": "unhealthy", "error": str(e)}
-        }
-    except Exception as e:
         return JSONResponse(
             status_code=500,
             content={"status": "unhealthy", "error": str(e)}

@@ -8,7 +8,7 @@ from datetime import datetime
 import uuid
 
 from sicuan.core.planner_dag import PlannerDAG
-from sicuan.core.executor_engine import ExecutorEngine
+# from sicuan.core.executor_engine import ExecutorEngine  # Lazy import
 from sicuan.core.workflow_context import WorkflowContext
 from sicuan.core.reflection_engine import ReflectionEngine
 from sicuan.action_registry import ActionRegistry

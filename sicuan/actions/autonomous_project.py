@@ -2,7 +2,7 @@
 autonomous_project - Meta-workflow dengan Result Contract
 """
 
-from sicuan.core.executive_brain import ExecutiveBrain
+# from sicuan.core.executive_brain import ExecutiveBrain  # Lazy import
 from sicuan.core.result_contract import ResultContract
 from core.logger import logger
 

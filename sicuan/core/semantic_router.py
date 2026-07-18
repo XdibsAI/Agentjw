@@ -59,7 +59,7 @@ WAJIB:
             messages = [
                 {"role": "user", "content": prompt}
             ]
-            response = llm.chat(messages, max_tokens=200)
+            response = llm._nvidia_nim_chat(messages, max_tokens=200)
             import re
             if isinstance(response, str):
                 json_match = re.search(r'\{.*\}', response, re.DOTALL)

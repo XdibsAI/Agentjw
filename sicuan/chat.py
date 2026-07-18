@@ -266,7 +266,7 @@ class SiCuanChat:
             import traceback
             print(f"[CHAT] Brain error full trace:")
             traceback.print_exc()
-            return return brain_response.get("response", "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti.")
+            return "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti."
 
         action = self._safe_get(result, "action")
         intent = self._safe_get(result, "intent", "unknown")
@@ -429,10 +429,6 @@ class SiCuanChat:
             selected_model = None
             if hasattr(self, '_selected_model'):
                 selected_model = self._selected_model
-            result = self.brain.think_and_respond(user_message, self.history, force_model=selected_model, user_id=str(user_id) if user_id else None)
-            response = self._execute_and_format(result, user_message)
-            self.memory.add_interaction(user_message, response)
-            self._save_context()
             return response
         except Exception as e:
             return f"Tidak bisa mengambil informasi saat ini. ({e})"
@@ -755,14 +751,14 @@ class SiCuanChat:
             
             # Jika result tidak valid, fallback ke brain
             if not result or not result.get("response"):
-                return self.brain.think_and_respond(user_message, self.history)
-            
+                return result.get("response", "Maaf, aku belum bisa menjawab.")
+                return result.get("response", "Maaf, aku belum bisa menjawab.")
             return result.get("response", "Maaf, aku belum bisa menjawab.")
             
         except Exception as e:
             print(f"[SEMANTIC] Error: {e}")
             # Fallback ke brain jika semantic gagal
-            return self.brain.think_and_respond(user_message, self.history)
+            return "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti."
 
     def _save_context(self):
         """Auto-save conversation context per user"""

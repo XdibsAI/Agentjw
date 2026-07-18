@@ -178,13 +178,55 @@ class SiCuanBrain:
 
 
     def load_context(self, user_message: str = "", user_id: str = None) -> str:
-        """Load semua konteks nyata dari disk"""
         ctx = []
+        
+        # === RIWAYAT PERCAKAPAN ===
+        try:
+            import json
+            from pathlib import Path
+            context_file = Path("memory/conversation_context.json")
+            if context_file.exists():
+                data = json.loads(context_file.read_text())
+                topics = data.get("topics", [])
+                actions = data.get("actions", [])
+                if topics:
+                    ctx.append("=== 20 RIWAYAT PERCAKAPAN TERAKHIR ===")
+                    for i, topic in enumerate(topics[-20:], 1):
+                        action = actions[i-1] if i-1 < len(actions) else "chat"
+                        ctx.append(f"  {i}. [{action}] {topic}")
+                else:
+                    ctx.append("Belum ada riwayat percakapan.")
+            else:
+                ctx.append("File konteks belum ada.")
+        except Exception as e:
+            ctx.append(f"Gagal baca riwayat: {{e}}")
+        
+        
+        # === BACA RIWAYAT PERCAKAPAN ===
+        try:
+            import json
+            from pathlib import Path
+            context_file = Path("memory/conversation_context.json")
+            if context_file.exists():
+                data = json.loads(context_file.read_text())
+                topics = data.get("topics", [])
+                actions = data.get("actions", [])
+                if topics:
+                    ctx.append("=== RIWAYAT PERCAKAPAN (20 TERAKHIR) ===")
+                    for i, topic in enumerate(topics[-20:], 1):
+                        action = actions[i-1] if i-1 < len(actions) else "chat"
+                        ctx.append(f"  {i}. [{action}] {topic}")
+                else:
+                    ctx.append("Belum ada riwayat percakapan.")
+            else:
+                ctx.append("File konteks belum ada.")
+        except Exception as e:
+            ctx.append(f"Gagal baca riwayat: {e}")
+        
         
         # === STRUKTURAL KONTEKS ===
         try:
             cm = get_context_manager(user_id)
-            ctx.append("=== KONTEKS PERCAKAPAN ===")
             
             # Topik saat ini
             current_topic = cm.get_current_topic()
@@ -818,7 +860,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
         messages.append({"role": "user", "content": user_message})
 
         try:
-            raw = self.llm.chat(
+            raw = self.llm._nvidia_nim_chat(
                 messages=messages,
                 system=system,
                 temperature=0.7,
@@ -913,7 +955,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
         )
 
         try:
-            raw = self.llm.chat(
+            raw = self.llm._nvidia_nim_chat(
                 messages=[{"role": "user", "content": eval_prompt}],
                 system=(
                     "Kamu adalah reasoning evaluator untuk SiCuan. Tugasmu HANYA menilai "
@@ -961,7 +1003,7 @@ Kalau project belum di-render, bilang jujur "belum di-render" — JANGAN karang 
             f"sintesis insight-nya. Maksimal 400 kata."
         )
         try:
-            final = self.llm.chat(
+            final = self.llm._nvidia_nim_chat(
                 messages=[{"role": "user", "content": synth_prompt}],
                 system="Kamu SiCuan, AI partner bisnis. Sintesis data jadi insight actionable.",
                 temperature=0.5,
@@ -1167,7 +1209,7 @@ Buat jawaban final:
 """
 
         try:
-            final = self.llm.chat(
+            final = self.llm._nvidia_nim_chat(
                 messages=[
                     {
                         "role":"user",
