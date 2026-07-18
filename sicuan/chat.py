@@ -330,7 +330,8 @@ class SiCuanChat:
             result = {"response": str(result), "action": None}
 
         # Execute dan format response
-        response = self._execute_and_format(result, user_message)
+        # response = self._execute_and_format(result, user_message)  # REMOVED — using Response Composer
+        return response
 
         # Update memory dan state
         self.memory.add_interaction(user_message, response)
