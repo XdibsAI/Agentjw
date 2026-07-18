@@ -8,6 +8,10 @@ on:
 
 jobs:
   test:
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      NVIDIA_NIM_API_KEY: ${{ secrets.NVIDIA_NIM_API_KEY }}
+      TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
