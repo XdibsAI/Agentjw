@@ -1,11 +1,43 @@
 {
-  "coding": true,
-  "debugging": true,
-  "filesystem": true,
-  "telegram": true,
-  "video": true,
-  "youtube": true,
-  "trading": true,
-  "mcp": true,
-  "memory": true
+  "agents": {
+    "coder": {
+      "skills": {
+        "python": 98,
+        "javascript": 70,
+        "rust": 25,
+        "go": 30,
+        "sql": 80
+      },
+      "experience": 5,
+      "success_rate": 28.8
+    },
+    "reviewer": {
+      "skills": {
+        "code_review": 90,
+        "security": 75,
+        "performance": 70
+      },
+      "experience": 0,
+      "success_rate": 0
+    },
+    "sales": {
+      "skills": {
+        "negotiation": 85,
+        "crm": 80,
+        "presentation": 75,
+        "closing": 70
+      },
+      "experience": 0,
+      "success_rate": 0
+    },
+    "support": {
+      "skills": {
+        "troubleshooting": 90,
+        "customer_handling": 85,
+        "communication": 80
+      },
+      "experience": 0,
+      "success_rate": 0
+    }
+  }
 }

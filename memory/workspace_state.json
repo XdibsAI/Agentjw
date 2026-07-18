@@ -38,7 +38,7 @@
     },
     "sicuan": {
       "path": "/home/dibs/agentjw/sicuan",
-      "python_files": 277,
+      "python_files": 342,
       "exists": true
     }
   },
@@ -55,34 +55,27 @@
     },
     "godmeme_bot": {
       "path": "/home/dibs/agentjw/projects/godmeme_bot",
-      "python_files": 24,
+      "python_files": 25,
       "status": "active"
     }
   },
   "logs": [
-    "/home/dibs/agentjw/logs/20260707_agentjw.log",
-    "/home/dibs/agentjw/logs/api.log",
-    "/home/dibs/agentjw/logs/download.log",
-    "/home/dibs/agentjw/logs/telegram_bot_error.log",
-    "/home/dibs/agentjw/logs/download_server.log",
+    "/home/dibs/agentjw/logs/regression_cron.log",
+    "/home/dibs/agentjw/logs/20260717_agentjw.log",
     "/home/dibs/agentjw/logs/sicuan_scheduler.log",
-    "/home/dibs/agentjw/logs/fix_all_20260612_020642.log",
+    "/home/dibs/agentjw/logs/20260718_agentjw.log",
+    "/home/dibs/agentjw/logs/agentjw.log",
     "/home/dibs/agentjw/logs/api_server.log",
-    "/home/dibs/agentjw/logs/20260709_agentjw.log",
     "/home/dibs/agentjw/logs/api_server_debug.log",
-    "/home/dibs/agentjw/logs/20260705_agentjw.log",
     "/home/dibs/agentjw/logs/telegram_bot.log",
     "/home/dibs/agentjw/logs/sicuan_telegram.log",
-    "/home/dibs/agentjw/logs/20260710_agentjw.log",
-    "/home/dibs/agentjw/logs/20260711_agentjw.log",
-    "/home/dibs/agentjw/logs/20260706_agentjw.log",
-    "/home/dibs/agentjw/logs/20260708_agentjw.log",
-    "/home/dibs/agentjw/logs/fix_all_20260621_001116.log"
+    "/home/dibs/agentjw/logs/20260716_agentjw.log"
   ],
   "databases": [
     "/home/dibs/agentjw/trading.db",
     "/home/dibs/agentjw/memory/media_registry.db",
     "/home/dibs/agentjw/memory/agentjw.db",
+    "/home/dibs/agentjw/memory/recovery.db",
     "/home/dibs/agentjw/projects/godmeme_bot/trading.db",
     "/home/dibs/agentjw/projects/godmeme_bot/trading_backup_bug_pnl.db",
     "/home/dibs/agentjw/projects/godmeme_bot/godmeme.db",
@@ -209,9 +202,9 @@
     "/home/dibs/agentjw/memory/workspaces/ff30a3e4a8594b8f/memory/context.db",
     "/home/dibs/agentjw/memory/workspaces/d7d8f4bce3604708/memory/context.db"
   ],
-  "python_files": 347,
-  "total_files": 21506,
-  "useful_files": 951,
+  "python_files": 412,
+  "total_files": 22611,
+  "useful_files": 1074,
   "projects_count": 3,
   "systems_count": 8
 }

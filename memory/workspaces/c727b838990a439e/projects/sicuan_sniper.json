@@ -1,0 +1,14 @@
+{
+  "id": "sicuan_sniper",
+  "name": "sicuan_sniper",
+  "created_at": "2026-07-14T11:26:22.540090",
+  "updated_at": "2026-07-14T11:26:22.540100",
+  "data": {
+    "path": "/home/dibs/agentjw/projects/sicuan_sniper",
+    "python_files": 1431,
+    "status": "active",
+    "source": "migrated_from_workspace_state"
+  },
+  "status": "active",
+  "files": []
+}

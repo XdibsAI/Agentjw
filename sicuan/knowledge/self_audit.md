@@ -1,398 +1,350 @@
 # SiCuan Self-Audit Report
 
-Dibuat: 2026-07-14T02:45:24.114024+00:00
+Dibuat: 2026-07-15T07:08:36.529768+00:00
 Model analisis: openai/gpt-4o-mini
 Scope: sicuan, agents, core, mcp
 
 ## Ringkasan
 
-- File dipindai: 372
-- Fungsi/method diindeks: 1864
-- Grup duplikat identik: 25
-- Grup duplikat struktural: 55
-- Class divergen: 8
+- File dipindai: 412
+- Fungsi/method diindeks: 2031
+- Grup duplikat identik: 108
+- Grup duplikat struktural: 58
+- Class divergen: 9
 - Broken imports: 3
-- Orphan files: 105
+- Orphan files: 108
 - Endpoint collisions: 1
 
 ## exact_duplicates
 
-_Temuan duplikat ini sebagian besar terdiri dari metode dan fungsi sederhana yang merupakan pola umum dalam pemrograman. Tidak ada indikasi bahwa ini adalah kode mati, dan duplikasi ini tidak mengganggu fungsionalitas keseluruhan. Oleh karena itu, disarankan untuk membiarkan duplikat ini tetap ada._
+_Temuan ini menunjukkan adanya beberapa duplikasi fungsi dengan tingkat kompleksitas yang bervariasi. Beberapa fungsi memiliki logika penting yang sebaiknya digabungkan untuk meningkatkan pemeliharaan, sementara yang lain adalah pola umum yang tidak menimbulkan masalah besar. Tindakan yang direkomendasikan berfokus pada penggabungan fungsi yang kompleks dan mempertahankan fungsi yang lebih sederhana._
 
-- 🟢 **Config.get_llm_key** (low): Duplikat ini adalah metode sederhana yang mengembalikan nilai, sehingga dianggap sebagai pola umum. Tidak ada indikasi bahwa ini adalah kode mati.
+- 🟠 **ProjectAdapter.find_project** (high): Fungsi ini memiliki logika yang kompleks dan panjang, sehingga duplikasinya dapat menyebabkan kesulitan dalam pemeliharaan dan potensi bug. Keduanya berada di file yang berbeda, tetapi tampaknya digunakan dalam konteks yang sama.
+  - ➡️ gabungkan menjadi satu implementasi di salah satu file
+- 🟠 **SiCuanBrain._safe_get** (high): Fungsi ini memiliki logika yang signifikan dan kompleks, sehingga duplikasinya dapat menyebabkan kesulitan dalam pemeliharaan. Keduanya berada di file yang berbeda.
+  - ➡️ gabungkan menjadi satu implementasi di salah satu file
+- 🟠 **SiCuanBrain.get_data_availability** (high): Fungsi ini memiliki logika yang penting dan kompleks, sehingga duplikasinya dapat menyebabkan kesulitan dalam pemeliharaan. Keduanya berada di file yang berbeda.
+  - ➡️ gabungkan menjadi satu implementasi di salah satu file
+- 🟠 **SiCuanBrain._find_project** (high): Fungsi ini memiliki logika yang kompleks dan panjang, sehingga duplikasinya dapat menyebabkan kesulitan dalam pemeliharaan. Keduanya berada di file yang berbeda.
+  - ➡️ gabungkan menjadi satu implementasi di salah satu file
+- 🟠 **SiCuanBrain._get_projects** (high): Fungsi ini memiliki logika yang penting dan kompleks, sehingga duplikasinya dapat menyebabkan kesulitan dalam pemeliharaan. Keduanya berada di file yang berbeda.
+  - ➡️ gabungkan menjadi satu implementasi di salah satu file
+- 🟢 **ProjectAdapter.get_project_by_name** (low): Fungsi ini cukup pendek dan sederhana, sehingga duplikasinya tidak terlalu berisiko. Ini adalah pola umum yang sering ditemukan dalam kode.
   - ➡️ biarkan, ini wajar
-- 🟢 **Config.get_model** (low): Metode ini juga merupakan pola umum dan tidak menunjukkan indikasi kode mati. Duplikasi ini tidak mengganggu.
+- 🟢 **get_project_adapter** (low): Fungsi ini juga pendek dan berfungsi sebagai getter, sehingga duplikasinya tidak menjadi masalah besar. Ini adalah pola umum dalam pengembangan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.llm** (low): Metode ini memiliki logika sederhana dan merupakan pola umum dalam banyak kelas. Tidak ada indikasi bahwa ini adalah kode mati.
+- 🟢 **SiCuanBrain.__init__** (low): Duplikasi ini terjadi pada konstruktor yang pendek, yang merupakan pola umum dalam OOP. Ini tidak menimbulkan masalah besar.
   - ➡️ biarkan, ini wajar
-- 🟢 **BaseAgent.llm** (low): Duplikat ini adalah metode sederhana yang umum, tidak menunjukkan indikasi kode mati.
+- 🟢 **SiCuanBrain.llm** (low): Fungsi ini adalah metode pendek yang sering ditemukan dalam berbagai kelas, sehingga duplikasinya tidak menjadi masalah besar.
   - ➡️ biarkan, ini wajar
-- 🟢 **RepairSpecialist.llm** (low): Metode ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **AgentDialog.llm** (low): Metode ini juga merupakan pola umum dan tidak menunjukkan indikasi kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **YouTubeTool.llm** (low): Metode ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **TradingTool.llm** (low): Duplikat ini adalah metode sederhana yang umum, tidak menunjukkan indikasi kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **TradingPromptParser.llm** (low): Metode ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **MCPClient.llm** (low): Metode ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.fs** (low): Duplikat ini adalah metode sederhana yang umum, tidak menunjukkan indikasi kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **OrchestratorAgent.fs** (low): Metode ini juga merupakan pola umum dan tidak menunjukkan indikasi kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_alerting** (low): Duplikat ini adalah fungsi sederhana yang umum, tidak menunjukkan indikasi kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_auth** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_plugin_manager** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_vault** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_project_manager** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_webhook_engine** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_runtime_manager** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_job_queue** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_api_gateway** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_workspace** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_billing** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_workspace_resolver** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_backup_manager** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_user_memory** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_repair_pipeline** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_intent_engine** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
-  - ➡️ biarkan, ini wajar
-- 🟢 **get_dispatcher** (low): Fungsi ini adalah pola umum dan tidak menunjukkan indikasi bahwa ini adalah kode mati.
+- 🟢 **SiCuanBrain.fs** (low): Duplikasi ini terjadi pada metode pendek yang merupakan pola umum dalam OOP. Ini tidak menimbulkan masalah besar.
   - ➡️ biarkan, ini wajar
 
 ## structural_duplicates
 
-_Temuan ini menunjukkan adanya banyak duplikasi struktur dalam kode, namun sebagian besar adalah metode sederhana yang mengikuti pola umum. Tidak ada indikasi bahwa ini adalah dead code, dan duplikasi ini tidak menunjukkan masalah serius._
+_Temuan ini menunjukkan adanya beberapa duplikasi struktur dalam kode. Sebagian besar duplikasi adalah pada fungsi sederhana dan konstruktor, yang merupakan pola umum dalam pemrograman. Beberapa fungsi dengan logika lebih kompleks perlu ditinjau lebih lanjut untuk memastikan tidak ada redundansi yang tidak perlu._
 
-- 🟢 **SiCuanBrain.get_task_status** (low): Fungsi ini memiliki logika yang sederhana dan merupakan bagian dari pola umum dalam kelas. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟡 **SiCuanBrain.diagnose_error** (medium): Fungsi ini memiliki logika yang lebih kompleks dan penting. Duplikasi ini perlu diperiksa lebih lanjut untuk memastikan tidak ada redundansi yang tidak perlu.
+  - ➡️ cek manual: apakah dipanggil di tempat lain
+- 🟡 **SiCuanChat._handle_summary_query** (medium): Fungsi ini memiliki logika yang lebih kompleks. Duplikasi ini perlu diperiksa lebih lanjut untuk memastikan tidak ada redundansi yang tidak perlu.
+  - ➡️ cek manual: apakah dipanggil di tempat lain
+- 🟡 **SiCuanChat._handle_resume_query** (medium): Fungsi ini juga memiliki logika yang lebih kompleks. Duplikasi ini perlu diperiksa lebih lanjut untuk memastikan tidak ada redundansi yang tidak perlu.
+  - ➡️ cek manual: apakah dipanggil di tempat lain
+- 🟢 **SiCuanBrain.get_task_status** (low): Fungsi ini memiliki logika yang sederhana dan merupakan getter, sehingga duplikasi dianggap wajar. Keduanya berada dalam konteks yang sama dan tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.vault_daily_review** (low): Mirip dengan fungsi sebelumnya, ini adalah metode sederhana yang mengikuti pola yang sama. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **SiCuanBrain.vault_daily_review** (low): Mirip dengan fungsi sebelumnya, ini juga merupakan getter sederhana. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.vault_weekly_review** (low): Fungsi ini juga merupakan metode sederhana yang mengikuti pola yang sama. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **SiCuanBrain.vault_weekly_review** (low): Fungsi ini juga merupakan getter sederhana. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat.get_context** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **SiCuanBrain.vault_search** (low): Fungsi ini memiliki logika yang sederhana dan merupakan bagian dari pola yang sama. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.vault_search** (low): Metode ini memiliki logika yang sederhana dan merupakan bagian dari pola umum. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **_fix_score_threshold** (low): Fungsi ini memiliki logika yang sederhana dan merupakan bagian dari pola yang sama. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **ConversationSlot.get** (low): Fungsi ini adalah metode sederhana yang mengikuti pola yang sama. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **_fix_buy_logic** (low): Fungsi ini juga memiliki logika yang sederhana. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanBrain.diagnose_error** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **SiCuanChat.get_context** (low): Fungsi ini merupakan getter sederhana. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat.route_message** (low): Metode ini memiliki logika yang sederhana dan merupakan bagian dari pola umum. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **ActionRegistry.list_actions** (low): Fungsi ini memiliki logika yang sederhana. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat._handle_summary_query** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **CapabilityManager.list_all** (low): Fungsi ini juga memiliki logika yang sederhana. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat._handle_resume_query** (low): Metode ini memiliki logika yang sederhana dan merupakan bagian dari pola umum. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **Alerting.__init__** (low): Duplikasi ini terjadi pada metode konstruktor yang umum. Ini adalah pola yang wajar dalam OOP.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat._save_context** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **Workspace.__init__** (low): Mirip dengan fungsi sebelumnya, ini juga merupakan konstruktor yang umum. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **SiCuanChat._load_context** (low): Metode ini memiliki logika yang sederhana dan merupakan bagian dari pola umum. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **Billing.__init__** (low): Fungsi ini juga merupakan konstruktor yang umum. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **ActionRegistry.list_actions** (low): Fungsi ini adalah metode sederhana yang mengikuti pola yang sama. Tidak ada indikasi bahwa ini adalah dead code.
+- 🟢 **PluginManager.__init__** (low): Duplikasi ini terjadi pada metode konstruktor yang umum. Ini adalah pola yang wajar dalam OOP.
   - ➡️ biarkan, ini wajar
-- 🟢 **CapabilityManager.list_all** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **APIGateway.__init__** (low): Mirip dengan fungsi sebelumnya, ini juga merupakan konstruktor yang umum. Duplikasi ini tidak menunjukkan masalah yang signifikan.
   - ➡️ biarkan, ini wajar
-- 🟢 **Alerting.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
+- 🟢 **SecretVault.__init__** (low): Fungsi ini juga merupakan konstruktor yang umum. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
-- 🟢 **Workspace.__init__** (low): Metode ini adalah inisialisasi yang umum dan tidak menunjukkan masalah serius.
+- 🟢 **WebhookEngine.__init__** (low): Duplikasi ini terjadi pada metode konstruktor yang umum. Ini adalah pola yang wajar dalam OOP.
   - ➡️ biarkan, ini wajar
-- 🟢 **Billing.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **PluginManager.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **APIGateway.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **SecretVault.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WebhookEngine.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WorkspaceResolver.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **UserManager.__init__** (low): Ini adalah metode inisialisasi yang umum dan tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **SecretVault.encrypt** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **SecretVault.decrypt** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WorkspaceContext.set_current_project** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WorkspaceContext.set_current_folder** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WorkspaceContext.set_current_file** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
-  - ➡️ biarkan, ini wajar
-- 🟢 **WorkspaceContext.set_current_task** (low): Ini adalah metode sederhana dengan logika yang mirip dengan fungsi lain. Duplikasi ini tidak menunjukkan masalah serius.
+- 🟢 **WorkspaceResolver.__init__** (low): Fungsi ini juga merupakan konstruktor yang umum. Duplikasi ini tidak menunjukkan indikasi bahwa salah satu tidak digunakan.
   - ➡️ biarkan, ini wajar
 
 ## class_diverged
 
-_Terdapat beberapa kelas yang memiliki implementasi ganda di berbagai file, yang menunjukkan potensi masalah dalam pengorganisasian kode. Beberapa di antaranya mungkin tidak digunakan, tetapi perlu verifikasi lebih lanjut untuk memastikan tidak ada yang terabaikan atau hilang karena dynamic loading._
+_Terdapat beberapa kelas yang terduplikasi dengan metode yang berbeda di berbagai file, menunjukkan adanya pengembangan paralel atau fitur yang belum sepenuhnya diintegrasikan. Sebagian besar temuan tidak menunjukkan dead code, tetapi perlu diteliti lebih lanjut untuk memastikan integrasi yang tepat._
 
-- 🟡 **ProjectManager** (medium): Terdapat dua implementasi dari ProjectManager di file yang berbeda. Meskipun ada kemungkinan salah satu tidak digunakan, perlu diperiksa apakah keduanya dipanggil melalui dynamic import atau pipeline yang berbeda.
+- 🟡 **ProjectAdapter** (medium): Ada dua implementasi dari ProjectAdapter di file yang berbeda, namun keduanya memiliki metode yang berbeda. Ini menunjukkan bahwa mungkin ada pengembangan paralel atau fitur yang belum sepenuhnya diintegrasikan.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟡 **ContextManager** (medium): Dua implementasi ContextManager ditemukan, satu di core dan satu di memory. Perlu diteliti apakah keduanya digunakan dalam konteks yang berbeda atau ada dynamic loading yang membuat salah satu dari mereka tidak terpakai.
+- 🟡 **ProjectManager** (medium): Terdapat dua kelas ProjectManager dengan metode yang sangat berbeda. Hal ini bisa menunjukkan bahwa ada dua pendekatan yang sedang dieksplorasi, sehingga perlu diteliti lebih lanjut.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟡 **RepairAgent** (medium): Dua implementasi RepairAgent ditemukan. Perlu diteliti apakah keduanya digunakan dalam konteks yang berbeda atau ada dynamic loading yang membuat salah satu dari mereka tidak terpakai.
+- 🟡 **ContextManager** (medium): Dua implementasi ContextManager ditemukan dengan metode yang berbeda. Ini bisa jadi indikasi adanya pengembangan yang belum selesai atau fitur yang direncanakan.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟡 **CoderAgent** (medium): Terdapat dua implementasi CoderAgent yang mungkin digunakan dalam konteks yang berbeda. Perlu diperiksa lebih lanjut untuk memastikan tidak ada yang terabaikan.
+- 🟡 **RepairAgent** (medium): Dua implementasi RepairAgent ditemukan dengan metode yang berbeda. Hal ini menunjukkan adanya pengembangan paralel yang perlu diteliti lebih lanjut.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟡 **ReviewerAgent** (medium): Dua implementasi ReviewerAgent ditemukan. Seperti yang lainnya, perlu diteliti apakah keduanya digunakan dalam konteks yang berbeda atau ada dynamic loading yang membuat salah satu dari mereka tidak terpakai.
+- 🟡 **CoderAgent** (medium): Terdapat dua kelas CoderAgent dengan metode yang berbeda. Ini bisa jadi indikasi adanya pengembangan yang belum selesai atau fitur yang direncanakan.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟢 **Strategy** (low): Banyak variasi dari kelas Strategy ditemukan, sebagian besar merupakan file pengujian dengan metode yang sama. Ini menunjukkan pola pengujian yang umum, bukan bug serius.
+- 🟡 **ReviewerAgent** (medium): Dua implementasi ReviewerAgent ditemukan dengan metode yang berbeda. Hal ini menunjukkan adanya pengembangan paralel yang perlu diteliti lebih lanjut.
+  - ➡️ cek manual: apakah dipanggil via importlib
+- 🟢 **Strategy** (low): Banyak variasi dari kelas Strategy ditemukan di file yang berbeda, namun sebagian besar hanya memiliki metode 'run' yang sederhana. Ini menunjukkan bahwa ini adalah pola pengujian dan bukan bug serius.
   - ➡️ biarkan, ini wajar
-- 🟢 **Base** (low): Dua implementasi dari Base ditemukan di file yang berbeda, namun keduanya tampaknya digunakan dalam konteks pengujian. Ini adalah pola umum dalam pengujian dan tidak menunjukkan masalah serius.
+- 🟢 **Base** (low): Kelas Base muncul di beberapa file dengan metode yang mirip. Ini adalah pola umum dalam pengujian dan tidak menunjukkan masalah serius.
   - ➡️ biarkan, ini wajar
-- 🟢 **Point** (low): Beberapa implementasi Point ditemukan, tetapi beberapa di antaranya tidak memiliki metode. Ini menunjukkan bahwa beberapa mungkin tidak digunakan, tetapi perlu verifikasi lebih lanjut.
-  - ➡️ hapus file yang tidak digunakan
+- 🟢 **Point** (low): Kelas Point muncul di beberapa file dengan metode yang berbeda. Ini menunjukkan bahwa ini adalah variasi dalam pengujian dan bukan indikasi bug.
+  - ➡️ biarkan, ini wajar
 
 ## broken_imports
 
-_Terdapat beberapa broken imports yang menunjukkan ketergantungan pada modul 'projects.godmeme_bot.status_sync_provider'. Meskipun saat ini tidak ada implementasi, referensi di beberapa file menunjukkan bahwa ini mungkin fitur yang direncanakan. Disarankan untuk memeriksa rencana implementasi lebih lanjut._
+_Temuan broken imports ini menunjukkan ketergantungan pada modul yang mungkin belum diimplementasikan. Meskipun tidak bisa dianggap dead code, perlu dilakukan pengecekan lebih lanjut untuk memastikan apakah modul tersebut memang direncanakan untuk dikembangkan atau tidak._
 
-- 🟠 **get_godmeme_status (sicuan/brain.py)** (high): Modul 'projects.godmeme_bot.status_sync_provider' mungkin belum ditulis atau diimplementasikan, sehingga menyebabkan broken import. Namun, karena ada beberapa referensi ke modul ini di file lain, ada kemungkinan bahwa ini adalah fitur yang direncanakan.
+- 🟠 **get_godmeme_status (sicuan/brain.py)** (high): Modul 'projects.godmeme_bot.status_sync_provider' mungkin belum ditulis atau diimplementasikan, sehingga import ini menjadi broken. Namun, mengingat adanya beberapa referensi ke modul yang sama di file lain, ada kemungkinan ini adalah fitur yang direncanakan.
   - ➡️ cek manual: apakah dipanggil via importlib atau ada rencana implementasi untuk modul ini
-- 🟠 **get_godmeme_status (sicuan/core/semantic_query.py)** (high): Sama seperti temuan sebelumnya, broken import ini menunjukkan bahwa modul yang diimpor mungkin belum ada. Namun, karena ada beberapa referensi di file lain, ini bisa jadi fitur yang sedang dalam pengembangan.
+- 🟠 **get_godmeme_status (sicuan/core/semantic_query.py)** (high): Sama seperti temuan sebelumnya, import ini menunjukkan ketergantungan pada modul yang mungkin belum ada. Namun, karena ada referensi lain, ini bisa jadi fitur yang sedang dalam pengembangan.
   - ➡️ cek manual: apakah dipanggil via importlib atau ada rencana implementasi untuk modul ini
-- 🟠 **get_godmeme_status (sicuan/actions/godmeme_status.py)** (high): Temuan ini menunjukkan bahwa ada ketergantungan pada modul yang mungkin belum diimplementasikan. Dengan adanya referensi di beberapa file, ini menunjukkan bahwa fitur ini mungkin sedang dalam proses pengembangan.
+- 🟠 **get_godmeme_status (sicuan/actions/godmeme_status.py)** (high): Import ini juga menunjukkan ketergantungan pada modul yang mungkin belum ada. Dengan adanya beberapa referensi di file lain, ini menunjukkan bahwa ada potensi pengembangan fitur yang belum selesai.
   - ➡️ cek manual: apakah dipanggil via importlib atau ada rencana implementasi untuk modul ini
 
 ## orphan_files
 
-_Sebagian besar file yang terdeteksi sebagai orphan tidak memiliki referensi yang jelas dalam kode lain dan tidak terdeteksi dalam dynamic loading context. Disarankan untuk menghapus file-file ini untuk menjaga kebersihan kode. Namun, beberapa file seperti 'plugin.py' mungkin digunakan secara dinamis, sehingga perlu pemeriksaan lebih lanjut._
+_Banyak file dalam kategori ini tidak terhubung dengan bagian lain dari project, menunjukkan kemungkinan bahwa mereka adalah kode mati. Namun, beberapa file memiliki konteks pemuatan dinamis yang menunjukkan bahwa mereka mungkin direncanakan untuk digunakan di masa depan. Disarankan untuk memverifikasi setiap file secara manual sebelum penghapusan._
 
-- 🟡 **sicuan/platform/plugin.py** (medium): File ini terdeteksi dalam dynamic loading context, sehingga status orphan-nya meragukan dan mungkin digunakan secara dinamis.
+- 🟡 **sicuan/platform/plugin.py** (medium): File ini memiliki dynamic loading context, menunjukkan bahwa mungkin ada penggunaan yang direncanakan. Perlu verifikasi lebih lanjut.
   - ➡️ cek manual: apakah dipanggil via importlib
-- 🟢 **core/image_service.py** (low): File ini tidak memiliki referensi yang jelas dalam kode lain dan tidak terdeteksi dalam dynamic loading context, sehingga kemungkinan besar tidak digunakan.
+- 🟢 **core/image_service.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, namun tidak ada indikasi bahwa ini adalah fitur yang direncanakan. Sebaiknya diperiksa lebih lanjut.
   - ➡️ hapus file core/image_service.py
-- 🟢 **sicuan/cleanup.py** (low): File ini tampaknya tidak digunakan di mana pun dalam kode, tanpa adanya referensi atau dynamic loading signals.
+- 🟢 **sicuan/cleanup.py** (low): File ini tidak terhubung dengan bagian lain dari project, kemungkinan tidak digunakan. Perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/cleanup.py
-- 🟢 **sicuan/platform/event_bus.py** (low): Tidak ada referensi yang jelas dan tidak terdeteksi dalam dynamic loading context, menunjukkan bahwa file ini mungkin tidak digunakan.
+- 🟢 **sicuan/platform/event_bus.py** (low): Tidak ada referensi ke file ini dalam codebase, tetapi perlu diperiksa apakah ada rencana penggunaan di masa depan.
   - ➡️ hapus file sicuan/platform/event_bus.py
-- 🟢 **sicuan/platform/alerting.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/platform/alerting.py** (low): File ini tidak terhubung dengan bagian lain dari project, namun bisa jadi bagian dari fitur yang belum selesai.
   - ➡️ hapus file sicuan/platform/alerting.py
-- 🟢 **sicuan/platform/workspace_context.py** (low): Tidak ada referensi yang jelas dan tidak terdeteksi dalam dynamic loading context, menunjukkan bahwa file ini mungkin tidak digunakan.
+- 🟢 **sicuan/platform/workspace_context.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/platform/workspace_context.py
-- 🟢 **sicuan/platform/backup.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/platform/backup.py** (low): File ini tidak terhubung dengan bagian lain dari project, kemungkinan tidak digunakan. Perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/platform/backup.py
-- 🟢 **sicuan/core/artifact.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/artifact.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/artifact.py
-- 🟢 **sicuan/core/input_validator.py** (low): Tidak ada referensi yang jelas dan tidak terdeteksi dalam dynamic loading context, menunjukkan bahwa file ini mungkin tidak digunakan.
+- 🟢 **sicuan/core/input_validator.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, namun tidak ada indikasi bahwa ini adalah fitur yang direncanakan.
   - ➡️ hapus file sicuan/core/input_validator.py
-- 🟢 **sicuan/core/data_awareness_injector.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/data_awareness_injector.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/data_awareness_injector.py
-- 🟢 **sicuan/core/target_router.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/target_router.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/target_router.py
-- 🟢 **sicuan/core/entry_tester.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/entry_tester.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/entry_tester.py
-- 🟢 **sicuan/core/executive_brain_complete.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/executive_brain_complete.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/executive_brain_complete.py
-- 🟢 **sicuan/core/capability_engine.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/capability_engine.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/capability_engine.py
-- 🟢 **sicuan/core/dynamic_blacklist.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/dynamic_blacklist.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/dynamic_blacklist.py
-- 🟢 **sicuan/core/capability_manager.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/capability_manager.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/capability_manager.py
-- 🟢 **sicuan/core/context_router.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/context_router.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/context_router.py
-- 🟢 **sicuan/core/conversation_dispatcher.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/memory_service.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
+  - ➡️ hapus file sicuan/core/memory_service.py
+- 🟢 **sicuan/core/conversation_dispatcher.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/conversation_dispatcher.py
-- 🟢 **sicuan/core/task_generator.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/task_generator.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/task_generator.py
-- 🟢 **sicuan/core/attribution_dashboard.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/attribution_dashboard.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/attribution_dashboard.py
-- 🟢 **sicuan/core/token_scorer.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/token_scorer.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/token_scorer.py
-- 🟢 **sicuan/core/evaluator_engine.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/evaluator_engine.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/evaluator_engine.py
-- 🟢 **sicuan/core/conversation_reasoner.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/conversation_reasoner.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/conversation_reasoner.py
-- 🟢 **sicuan/core/data_aware_planner.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/data_aware_planner.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/data_aware_planner.py
-- 🟢 **sicuan/core/conversation_slot.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/conversation_slot.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/conversation_slot.py
-- 🟢 **sicuan/core/task_queue.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/task_queue.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/task_queue.py
-- 🟢 **sicuan/core/intent_engine.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/intent_engine.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/intent_engine.py
-- 🟢 **sicuan/core/unified_query.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/unified_query.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/unified_query.py
-- 🟢 **sicuan/core/function_patch.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/script_generator.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
+  - ➡️ hapus file sicuan/core/script_generator.py
+- 🟢 **sicuan/core/function_patch.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/function_patch.py
-- 🟢 **sicuan/core/result_normalizer.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/result_normalizer.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/result_normalizer.py
-- 🟢 **sicuan/core/adaptive_entry_time.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/adaptive_entry_time.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/adaptive_entry_time.py
-- 🟢 **sicuan/core/runtime_fixer.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/runtime_fixer.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/runtime_fixer.py
-- 🟢 **sicuan/core/event_replay.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/event_replay.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/event_replay.py
-- 🟢 **sicuan/core/llm_task_executor.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/llm_task_executor.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/llm_task_executor.py
-- 🟢 **sicuan/core/data_awareness.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/data_awareness.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/data_awareness.py
-- 🟢 **sicuan/core/dispatcher.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/response_gate.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
+  - ➡️ hapus file sicuan/core/response_gate.py
+- 🟢 **sicuan/core/dispatcher.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/dispatcher.py
-- 🟢 **sicuan/core/function_ranker.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/function_ranker.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/function_ranker.py
-- 🟢 **sicuan/core/drift_monitor.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/drift_monitor.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/drift_monitor.py
-- 🟢 **sicuan/core/knowledge_state.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/knowledge_state.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/knowledge_state.py
-- 🟢 **sicuan/core/project_brain.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/project_brain.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/project_brain.py
-- 🟢 **sicuan/core/intelligence/endpoint_registry.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/intelligence/endpoint_registry.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/intelligence/endpoint_registry.py
-- 🟢 **sicuan/core/intelligence/capability_graph.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/intelligence/capability_graph.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/intelligence/capability_graph.py
-- 🟢 **sicuan/core/intelligence/project_operator.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/intelligence/project_operator.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/intelligence/project_operator.py
-- 🟢 **sicuan/core/intelligence/runtime_intelligence.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/core/intelligence/runtime_intelligence.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/core/intelligence/runtime_intelligence.py
-- 🟢 **sicuan/actions/auto_fix_from_recommendations.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/actions/auto_fix_from_recommendations.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/actions/auto_fix_from_recommendations.py
-- 🟢 **sicuan/actions/evaluate_strategy.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/actions/evaluate_strategy.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/actions/evaluate_strategy.py
-- 🟢 **sicuan/tests/generate_stress_tests.py** (low): File ini tampaknya tidak digunakan di mana pun dalam kode, tanpa adanya referensi atau dynamic loading context.
+- 🟢 **sicuan/tests/generate_stress_tests.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/generate_stress_tests.py
-- 🟢 **sicuan/tests/temp_stress/18_runtime_exception.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/18_runtime_exception.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/18_runtime_exception.py
-- 🟢 **sicuan/tests/temp_stress/16_large_file.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/16_large_file.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/16_large_file.py
-- 🟢 **sicuan/tests/temp_stress/05_abstract_class.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/05_abstract_class.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/05_abstract_class.py
-- 🟢 **sicuan/tests/temp_stress/09_import_alias.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/09_import_alias.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/09_import_alias.py
-- 🟢 **sicuan/tests/temp_stress/10_circular_import.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/10_circular_import.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/10_circular_import.py
-- 🟢 **sicuan/tests/temp_stress/02_decorator.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/02_decorator.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/02_decorator.py
-- 🟢 **sicuan/tests/temp_stress/11_single_syntax_error.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/11_single_syntax_error.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/11_single_syntax_error.py
-- 🟢 **sicuan/tests/temp_stress/14_generic_typing.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/14_generic_typing.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/14_generic_typing.py
-- 🟢 **sicuan/tests/temp_stress/17_multi_file.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/17_multi_file.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/17_multi_file.py
-- 🟢 **sicuan/tests/temp_stress/04_inheritance.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/04_inheritance.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/04_inheritance.py
-- 🟢 **sicuan/tests/temp_stress/06_dataclass.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/06_dataclass.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/06_dataclass.py
-- 🟢 **sicuan/tests/temp_stress/11_multiple_syntax_error.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/11_multiple_syntax_error.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/11_multiple_syntax_error.py
-- 🟢 **sicuan/tests/temp_stress/08_property.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/08_property.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/08_property.py
-- 🟢 **sicuan/tests/temp_stress/01_nested_class.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/01_nested_class.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/01_nested_class.py
-- 🟢 **sicuan/tests/temp_stress/15_overload.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/15_overload.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/15_overload.py
-- 🟢 **sicuan/tests/temp_stress/12_broken_docstring.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/12_broken_docstring.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/12_broken_docstring.py
-- 🟢 **sicuan/tests/temp_stress/07_enum.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/07_enum.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/07_enum.py
-- 🟢 **sicuan/tests/temp_stress/13_mixed_tabs_spaces.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/13_mixed_tabs_spaces.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/13_mixed_tabs_spaces.py
-- 🟢 **sicuan/tests/temp_stress/03_async_function.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/03_async_function.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/03_async_function.py
-- 🟢 **sicuan/tests/temp_stress/19_multiple_independent_syntax_errors.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp_stress/19_multiple_independent_syntax_errors.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp_stress/19_multiple_independent_syntax_errors.py
-- 🟢 **sicuan/tests/temp/missing_import.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/missing_import.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/missing_import.py
-- 🟢 **sicuan/tests/temp/broken_class.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/broken_class.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/broken_class.py
-- 🟢 **sicuan/tests/temp/dataclass_simple.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/dataclass_simple.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/dataclass_simple.py
-- 🟢 **sicuan/tests/temp/missing_method.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/missing_method.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/missing_method.py
-- 🟢 **sicuan/tests/temp/dataclass_fixed.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/dataclass_fixed.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/dataclass_fixed.py
-- 🟢 **sicuan/tests/temp/import_missing.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/import_missing.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/import_missing.py
-- 🟢 **sicuan/tests/temp/duplicate_method.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/duplicate_method.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/duplicate_method.py
-- 🟢 **sicuan/tests/temp/async_missing_colon.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/async_missing_colon.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/async_missing_colon.py
-- 🟢 **sicuan/tests/temp/healthy.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/healthy.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/healthy.py
-- 🟢 **sicuan/tests/temp/syntax_error.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/syntax_error.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/syntax_error.py
-- 🟢 **sicuan/tests/temp/class_missing_colon.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/temp/class_missing_colon.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/temp/class_missing_colon.py
-- 🟢 **sicuan/tests/fixtures_stress/18_runtime_exception.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/18_runtime_exception.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/18_runtime_exception.py
-- 🟢 **sicuan/tests/fixtures_stress/16_large_file.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/16_large_file.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/16_large_file.py
-- 🟢 **sicuan/tests/fixtures_stress/05_abstract_class.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/05_abstract_class.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/05_abstract_class.py
-- 🟢 **sicuan/tests/fixtures_stress/09_import_alias.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/09_import_alias.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/09_import_alias.py
-- 🟢 **sicuan/tests/fixtures_stress/10_circular_import.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/10_circular_import.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/10_circular_import.py
-- 🟢 **sicuan/tests/fixtures_stress/02_decorator.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/02_decorator.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/02_decorator.py
-- 🟢 **sicuan/tests/fixtures_stress/11_single_syntax_error.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/11_single_syntax_error.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/11_single_syntax_error.py
-- 🟢 **sicuan/tests/fixtures_stress/14_generic_typing.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/14_generic_typing.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/14_generic_typing.py
-- 🟢 **sicuan/tests/fixtures_stress/17_multi_file.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/17_multi_file.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/17_multi_file.py
-- 🟢 **sicuan/tests/fixtures_stress/04_inheritance.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/04_inheritance.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/04_inheritance.py
-- 🟢 **sicuan/tests/fixtures_stress/06_dataclass.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/06_dataclass.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/06_dataclass.py
-- 🟢 **sicuan/tests/fixtures_stress/11_multiple_syntax_error.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/11_multiple_syntax_error.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/11_multiple_syntax_error.py
-- 🟢 **sicuan/tests/fixtures_stress/08_property.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/08_property.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/08_property.py
-- 🟢 **sicuan/tests/fixtures_stress/01_nested_class.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/01_nested_class.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/01_nested_class.py
-- 🟢 **sicuan/tests/fixtures_stress/15_overload.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/15_overload.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/15_overload.py
-- 🟢 **sicuan/tests/fixtures_stress/12_broken_docstring.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/12_broken_docstring.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/12_broken_docstring.py
-- 🟢 **sicuan/tests/fixtures_stress/07_enum.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/07_enum.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/07_enum.py
-- 🟢 **sicuan/tests/fixtures_stress/13_mixed_tabs_spaces.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/13_mixed_tabs_spaces.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/13_mixed_tabs_spaces.py
-- 🟢 **sicuan/tests/fixtures_stress/03_async_function.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/03_async_function.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/03_async_function.py
-- 🟢 **sicuan/tests/fixtures_stress/19_multiple_independent_syntax_errors.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures_stress/19_multiple_independent_syntax_errors.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures_stress/19_multiple_independent_syntax_errors.py
-- 🟢 **sicuan/tests/fixtures/missing_import.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/missing_import.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/missing_import.py
-- 🟢 **sicuan/tests/fixtures/broken_class.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/broken_class.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/broken_class.py
-- 🟢 **sicuan/tests/fixtures/missing_method.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/missing_method.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/missing_method.py
-- 🟢 **sicuan/tests/fixtures/dataclass_fixed.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/dataclass_fixed.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/dataclass_fixed.py
-- 🟢 **sicuan/tests/fixtures/duplicate_method.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/duplicate_method.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/duplicate_method.py
-- 🟢 **sicuan/tests/fixtures/healthy.py** (low): File ini tidak memiliki referensi yang jelas dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/healthy.py** (low): File ini tidak terdeteksi digunakan di bagian lain dari codebase, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/healthy.py
-- 🟢 **sicuan/tests/fixtures/syntax_error.py** (low): File ini tidak memiliki referensi dalam kode lain dan tidak terdeteksi dalam dynamic loading context.
+- 🟢 **sicuan/tests/fixtures/syntax_error.py** (low): File ini tidak terhubung dengan bagian lain dari project, perlu verifikasi lebih lanjut.
   - ➡️ hapus file sicuan/tests/fixtures/syntax_error.py
 
 ## endpoint_collisions
 
-_Terdapat beberapa endpoint yang mengalami collision, yang dapat menyebabkan kebingungan dalam routing. Penanganan yang tepat diperlukan untuk memastikan bahwa setiap endpoint dapat diakses dengan jelas dan tidak terjadi konflik dalam pemanggilan fungsi._
+_Terdapat dua endpoint yang bertabrakan dengan nama fungsi yang sama di dua file berbeda. Ini dapat menyebabkan masalah dalam routing dan harus segera ditangani untuk memastikan API berfungsi dengan baik dan tidak membingungkan pengguna._
 
-- 🟠 **api_server.py/root** (high): Endpoint collision terjadi karena dua fungsi dengan nama yang sama di path yang sama. Meskipun keduanya memiliki implementasi yang berbeda, ini dapat menyebabkan kebingungan dalam routing. Perlu diteliti lebih lanjut apakah kedua fungsi ini memang dipanggil dalam konteks yang berbeda.
-  - ➡️ cek manual: apakah kedua fungsi ini dipanggil dalam konteks yang berbeda dan pertimbangkan untuk mengubah nama salah satu fungsi.
-- 🟠 **mcp/servers/gusmcp_server.py/root** (high): Endpoint collision terjadi karena dua fungsi dengan nama yang sama di path yang sama. Meskipun keduanya memiliki implementasi yang berbeda, ini dapat menyebabkan kebingungan dalam routing. Perlu diteliti lebih lanjut apakah kedua fungsi ini memang dipanggil dalam konteks yang berbeda.
-  - ➡️ cek manual: apakah kedua fungsi ini dipanggil dalam konteks yang berbeda dan pertimbangkan untuk mengubah nama salah satu fungsi.
+- 🟠 **api_server.py/root** (high): Endpoint '/' di api_server.py dan gusmcp_server.py memiliki nama fungsi yang sama, yang dapat menyebabkan kebingungan dalam routing. Meskipun keduanya ada, potensi konflik ini harus diatasi untuk menjaga kejelasan dan konsistensi dalam API.
+  - ➡️ ubah nama fungsi di salah satu file untuk menghindari konflik
+- 🟠 **gusmcp_server.py/root** (high): Endpoint '/' di gusmcp_server.py dan api_server.py memiliki nama fungsi yang sama, yang dapat menyebabkan kebingungan dalam routing. Meskipun keduanya ada, potensi konflik ini harus diatasi untuk menjaga kejelasan dan konsistensi dalam API.
+  - ➡️ ubah nama fungsi di salah satu file untuk menghindari konflik

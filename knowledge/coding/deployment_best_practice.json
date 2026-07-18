@@ -1,0 +1,9 @@
+{
+  "summary": "Always check port availability before deployment",
+  "steps": [
+    "Check port",
+    "Kill process",
+    "Deploy"
+  ],
+  "updated_at": "2026-07-17T06:18:51.581783"
+}

@@ -1,0 +1,9 @@
+{
+  "summary": "Godmeme bot menggunakan strategi momentum sniper dengan DexScreener",
+  "parameters": {
+    "score_threshold": 8,
+    "min_liquidity": 25000,
+    "max_mcap": 750000
+  },
+  "updated_at": "2026-07-17T06:02:23.956431"
+}
