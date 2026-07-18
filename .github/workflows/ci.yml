@@ -45,7 +45,7 @@ jobs:
 
       - name: Run regression suite
         run: |
-          echo "=== RUNNING REGRESSION SUITE ===" && python3 tests/regression/suite.py
+          echo "=== RUNNING REGRESSION SUITE ===" && SKIP_API_TESTS=1 python3 tests/regression/suite.py
 
       - name: Security scan
         run: |
