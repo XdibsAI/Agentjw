@@ -1,202 +1,217 @@
 """
-Response Composer - Mengubah data internal menjadi jawaban natural
+Response Composer — Layer untuk menyusun jawaban alami dari hasil planner/executor
 """
 
-from typing import Dict, List, Optional, Any
-
-
-
+from typing import Dict, List, Any, Optional
+import json
+import re
 
 class ResponseComposer:
-    @staticmethod
-    def compose_analysis(project: str, stats: dict, recommendations: list, features: list) -> str:
-        """Compose analysis result menjadi response yang ramah user"""
-        
-        lines = []
-        
-        # 1. Intro
-        lines.append(f"📊 **Analisis {project}**")
-        lines.append("")
-        
-        # 2. Ringkasan
-        total = stats.get("total", 0)
-        winrate = stats.get("winrate", 0)
-        total_pnl = stats.get("total_pnl", 0)
-        
-        if total == 0:
-            lines.append("ℹ️ Belum ada data trading.")
-        else:
-            if total_pnl < 0:
-                status = "⚠️ **Sedang rugi**"
-            else:
-                status = "✅ **Profit**"
-            lines.append(f"{status} | PnL: {total_pnl:.4f} SOL | Win Rate: {winrate:.1f}%")
-            lines.append("")
-        
-        # 3. Masalah utama (maks 3)
-        problems = [r for r in recommendations if "⚠️" in r or "🔧" in r][:3]
-        if problems:
-            lines.append("**🔴 Masalah utama:**")
-            for p in problems:
-                lines.append(f"  - {p.replace('⚠️', '').replace('🔧', '').strip()}")
-            lines.append("")
-        
-        # 4. Rekomendasi (maks 3)
-        suggestions = [r for r in recommendations if "Saran" in r or "Periksa" in r][:3]
-        if suggestions:
-            lines.append("**💡 Rekomendasi saya:**")
-            for s in suggestions:
-                lines.append(f"  - {s.replace('🔧 Saran:', '').strip()}")
-            lines.append("")
-        
-        # 5. Call to action
-        lines.append("**Mau saya terapkan perbaikan ini?**")
-        lines.append("Balas **'perbaiki'** dan saya akan auto-fix semua.")
-        
-        return "\n".join(lines)
-
-    """Mengubah data query menjadi jawaban natural"""
+    """
+    Mengubah hasil planner (JSON) menjadi jawaban alami untuk user
+    """
     
-    @staticmethod
-    def compose_knowledge(entity: str, data: Dict) -> str:
-        """Compose knowledge query response"""
-        if not data:
-            return f"Belum ada pengetahuan tentang {entity}."
-        
-        lines = []
-        
-        # Cari informasi penting
-        files = data.get("total_files", {}).get("value")
-        functions = data.get("functions", {}).get("value")
-        confidence = data.get("confidence", {}).get("value")
-        
-        if files:
-            lines.append(f"Dari scan terakhir, ditemukan {files} file dalam kondisi valid.")
-        if functions:
-            lines.append(f"Total fungsi yang terdeteksi: {functions}.")
-        if confidence:
-            lines.append(f"Keyakinan terhadap hasil scan: {confidence}%.")
-        
-        if lines:
-            return "\n".join(lines)
-        
-        # Fallback: tampilkan semua data
-        fallback = [f"📚 Pengetahuan tentang {entity}:"]
-        for attr, info in data.items():
-            fallback.append(f"  {attr}: {info['value']}")
-        return "\n".join(fallback)
+    def __init__(self):
+        self.severity_order = {
+            "critical": 0,
+            "high": 1,
+            "medium": 2,
+            "low": 3,
+            "info": 4
+        }
     
-    @staticmethod
-    def compose_decision(action: str, decision: Dict) -> str:
-        """Compose decision query response"""
-        if not decision:
-            return f"Belum ada keputusan tentang {action}."
+    def compose(self, planner_result: Dict, context: Dict = None) -> str:
+        """
+        Mengubah hasil planner menjadi response alami
+        """
+        # Jika planner_result sudah berupa string, return langsung
+        if isinstance(planner_result, str):
+            return planner_result
         
-        reason_code = decision.get("reason", "")
-        confidence = decision.get("confidence", 0)
-        candidates = decision.get("candidates", [])
+        # Jika bukan dict, convert
+        if not isinstance(planner_result, dict):
+            return str(planner_result)
         
-        # Map reason_code ke penjelasan natural
-        reason_map = {
-            "PROJECT_NOT_SCANNED": "Project belum memiliki hasil scan yang valid. Analisis berikutnya berisiko menggunakan informasi yang belum lengkap.",
-            "SCAN_COMPLETED": "Scan sudah selesai dan hasilnya valid. Langkah selanjutnya adalah menganalisis project berdasarkan data yang sudah diverifikasi.",
-            "TASK_EXECUTED": "Task ini dipilih karena sesuai dengan alur kerja yang sudah direncanakan.",
+        # Cek apakah ada error
+        if planner_result.get("error"):
+            return self._handle_error(planner_result["error"])
+        
+        # Extract components
+        intent = planner_result.get("intent", "chat")
+        response = planner_result.get("response", "")
+        plan = planner_result.get("plan", [])
+        action = planner_result.get("action", "null")
+        needs_from_user = planner_result.get("needs_from_user", "null")
+        reasoning = planner_result.get("reasoning", "")
+        
+        # Priority issues (jika ada)
+        issues = planner_result.get("issues", [])
+        
+        # Build response
+        parts = []
+        
+        # 1. Main response (dari LLM)
+        if response and response != "null":
+            parts.append(response)
+        
+        # 2. Issues dengan prioritas
+        if issues:
+            parts.append(self._format_issues(issues))
+        
+        # 3. Plan/actions
+        if plan:
+            parts.append(self._format_plan(plan))
+        
+        # 4. Needs from user
+        if needs_from_user and needs_from_user != "null":
+            parts.append(f"\n📌 {needs_from_user}")
+        
+        # 5. Follow-up
+        if action and action != "null":
+            parts.append(f"\n🔄 Saya akan {self._describe_action(action)}")
+        
+        # Gabungkan
+        result = "\n\n".join([p for p in parts if p and p.strip()])
+        
+        # Jika kosong, fallback
+        if not result:
+            result = "Saya siap membantu. Ada yang bisa saya bantu?"
+        
+        return result
+    
+    def _handle_error(self, error: str) -> str:
+        """Handle error dengan cara yang human-friendly"""
+        if "API" in error or "timeout" in error.lower():
+            return "Maaf, saya sedang mengalami gangguan teknis. Silakan coba lagi nanti."
+        return f"Terjadi kesalahan: {error}"
+    
+    def _format_issues(self, issues: List[Dict]) -> str:
+        """Format issues berdasarkan prioritas"""
+        if not issues:
+            return ""
+        
+        # Urutkan berdasarkan severity
+        sorted_issues = sorted(
+            issues, 
+            key=lambda x: self.severity_order.get(x.get("severity", "low"), 99)
+        )
+        
+        lines = ["\n📊 **Ringkasan Masalah:**"]
+        
+        # Kelompokkan berdasarkan severity
+        groups = {}
+        for issue in sorted_issues:
+            severity = issue.get("severity", "low")
+            if severity not in groups:
+                groups[severity] = []
+            groups[severity].append(issue)
+        
+        # Tampilkan per group
+        severity_labels = {
+            "critical": "🔴 **Kritis** (Harus segera diperbaiki)",
+            "high": "🟠 **Tinggi** (Perlu perhatian)",
+            "medium": "🟡 **Sedang**",
+            "low": "🟢 **Rendah**",
+            "info": "ℹ️ **Informasi**"
         }
         
-        reason = reason_map.get(reason_code, f"Alasan: {reason_code}")
-        
-        if candidates:
-            candidate_text = ", ".join(candidates[:3])
-            return f"Keputusan: {action}\nAlasan: {reason}\nKeyakinan: {confidence:.0%}\nAlternatif: {candidate_text}"
-        
-        return f"Keputusan: {action}\nAlasan: {reason}\nKeyakinan: {confidence:.0%}"
-    
-    @staticmethod
-    def compose_summary(state: Dict) -> str:
-        """Compose summary query response"""
-        if not state:
-            return "Belum ada pekerjaan yang bisa diringkas."
-        
-        project = state.get("project", "Tidak ada")
-        current = state.get("current_task", "Tidak ada")
-        completed = state.get("completed_tasks", [])
-        pending = state.get("pending_tasks", [])
-        
-        lines = []
-        lines.append(f"📋 Ringkasan Pekerjaan")
-        lines.append(f"Project: {project}")
-        lines.append("")
-        
-        if completed:
-            lines.append(f"✅ Selesai: {', '.join(completed)}")
-        
-        if current and current not in completed:
-            lines.append(f"🔄 Sedang: {current}")
-        
-        if pending:
-            lines.append(f"📌 Tersisa: {', '.join(pending)}")
+        for severity, label in severity_labels.items():
+            if severity in groups:
+                lines.append(f"\n{label}:")
+                for issue in groups[severity]:
+                    desc = issue.get("description", "")
+                    location = issue.get("location", "")
+                    if location:
+                        lines.append(f"  • {desc} ({location})")
+                    else:
+                        lines.append(f"  • {desc}")
         
         return "\n".join(lines)
     
-    @staticmethod
-    def compose_memory(state: Dict, artifact: Dict = None) -> str:
-        """Compose memory query response"""
-        if not state:
-            return "Belum ada pekerjaan yang tersimpan."
+    def _format_plan(self, plan: List[Dict]) -> str:
+        """Format plan menjadi langkah-langkah"""
+        if not plan:
+            return ""
         
-        project = state.get("project", "Tidak ada")
-        current = state.get("current_task", "Tidak ada")
-        completed = state.get("completed_tasks", [])
-        pending = state.get("pending_tasks", [])
-        
-        lines = []
-        
-        if completed:
-            last = completed[-1]
-            lines.append(f"Terakhir kita menyelesaikan {last}.")
-            lines.append("")
-        
-        lines.append(f"📋 Status saat ini:")
-        lines.append(f"  Project: {project}")
-        
-        if current:
-            lines.append(f"  Sedang: {current}")
-        
-        if pending:
-            lines.append(f"  Selanjutnya: {pending[0]}")
-        
-        if len(pending) > 1:
-            lines.append(f"  Tersisa: {', '.join(pending[1:])}")
+        lines = ["\n📋 **Rencana Tindakan:**"]
+        for i, step in enumerate(plan, 1):
+            action = step.get("action", "unknown")
+            target = step.get("action_target", "")
+            purpose = step.get("purpose", "")
+            
+            action_desc = self._describe_action(action)
+            if target:
+                lines.append(f"  {i}. {action_desc} `{target}`")
+            else:
+                lines.append(f"  {i}. {action_desc}")
+            
+            if purpose:
+                lines.append(f"     _{purpose}_")
         
         return "\n".join(lines)
     
-    @staticmethod
-    def compose_resume(state: Dict) -> str:
-        """Compose resume query response (besok lanjut dari mana)"""
-        if not state:
-            return "Belum ada pekerjaan yang dimulai."
+    def _describe_action(self, action: str) -> str:
+        """Deskripsikan action dalam bahasa alami"""
+        descriptions = {
+            "analyze_project": "menganalisis project",
+            "list_projects": "menampilkan daftar project",
+            "modify_logic": "memperbaiki logic",
+            "scan_project": "memindai project",
+            "repair_project": "memperbaiki project",
+            "build_project": "membangun project",
+            "run_bot": "menjalankan bot",
+            "show_log": "menampilkan log",
+            "godmeme_status": "mengecek status Godmeme",
+            "analyze_trading_data": "menganalisis data trading",
+            "null": "menunggu instruksi"
+        }
+        return descriptions.get(action, action.replace("_", " "))
+    
+    def extract_priority_issues(self, data: Dict) -> List[Dict]:
+        """
+        Extract priority issues dari data
+        """
+        issues = []
         
-        current = state.get("current_task", "Tidak ada")
-        completed = state.get("completed_tasks", [])
-        pending = state.get("pending_tasks", [])
-        project = state.get("project", "Tidak ada")
+        # Cek broken imports
+        if data.get("broken_imports"):
+            issues.append({
+                "severity": "critical",
+                "description": f"{len(data['broken_imports'])} broken import",
+                "location": "projects"
+            })
         
-        lines = []
+        # Cek orphan files
+        if data.get("orphan_files", 0) > 0:
+            issues.append({
+                "severity": "medium",
+                "description": f"{data['orphan_files']} file orphan",
+                "location": "repository"
+            })
         
-        if completed:
-            lines.append(f"Terakhir kita menyelesaikan {completed[-1]}.")
-        elif current:
-            lines.append(f"Kita sedang mengerjakan {current}.")
-        else:
-            lines.append("Belum ada pekerjaan yang dimulai.")
+        # Cek duplicate files
+        if data.get("duplicate_files", 0) > 0:
+            issues.append({
+                "severity": "low",
+                "description": f"{data['duplicate_files']} file duplikat",
+                "location": "repository"
+            })
         
-        lines.append("")
+        # Cek missing API keys
+        if data.get("missing_api_keys"):
+            issues.append({
+                "severity": "high",
+                "description": f"{len(data['missing_api_keys'])} API key belum dikonfigurasi",
+                "location": ".env"
+            })
         
-        if pending:
-            lines.append(f"📌 Besok akan dilanjutkan dengan: {pending[0]}")
-            if len(pending) > 1:
-                lines.append(f"Setelah itu: {', '.join(pending[1:])}")
-        else:
-            lines.append("✅ Tidak ada task pending. Semua selesai.")
-        
-        return "\n".join(lines)
+        return issues
+
+# Singleton
+_composer = None
+
+def get_response_composer() -> ResponseComposer:
+    global _composer
+    if _composer is None:
+        _composer = ResponseComposer()
+    return _composer

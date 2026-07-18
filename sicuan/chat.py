@@ -23,6 +23,7 @@ from sicuan.core.intent_classifier import IntentClassifier
 from sicuan.core.semantic_query import SemanticQuery
 from sicuan.core.multimodel_orchestrator import get_multimodel_orchestrator
 from sicuan.core.semantic_router import get_semantic_router
+from sicuan.core.response_composer import get_response_composer
 from sicuan.core.context_memory import get_context_memory
 from sicuan.core.conversation_context import ConversationContext
 from sicuan.core.goal_engine import GoalEngine
@@ -262,15 +263,27 @@ class SiCuanChat:
                 result = result[0] if result else {}
             if not isinstance(result, dict):
                 result = {"response": str(result), "action": None}
+            
+            # === RESPONSE COMPOSER ===
+            try:
+                from sicuan.core.response_composer import get_response_composer
+                composer = get_response_composer()
+                composed_response = composer.compose(result)
+                return composed_response
+            except Exception as composer_error:
+                print(f"[CHAT] Response Composer error: {composer_error}")
+                # Fallback: gunakan response dari result
+                return result.get("response", "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti.")
+                
         except Exception as e:
             import traceback
             print(f"[CHAT] Brain error full trace:")
             traceback.print_exc()
             return "Maaf, saya mengalami kesalahan teknis. Silakan coba lagi nanti."
 
-        action = self._safe_get(result, "action")
-        intent = self._safe_get(result, "intent", "unknown")
-        print(f"[CHAT] Brain decided: action={action}")
+        # action = self._safe_get(result, "action")
+        # intent = self._safe_get(result, "intent", "unknown")
+        # print(f"[CHAT] Brain decided: action={action}")
 
         # === PROVENANCE: Catat keputusan ===
         try:
