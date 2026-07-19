@@ -29,15 +29,15 @@ jobs:
 
       - name: Lint with flake8
         run: |
-          flake8 sicuan/ core/ --count --max-complexity=10 --statistics --exit-zero
+          flake8 sicuan/ core/ --count --max-complexity=10 --statistics --exit-zero || echo "Flake8 issues found, but continuing..."
 
       - name: Format with black
         run: |
-          black --check sicuan/ core/ || true
+          black --check sicuan/ core/ || echo "Black issues found, but continuing..."
 
       - name: Type check with mypy
         run: |
-          mypy sicuan/ core/ --ignore-missing-imports || true
+          mypy sicuan/ core/ --ignore-missing-imports || echo "Mypy issues found, but continuing..."
 
       - name: Run unit tests with coverage
         run: |
